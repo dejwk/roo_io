@@ -43,7 +43,26 @@ Status ArduinoMountImpl::mkdir(const char* path) {
   return fs_.mkdir(path) ? kOk : kUnknownIOError;
 }
 
-bool ArduinoMountImpl::rmdir(const char* path) { return fs_.rmdir(path); }
+Status ArduinoMountImpl::rmdir(const char* path) {
+  if (path == nullptr || path[0] != '/') {
+    return kInvalidPath;
+  }
+  {
+    fs::File f = fs_.open(path);
+    if (!f) return kNotFound;
+    if (!f.isDirectory()) return kNotDirectory;
+    if (read_only_) return kReadOnlyFilesystem;
+    if (fs_.rmdir(path)) return kOk;
+
+    fs::File child;
+    do {
+      child = f.openNextFile();
+    } while (child && (strcmp(child.name(), ".") == 0 ||
+                       strcmp(child.name(), "..") == 0));
+    if (child) return kDirectoryNotEmpty;
+  }
+  return kUnknownIOError;
+}
 
 std::unique_ptr<FileImpl> ArduinoMountImpl::openForReading(const char* path) {
   fs::File f = fs_.open(path, "r");

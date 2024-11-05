@@ -36,6 +36,8 @@ const char* StatusAsString(Status status) {
       return "is a directory";
     case kNotDirectory:
       return "not a directory";
+    case kDirectoryNotEmpty:
+      return "directory not empty";
     case kInvalidPath:
       return "invalid path";
     case kOutOfMemory:

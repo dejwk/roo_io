@@ -28,7 +28,7 @@ class MountImpl {
   // 'kInvalidType', 'kOutOfMemory', 'kUnknownIOError'.
   virtual Status mkdir(const char* path) = 0;
 
-  virtual bool rmdir(const char* path) = 0;
+  virtual Status rmdir(const char* path) = 0;
 
   virtual std::unique_ptr<FileImpl> openForReading(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> openForAppend(const char* path) = 0;
@@ -65,8 +65,8 @@ class Mount {
     return status_ != kOk ? status_ : mount_->mkdir(path);
   }
 
-  bool rmdir(const char* path) {
-    return status_ != kOk ? false : mount_->rmdir(path);
+  Status rmdir(const char* path) {
+    return status_ != kOk ? status_ : mount_->rmdir(path);
   }
 
   File openForReading(const char* path) {

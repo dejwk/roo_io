@@ -19,6 +19,7 @@ enum Status {
   kDirectoryExists,
   kIsDirectory,
   kNotDirectory,
+  kDirectoryNotEmpty,
   kInvalidPath,
   kOutOfMemory,
   kUnknownIOError,
