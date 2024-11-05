@@ -29,7 +29,7 @@ cc_library(
         ],
         exclude = ["test/**"],
     ),
-    defines = ["ROO_DISPLAY_TESTING"],
+    defines = ["ROO_IO_TESTING"],
     alwayslink = 1,
     includes = [
         "src",
@@ -37,6 +37,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//roo_testing:arduino_gtest_main",
+        "//lib/roo_logging",
     ],
 )
 
@@ -48,7 +49,7 @@ cc_test(
     copts = ["-Iexternal/gtest/include"],
     linkstatic = 1,
     deps = [
-        "//lib/roo_display:testing",
+        "//lib/roo_io:testing",
     ],
 )
 
@@ -59,7 +60,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//lib/roo_display:testing",
+        "//lib/roo_io:testing",
     ],
 )
 
@@ -70,6 +71,6 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//lib/roo_display:testing",
+        "//lib/roo_io:testing",
     ],
 )
