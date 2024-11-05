@@ -11,11 +11,14 @@ enum Status {
   kSeekError,
   kWriteError,
   kMountError,
+  kReadOnlyFilesystem,
   kNoSpaceLeftOnDevice,
   kNotFound,
   kAlreadyExists,
-  kNotDirectory,
-  kUnknownError,
+  kInvalidType,
+  kInvalidPath,
+  kOutOfMemory,
+  kUnknownIOError,
 };
 
 const char* StatusAsString(Status status);

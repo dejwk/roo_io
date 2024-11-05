@@ -14,17 +14,17 @@ Status DeleteDirRecursively(Mount& fs, File& file) {
       if (f.name()[0] == '.') {
         continue;
       }
-      if (!DeleteDirRecursively(fs, f)) return kUnknownError;
+      if (!DeleteDirRecursively(fs, f)) return kUnknownIOError;
     } else {
       if (!fs.remove(f.path())) {
         LOG(ERROR) << "Failed to remove " << f.path();
-        return kUnknownError;
+        return kUnknownIOError;
       }
     }
   }
   if (!fs.rmdir(file.path())) {
     LOG(ERROR) << "Failed to delete directory " << file.path();
-    return kUnknownError;
+    return kUnknownIOError;
   }
   return kOk;
 }
@@ -57,7 +57,7 @@ Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
   } else {
     if (!fs.remove(path)) {
       LOG(ERROR) << "Failed to delete file " << path;
-      return kUnknownError;
+      return kUnknownIOError;
     }
     return kOk;
   }

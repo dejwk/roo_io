@@ -11,55 +11,23 @@ namespace roo_io {
 
 class ArduinoMountImpl : public MountImpl {
  public:
-  ArduinoMountImpl(FS& fs, std::function<void()> unmount_fn)
-      : MountImpl(unmount_fn), fs_(fs) {}
+  ArduinoMountImpl(FS& fs, std::function<void()> unmount_fn);
 
-  bool exists(const char* path) const override { return fs_.exists(path); }
+  bool exists(const char* path) const override;
 
-  bool remove(const char* path) override { return fs_.remove(path); }
+  Status remove(const char* path) override;
 
-  bool rename(const char* pathFrom, const char* pathTo) override {
-    return fs_.rename(pathFrom, pathTo);
-  }
+  bool rename(const char* pathFrom, const char* pathTo) override;
 
-  bool mkdir(const char* path) override { return fs_.mkdir(path); }
+  bool mkdir(const char* path) override;
 
-  bool rmdir(const char* path) override { return fs_.rmdir(path); }
+  bool rmdir(const char* path) override;
 
-  std::unique_ptr<FileImpl> openForReading(const char* path) override {
-    fs::File f = fs_.open(path, "r");
-    roo_io::Status status = roo_io::kOk;
-    if (!f) {
-      if (!fs_.exists(path)) {
-        status = roo_io::kNotFound;
-      } else {
-        status = roo_io::kOpenError;
-      }
-    }
-    return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
-  }
+  std::unique_ptr<FileImpl> openForReading(const char* path) override;
 
-  std::unique_ptr<FileImpl> createOrReplace(const char* path) {
-    fs::File f = fs_.open(path, "w", true);
-    roo_io::Status status = roo_io::kOk;
-    if (!f) {
-      status = roo_io::kOpenError;
-    }
-    return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
-  }
+  std::unique_ptr<FileImpl> createOrReplace(const char* path) override;
 
-  std::unique_ptr<FileImpl> openForAppend(const char* path) {
-    fs::File f = fs_.open(path, "a", false);
-    roo_io::Status status = roo_io::kOk;
-    if (!f) {
-      if (!fs_.exists(path)) {
-        status = roo_io::kNotFound;
-      } else {
-        status = roo_io::kOpenError;
-      }
-    }
-    return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
-  }
+  std::unique_ptr<FileImpl> openForAppend(const char* path) override;
 
  private:
   FS& fs_;

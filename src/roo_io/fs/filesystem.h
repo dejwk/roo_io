@@ -16,7 +16,9 @@ class MountImpl {
 
   virtual bool exists(const char* path) const = 0;
 
-  virtual bool remove(const char* path) = 0;
+  // Can return 'kOk', 'kNotFound', 'kInvalidPath', 'kInvalidType',
+  // 'kOutOfMemory', 'kUnknownIOError'.
+  virtual Status remove(const char* path) = 0;
 
   virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
 
@@ -40,38 +42,39 @@ class Mount {
   Mount() : Mount(kClosed) {}
 
   Status status() const { return status_; }
+
   bool ok() const { return status_ == kOk; }
 
   bool exists(const char* path) {
-    return mount_ == nullptr ? false : mount_->exists(path);
+    return status_ != kOk ? false : mount_->exists(path);
   }
 
-  bool remove(const char* path) {
-    return mount_ == nullptr ? false : mount_->remove(path);
+  Status remove(const char* path) {
+    return status_ != kOk ? status_ : mount_->remove(path);
   }
 
   bool rename(const char* pathFrom, const char* pathTo) {
-    return mount_ == nullptr ? false : mount_->rename(pathFrom, pathTo);
+    return status_ != kOk ? false : mount_->rename(pathFrom, pathTo);
   }
 
   bool mkdir(const char* path) {
-    return mount_ == nullptr ? false : mount_->mkdir(path);
+    return status_ != kOk ? false : mount_->mkdir(path);
   }
 
   bool rmdir(const char* path) {
-    return mount_ == nullptr ? false : mount_->rmdir(path);
+    return status_ != kOk ? false : mount_->rmdir(path);
   }
 
   File openForReading(const char* path) {
-    return mount_ == nullptr ? File() : File(mount_->openForReading(path));
+    return status_ != kOk ? File(status_) : File(mount_->openForReading(path));
   }
 
   File openForAppend(const char* path) {
-    return mount_ == nullptr ? File() : File(mount_->openForAppend(path));
+    return status_ != kOk ? File(status_) : File(mount_->openForAppend(path));
   }
 
   File createOrReplace(const char* path) {
-    return mount_ == nullptr ? File() : File(mount_->createOrReplace(path));
+    return status_ != kOk ? File(status_) : File(mount_->createOrReplace(path));
   }
 
   void close() {
