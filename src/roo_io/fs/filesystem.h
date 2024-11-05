@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "roo_io/fs/directory.h"
 #include "roo_io/fs/file.h"
 #include "roo_io/status.h"
 #include "roo_logging.h"
@@ -49,6 +50,8 @@ class MountImpl {
 
   virtual Status rmdir(const char* path) = 0;
 
+  virtual std::unique_ptr<DirectoryImpl> dir(const char* path) = 0;
+
   virtual std::unique_ptr<FileImpl> openForReading(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> openForAppend(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> createOrReplace(const char* path) = 0;
@@ -90,6 +93,10 @@ class Mount {
 
   Status rmdir(const char* path) {
     return status_ != kOk ? status_ : mount_->rmdir(path);
+  }
+
+  Directory dir(const char* path) {
+    return status_ != kOk ? Directory(status_) : Directory(mount_->dir(path));
   }
 
   File openForReading(const char* path) {
@@ -137,6 +144,8 @@ class Filesystem {
  private:
   std::weak_ptr<MountImpl> mount_;
 };
+
+const char* GetFileName(const char* path);
 
 Status DeleteRecursively(roo_io::Mount& fs, const char* path);
 

@@ -16,21 +16,9 @@ bool File::close() {
   return (status_ == kOk);
 }
 
-const char* File::path() { return status_ != kOk ? "" : file_->path(); }
+const char* File::path() const { return status_ != kOk ? "" : file_->path(); }
 
-const char* File::name() { return status_ != kOk ? "" : file_->name(); }
-
-bool File::isDirectory() const {
-  return status_ != kOk ? false : file_->isDirectory();
-}
-
-void File::rewindDirectory() {
-  if (file_ != nullptr) file_->rewindDirectory();
-}
-
-File File::openNextFile() {
-  return file_ == nullptr ? File() : File(file_->openNextFile());
-}
+const char* File::name() const { return status_ != kOk ? "" : file_->name(); }
 
 uint64_t File::size() const { return status_ != kOk ? 0 : file_->size(); }
 

@@ -19,13 +19,9 @@ class FileImpl {
   virtual Status status() const = 0;
   virtual bool close() = 0;
 
-  virtual bool isDirectory() const = 0;
   virtual uint64_t size() const = 0;
   virtual const char* path() const = 0;
   virtual const char* name() const = 0;
-
-  virtual void rewindDirectory() = 0;
-  virtual std::unique_ptr<FileImpl> openNextFile() = 0;
 
   virtual std::unique_ptr<RandomAccessInputStream> asInputStream() && = 0;
   virtual std::unique_ptr<OutputStream> asOutputStream() && = 0;
@@ -43,18 +39,14 @@ class File {
 
   File& operator=(File&& other) = default;
 
+  bool ok() const { return status() == kOk; }
+
   bool isOpen() const;
   Status status() const;
   bool close();
 
-  const char* path();
-  const char* name();
-
-  bool isDirectory() const;
-
-  void rewindDirectory();
-
-  File openNextFile();
+  const char* path() const;
+  const char* name() const;
 
   uint64_t size() const;
 

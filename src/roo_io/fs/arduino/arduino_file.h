@@ -27,21 +27,11 @@ class ArduinoFileImpl : public FileImpl {
 
   Status status() const override { return status_; }
 
-  bool isDirectory() const override { return file_.isDirectory(); }
-
   uint64_t size() const override { return file_.size(); }
 
   const char* path() const override { return file_.path(); }
 
   const char* name() const override { return file_.name(); }
-
-  void rewindDirectory() override { file_.rewindDirectory(); }
-
-  std::unique_ptr<FileImpl> openNextFile() override {
-    fs::File next = file_.openNextFile();
-    return std::unique_ptr<ArduinoFileImpl>(
-        new ArduinoFileImpl(next, next.operator bool() ? kOk : kClosed));
-  }
 
   std::unique_ptr<RandomAccessInputStream> asInputStream() && override {
     return std::unique_ptr<RandomAccessInputStream>(

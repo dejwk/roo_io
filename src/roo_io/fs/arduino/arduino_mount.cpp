@@ -75,6 +75,20 @@ Status ArduinoMountImpl::rmdir(const char* path) {
   return kUnknownIOError;
 }
 
+std::unique_ptr<DirectoryImpl> ArduinoMountImpl::dir(const char* path) {
+  fs::File f = fs_.open(path, "r");
+  roo_io::Status status = roo_io::kOk;
+  if (!f) {
+    if (!fs_.exists(path)) {
+      status = roo_io::kNotFound;
+    } else {
+      status = roo_io::kOpenError;
+    }
+  }
+  return std::unique_ptr<DirectoryImpl>(
+      new ArduinoDirectoryImpl(std::move(f), status));
+}
+
 std::unique_ptr<FileImpl> ArduinoMountImpl::openForReading(const char* path) {
   fs::File f = fs_.open(path, "r");
   roo_io::Status status = roo_io::kOk;

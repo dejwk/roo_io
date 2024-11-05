@@ -4,6 +4,7 @@
 
 #include <functional>
 
+#include "roo_io/fs/arduino/arduino_directory.h"
 #include "roo_io/fs/arduino/arduino_file.h"
 #include "roo_io/fs/filesystem.h"
 
@@ -24,6 +25,8 @@ class ArduinoMountImpl : public MountImpl {
   Status mkdir(const char* path) override;
 
   Status rmdir(const char* path) override;
+
+  std::unique_ptr<DirectoryImpl> dir(const char* path) override;
 
   std::unique_ptr<FileImpl> openForReading(const char* path) override;
 

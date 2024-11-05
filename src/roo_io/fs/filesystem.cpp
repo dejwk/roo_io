@@ -4,27 +4,17 @@ namespace roo_io {
 
 namespace {
 
-Status DeleteDirRecursively(Mount& fs, File& file) {
-  LOG(INFO) << "Recursively deleting directory " << file.path();
-  file.rewindDirectory();
+Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
+  if (!dir.ok()) return dir.status();
+  dir.rewind();
+  // LOG(INFO) << "Recursively deleting directory " << file.path();
+  // file.rewindDirectory();
   while (true) {
-    File f = file.openNextFile();
-    if (!f.isOpen()) break;
-    if (f.isDirectory()) {
-      if (f.name()[0] == '.') {
-        continue;
-      }
-      if (!DeleteDirRecursively(fs, f)) return kUnknownIOError;
-    } else {
-      if (!fs.remove(f.path())) {
-        LOG(ERROR) << "Failed to remove " << f.path();
-        return kUnknownIOError;
-      }
-    }
-  }
-  if (!fs.rmdir(file.path())) {
-    LOG(ERROR) << "Failed to delete directory " << file.path();
-    return kUnknownIOError;
+    const char* next = dir.next();
+    if (!dir.ok()) return dir.status();
+    if (next == nullptr) break;
+    Status s = DeleteRecursively(fs, next);
+    if (s != kOk) return s;
   }
   return kOk;
 }
@@ -46,21 +36,31 @@ Mount Filesystem::mount() {
 }
 
 Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
-  if (!fs.exists(path)) return kNotFound;
-  File f = fs.openForReading(path);
-  if (!f.isOpen()) {
-    LOG(ERROR) << "Failed to open " << path;
-    return f.status();
-  }
-  if (f.isDirectory()) {
-    return DeleteDirRecursively(fs, f);
+  Stat stat = fs.stat(path);
+  if (!stat.ok()) return stat.status();
+  if (stat.isFile()) {
+    return fs.remove(path);
   } else {
-    if (!fs.remove(path)) {
-      LOG(ERROR) << "Failed to delete file " << path;
-      return kUnknownIOError;
-    }
-    return kOk;
+    Directory dir = fs.dir(path);
+    if (!dir.ok()) return dir.status();
+    Status s = DeleteDirContentsRecursively(fs, dir);
+    if (s != kOk) return s;
+    return fs.rmdir(path);
   }
+}
+
+const char* GetFileName(const char* path) {
+  size_t i = 0;
+  size_t pos = 0;
+  char* p = (char*)path;
+  while (*p) {
+    i++;
+    if (*p == '/' || *p == '\\') {
+      pos = i;
+    }
+    p++;
+  }
+  return path + pos;
 }
 
 }  // namespace roo_io
