@@ -8,8 +8,13 @@ ArduinoMountImpl::ArduinoMountImpl(FS& fs, bool read_only,
 
 bool ArduinoMountImpl::isReadOnly() const { return read_only_; }
 
-bool ArduinoMountImpl::exists(const char* path) const {
-  return fs_.exists(path);
+Stat ArduinoMountImpl::stat(const char* path) const {
+  if (path == nullptr || path[0] != '/') {
+    return kInvalidPath;
+  }
+  fs::File f = fs_.open(path);
+  if (!f) return Stat(Stat::kNone);
+  return f.isDirectory() ? Stat(Stat::kDir) : Stat(Stat::kFile);
 }
 
 Status ArduinoMountImpl::remove(const char* path) {

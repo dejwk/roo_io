@@ -15,7 +15,7 @@ class ArduinoMountImpl : public MountImpl {
 
   bool isReadOnly() const override;
 
-  bool exists(const char* path) const override;
+  Stat stat(const char* path) const override;
 
   Status remove(const char* path) override;
 

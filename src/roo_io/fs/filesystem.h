@@ -8,6 +8,25 @@
 
 namespace roo_io {
 
+class Stat {
+ public:
+  enum Type { kNone, kDir, kFile };
+
+  Stat(Type type) : status_(kOk), type_(type) {}
+  Stat(Status error) : status_(error), type_(kNone) {}
+
+  Status status() const { return status_; }
+
+  bool ok() const { return status_ == kOk; }
+  bool isFile() const { return ok() && type_ == kFile; }
+  bool isDirectory() const { return ok() && type_ == kDir; }
+  bool exists() const { return ok() && type_ != kNone; }
+
+ private:
+  Status status_;
+  Type type_;
+};
+
 class MountImpl {
  public:
   virtual ~MountImpl() {
@@ -16,7 +35,7 @@ class MountImpl {
 
   virtual bool isReadOnly() const = 0;
 
-  virtual bool exists(const char* path) const = 0;
+  virtual Stat stat(const char* path) const = 0;
 
   // Can return 'kOk', 'kNotMounted', 'kNotFound', 'kInvalidPath',
   // 'kNotFile', 'kOutOfMemory', 'kUnknownIOError'.
@@ -49,8 +68,12 @@ class Mount {
 
   bool ok() const { return status_ == kOk; }
 
-  bool exists(const char* path) {
-    return status_ != kOk ? false : mount_->exists(path);
+  bool exists(const char* path) const {
+    return stat(path).exists();
+  }
+
+  Stat stat(const char* path) const {
+    return status_ != kOk ? Stat(status_) : mount_->stat(path);
   }
 
   Status remove(const char* path) {
