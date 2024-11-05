@@ -10,6 +10,8 @@ const char* StatusAsString(Status status) {
       return "end of stream";
     case kClosed:
       return "closed";
+    case kNotMounted:
+      return "not mounted";
     case kOpenError:
       return "failed to open";
     case kReadError:
@@ -30,8 +32,10 @@ const char* StatusAsString(Status status) {
       return "file already exists";
     case kDirectoryExists:
       return "directory already exists";
-    case kInvalidType:
-      return "incompatible type";
+    case kIsDirectory:
+      return "is a directory";
+    case kNotDirectory:
+      return "not a directory";
     case kInvalidPath:
       return "invalid path";
     case kOutOfMemory:

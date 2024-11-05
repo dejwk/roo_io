@@ -25,7 +25,8 @@ class ArduinoSDFS : public Filesystem {
       digitalWrite(ss_pin_, HIGH);
       return nullptr;
     }
-    return std::unique_ptr<MountImpl>(new ArduinoMountImpl(sd_, unmount_fn));
+    return std::unique_ptr<MountImpl>(
+        new ArduinoMountImpl(sd_, false, unmount_fn));
   }
 
   void unmountImpl() override {

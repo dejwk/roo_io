@@ -11,7 +11,9 @@ namespace roo_io {
 
 class ArduinoMountImpl : public MountImpl {
  public:
-  ArduinoMountImpl(FS& fs, std::function<void()> unmount_fn);
+  ArduinoMountImpl(FS& fs, bool read_only, std::function<void()> unmount_fn);
+
+  bool isReadOnly() const override;
 
   bool exists(const char* path) const override;
 
@@ -31,6 +33,7 @@ class ArduinoMountImpl : public MountImpl {
 
  private:
   FS& fs_;
+  bool read_only_;
 };
 
 }  // namespace roo_io

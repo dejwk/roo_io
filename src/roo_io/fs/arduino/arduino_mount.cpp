@@ -2,8 +2,11 @@
 
 namespace roo_io {
 
-ArduinoMountImpl::ArduinoMountImpl(FS& fs, std::function<void()> unmount_fn)
-    : MountImpl(unmount_fn), fs_(fs) {}
+ArduinoMountImpl::ArduinoMountImpl(FS& fs, bool read_only,
+                                   std::function<void()> unmount_fn)
+    : MountImpl(unmount_fn), fs_(fs), read_only_(read_only) {}
+
+bool ArduinoMountImpl::isReadOnly() const { return read_only_; }
 
 bool ArduinoMountImpl::exists(const char* path) const {
   return fs_.exists(path);
@@ -16,8 +19,9 @@ Status ArduinoMountImpl::remove(const char* path) {
   {
     fs::File f = fs_.open(path);
     if (!f) return kNotFound;
-    if (f.isDirectory()) return kInvalidType;
+    if (f.isDirectory()) return kIsDirectory;
   }
+  if (read_only_) return kReadOnlyFilesystem;
   return fs_.remove(path) ? kOk : kUnknownIOError;
 }
 
@@ -35,6 +39,7 @@ Status ArduinoMountImpl::mkdir(const char* path) {
       return f.isDirectory() ? kDirectoryExists : kFileExists;
     }
   }
+  if (read_only_) return kReadOnlyFilesystem;
   return fs_.mkdir(path) ? kOk : kUnknownIOError;
 }
 

@@ -14,14 +14,18 @@ class MountImpl {
     if (unmount_fn_ != nullptr) unmount_fn_();
   }
 
+  virtual bool isReadOnly() const = 0;
+
   virtual bool exists(const char* path) const = 0;
 
-  // Can return 'kOk', 'kNotFound', 'kInvalidPath', 'kInvalidType',
-  // 'kOutOfMemory', 'kUnknownIOError'.
+  // Can return 'kOk', 'kNotMounted', 'kNotFound', 'kInvalidPath',
+  // 'kNotFile', 'kOutOfMemory', 'kUnknownIOError'.
   virtual Status remove(const char* path) = 0;
 
   virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
 
+  // Can return 'kOk', 'kNotMounted', 'kDirectoryExists', 'kInvalidPath',
+  // 'kInvalidType', 'kOutOfMemory', 'kUnknownIOError'.
   virtual Status mkdir(const char* path) = 0;
 
   virtual bool rmdir(const char* path) = 0;
@@ -39,7 +43,7 @@ class MountImpl {
 
 class Mount {
  public:
-  Mount() : Mount(kClosed) {}
+  Mount() : Mount(kNotMounted) {}
 
   Status status() const { return status_; }
 
@@ -79,17 +83,18 @@ class Mount {
 
   void close() {
     mount_ = nullptr;
-    if (status_ == kOk) status_ = kClosed;
+    if (status_ == kOk) status_ = kNotMounted;
   }
 
  private:
   friend class Filesystem;
 
-  Mount(Status error) : mount_(nullptr), status_(error) {}
+  Mount(Status error) : mount_(nullptr), status_(error), read_only_(false) {}
   Mount(std::shared_ptr<MountImpl> impl) : mount_(impl), status_(kOk) {}
 
   std::shared_ptr<MountImpl> mount_;
   Status status_;
+  bool read_only_;
 };
 
 class Filesystem {
