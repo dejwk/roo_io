@@ -36,7 +36,8 @@ class FileImpl {
 
 class File {
  public:
-  File() = default;
+  File(Status status = kClosed) : status_(status) {}
+
   ~File() = default;
   File(File&& other) = default;
 
@@ -64,9 +65,12 @@ class File {
  private:
   friend class Mount;
 
-  File(std::unique_ptr<FileImpl> file) : file_(std::move(file)) {}
+  File(std::unique_ptr<FileImpl> file)
+      : file_(std::move(file)),
+        status_(file_ == nullptr ? kClosed : file_->status()) {}
 
   std::unique_ptr<FileImpl> file_;
+  Status status_;
 };
 
 }  // namespace roo_io
