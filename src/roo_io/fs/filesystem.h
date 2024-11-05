@@ -22,7 +22,7 @@ class MountImpl {
 
   virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
 
-  virtual bool mkdir(const char* path) = 0;
+  virtual Status mkdir(const char* path) = 0;
 
   virtual bool rmdir(const char* path) = 0;
 
@@ -57,8 +57,8 @@ class Mount {
     return status_ != kOk ? false : mount_->rename(pathFrom, pathTo);
   }
 
-  bool mkdir(const char* path) {
-    return status_ != kOk ? false : mount_->mkdir(path);
+  Status mkdir(const char* path) {
+    return status_ != kOk ? status_ : mount_->mkdir(path);
   }
 
   bool rmdir(const char* path) {

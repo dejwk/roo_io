@@ -19,7 +19,7 @@ class ArduinoMountImpl : public MountImpl {
 
   bool rename(const char* pathFrom, const char* pathTo) override;
 
-  bool mkdir(const char* path) override;
+  Status mkdir(const char* path) override;
 
   bool rmdir(const char* path) override;
 

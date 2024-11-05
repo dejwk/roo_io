@@ -26,8 +26,10 @@ const char* StatusAsString(Status status) {
       return "device full";
     case kNotFound:
       return "not found";
-    case kAlreadyExists:
-      return "alrady exists";
+    case kFileExists:
+      return "file already exists";
+    case kDirectoryExists:
+      return "directory already exists";
     case kInvalidType:
       return "incompatible type";
     case kInvalidPath:
