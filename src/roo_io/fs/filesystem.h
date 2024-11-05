@@ -41,7 +41,7 @@ class MountImpl {
   // 'kNotFile', 'kOutOfMemory', 'kUnknownIOError'.
   virtual Status remove(const char* path) = 0;
 
-  virtual bool rename(const char* pathFrom, const char* pathTo) = 0;
+  virtual Status rename(const char* pathFrom, const char* pathTo) = 0;
 
   // Can return 'kOk', 'kNotMounted', 'kDirectoryExists', 'kInvalidPath',
   // 'kInvalidType', 'kOutOfMemory', 'kUnknownIOError'.
@@ -80,8 +80,8 @@ class Mount {
     return status_ != kOk ? status_ : mount_->remove(path);
   }
 
-  bool rename(const char* pathFrom, const char* pathTo) {
-    return status_ != kOk ? false : mount_->rename(pathFrom, pathTo);
+  Status rename(const char* pathFrom, const char* pathTo) {
+    return status_ != kOk ? status_ : mount_->rename(pathFrom, pathTo);
   }
 
   Status mkdir(const char* path) {

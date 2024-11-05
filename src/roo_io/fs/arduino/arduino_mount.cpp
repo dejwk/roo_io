@@ -30,8 +30,14 @@ Status ArduinoMountImpl::remove(const char* path) {
   return fs_.remove(path) ? kOk : kUnknownIOError;
 }
 
-bool ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
-  return fs_.rename(pathFrom, pathTo);
+Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
+  Stat src = stat(pathFrom);
+  if (!src.ok()) return src.status();
+  if (!src.exists()) return kNotFound;
+  Stat dst = stat(pathTo);
+  if (!dst.ok()) return dst.status();
+  if (dst.exists()) return dst.isDirectory() ? kDirectoryExists : kFileExists;
+  return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
 }
 
 Status ArduinoMountImpl::mkdir(const char* path) {
