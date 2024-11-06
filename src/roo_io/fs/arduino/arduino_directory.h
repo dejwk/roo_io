@@ -34,14 +34,14 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
     next_ = "";
   }
 
-  const char* next() override {
-    if (status_ != kOk) return nullptr;
+  Entry read() override {
+    if (status_ != kOk) return Entry();
     if (!file_) {
       status_ = kClosed;
-      return nullptr;
+      return Entry();
     }
-    next_ = file_.openNextFile().path();
-    return next_.c_str();
+    fs::File f = file_.openNextFile();
+    return DirectoryImpl::CreateEntry(f.path(), f.isDirectory());
   }
 
  private:

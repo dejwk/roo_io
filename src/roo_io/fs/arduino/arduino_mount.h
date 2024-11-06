@@ -26,7 +26,7 @@ class ArduinoMountImpl : public MountImpl {
 
   Status rmdir(const char* path) override;
 
-  std::unique_ptr<DirectoryImpl> dir(const char* path) override;
+  std::unique_ptr<DirectoryImpl> opendir(const char* path) override;
 
   std::unique_ptr<FileImpl> openForReading(const char* path) override;
 

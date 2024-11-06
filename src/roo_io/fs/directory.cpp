@@ -25,8 +25,8 @@ void Directory::rewind() {
   if (dir_ != nullptr) dir_->rewind();
 }
 
-const char* Directory::next() {
-  return dir_ == nullptr ? nullptr : dir_->next();
+Entry Directory::read() {
+  return dir_ == nullptr ? Entry() : dir_->read();
 }
 
 }  // namespace roo_io

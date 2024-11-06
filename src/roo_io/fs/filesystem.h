@@ -50,7 +50,7 @@ class MountImpl {
 
   virtual Status rmdir(const char* path) = 0;
 
-  virtual std::unique_ptr<DirectoryImpl> dir(const char* path) = 0;
+  virtual std::unique_ptr<DirectoryImpl> opendir(const char* path) = 0;
 
   virtual std::unique_ptr<FileImpl> openForReading(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> openForAppend(const char* path) = 0;
@@ -95,8 +95,8 @@ class Mount {
     return status_ != kOk ? status_ : mount_->rmdir(path);
   }
 
-  Directory dir(const char* path) {
-    return status_ != kOk ? Directory(status_) : Directory(mount_->dir(path));
+  Directory opendir(const char* path) {
+    return status_ != kOk ? Directory(status_) : Directory(mount_->opendir(path));
   }
 
   File openForReading(const char* path) {
