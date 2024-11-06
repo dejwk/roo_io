@@ -10,19 +10,22 @@ namespace roo_io {
 
 class Entry {
  public:
-  Entry() : path_(nullptr), is_dir_(false) {}
+  Entry() : path_(nullptr), name_(nullptr), is_dir_(false) {}
 
   bool done() const { return path_ == nullptr; }
   const char* path() const { return path_; }
+  const char* name() const { return name_; }
   bool isDirectory() const { return is_dir_; }
 
  private:
   friend class Directory;
   friend class DirectoryImpl;
 
-  Entry(const char* path, bool is_dir) : path_(path), is_dir_(is_dir) {}
+  Entry(const char* path, int name_offset, bool is_dir)
+      : path_(path), name_(path + name_offset), is_dir_(is_dir) {}
 
   const char* path_;
+  const char* name_;
   bool is_dir_;
 };
 
@@ -43,8 +46,8 @@ class DirectoryImpl {
  protected:
   DirectoryImpl() = default;
 
-  static Entry CreateEntry(const char* path, bool is_dir) {
-    return Entry(path, is_dir);
+  static Entry CreateEntry(const char* path, int name_offset, bool is_dir) {
+    return Entry(path, name_offset, is_dir);
   }
 };
 

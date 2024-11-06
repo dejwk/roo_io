@@ -41,7 +41,8 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
       return Entry();
     }
     fs::File f = file_.openNextFile();
-    return DirectoryImpl::CreateEntry(f.path(), f.isDirectory());
+    return DirectoryImpl::CreateEntry(
+        f.path(), strlen(f.path()) - strlen(f.name()), f.isDirectory());
   }
 
  private:
