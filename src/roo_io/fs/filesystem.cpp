@@ -10,7 +10,7 @@ Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
   // LOG(INFO) << "Recursively deleting directory " << file.path();
   // file.rewindDirectory();
   while (true) {
-    Entry entry = dir.read();
+    Directory::Entry entry = dir.read();
     if (!dir.ok()) return dir.status();
     if (entry.done()) break;
     Status s = DeleteRecursively(fs, entry.path());

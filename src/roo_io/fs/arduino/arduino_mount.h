@@ -28,7 +28,7 @@ class ArduinoMountImpl : public MountImpl {
 
   std::unique_ptr<DirectoryImpl> opendir(const char* path) override;
 
-  std::unique_ptr<FileImpl> openForReading(const char* path) override;
+  std::unique_ptr<RandomAccessInputStream> fopen(const char* path) override;
 
   std::unique_ptr<FileImpl> createOrReplace(const char* path) override;
 

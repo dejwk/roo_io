@@ -16,6 +16,7 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
   bool isOpen() const override { return file_.operator bool(); }
 
   bool close() override {
+    entry_.close();
     file_.close();
     if (status_ = kOk) status_ = kClosed;
     return true;
@@ -40,13 +41,16 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
       status_ = kClosed;
       return Entry();
     }
-    fs::File f = file_.openNextFile();
+    entry_ = file_.openNextFile();
+    if (!entry_) return Entry();
     return DirectoryImpl::CreateEntry(
-        f.path(), strlen(f.path()) - strlen(f.name()), f.isDirectory());
+        entry_.path(), strlen(entry_.path()) - strlen(entry_.name()),
+        entry_.isDirectory());
   }
 
  private:
   mutable fs::File file_;
+  fs::File entry_;
   String next_;
   Status status_;
 };

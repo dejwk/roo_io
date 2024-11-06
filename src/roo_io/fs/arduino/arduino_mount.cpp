@@ -13,8 +13,8 @@ Stat ArduinoMountImpl::stat(const char* path) const {
     return kInvalidPath;
   }
   fs::File f = fs_.open(path);
-  if (!f) return Stat(Stat::kNone);
-  return f.isDirectory() ? Stat(Stat::kDir) : Stat(Stat::kFile);
+  if (!f) return Stat(Stat::kNone, 0);
+  return f.isDirectory() ? Stat(Stat::kDir, 0) : Stat(Stat::kFile, f.size());
 }
 
 Status ArduinoMountImpl::remove(const char* path) {
@@ -89,17 +89,20 @@ std::unique_ptr<DirectoryImpl> ArduinoMountImpl::opendir(const char* path) {
       new ArduinoDirectoryImpl(std::move(f), status));
 }
 
-std::unique_ptr<FileImpl> ArduinoMountImpl::openForReading(const char* path) {
+std::unique_ptr<RandomAccessInputStream> ArduinoMountImpl::fopen(
+    const char* path) {
   fs::File f = fs_.open(path, "r");
-  roo_io::Status status = roo_io::kOk;
   if (!f) {
     if (!fs_.exists(path)) {
-      status = roo_io::kNotFound;
+      return std::unique_ptr<RandomAccessInputStream>(
+          new NullInputStream(kNotFound));
     } else {
-      status = roo_io::kOpenError;
+      return std::unique_ptr<RandomAccessInputStream>(
+          new NullInputStream(kOpenError));
     }
   }
-  return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
+  return std::unique_ptr<RandomAccessInputStream>(
+      new ArduinoFileInputStream(std::move(f)));
 }
 
 std::unique_ptr<FileImpl> ArduinoMountImpl::createOrReplace(const char* path) {

@@ -25,7 +25,7 @@ void Directory::rewind() {
   if (dir_ != nullptr) dir_->rewind();
 }
 
-Entry Directory::read() {
+Directory::Entry Directory::read() {
   return dir_ == nullptr ? Entry() : dir_->read();
 }
 

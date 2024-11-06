@@ -13,8 +13,8 @@ class Stat {
  public:
   enum Type { kNone, kDir, kFile };
 
-  Stat(Type type) : status_(kOk), type_(type) {}
-  Stat(Status error) : status_(error), type_(kNone) {}
+  Stat(Type type, uint64_t size) : status_(kOk), type_(type), size_(size) {}
+  Stat(Status error) : status_(error), type_(kNone), size_(0) {}
 
   Status status() const { return status_; }
 
@@ -22,10 +22,12 @@ class Stat {
   bool isFile() const { return ok() && type_ == kFile; }
   bool isDirectory() const { return ok() && type_ == kDir; }
   bool exists() const { return ok() && type_ != kNone; }
+  uint64_t size() const { return size_; }
 
  private:
   Status status_;
   Type type_;
+  uint64_t size_;
 };
 
 class MountImpl {
@@ -52,7 +54,7 @@ class MountImpl {
 
   virtual std::unique_ptr<DirectoryImpl> opendir(const char* path) = 0;
 
-  virtual std::unique_ptr<FileImpl> openForReading(const char* path) = 0;
+  virtual std::unique_ptr<RandomAccessInputStream> fopen(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> openForAppend(const char* path) = 0;
   virtual std::unique_ptr<FileImpl> createOrReplace(const char* path) = 0;
 
@@ -71,9 +73,7 @@ class Mount {
 
   bool ok() const { return status_ == kOk; }
 
-  bool exists(const char* path) const {
-    return stat(path).exists();
-  }
+  bool exists(const char* path) const { return stat(path).exists(); }
 
   Stat stat(const char* path) const {
     return status_ != kOk ? Stat(status_) : mount_->stat(path);
@@ -96,11 +96,14 @@ class Mount {
   }
 
   Directory opendir(const char* path) {
-    return status_ != kOk ? Directory(status_) : Directory(mount_->opendir(path));
+    return status_ != kOk ? Directory(status_)
+                          : Directory(mount_->opendir(path));
   }
 
-  File openForReading(const char* path) {
-    return status_ != kOk ? File(status_) : File(mount_->openForReading(path));
+  std::unique_ptr<RandomAccessInputStream> fopen(const char* path) {
+    return status_ != kOk ? std::unique_ptr<RandomAccessInputStream>(
+                                new NullInputStream(status_))
+                          : mount_->fopen(path);
   }
 
   File openForAppend(const char* path) {
