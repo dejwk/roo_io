@@ -30,6 +30,12 @@ class Stat {
   uint64_t size_;
 };
 
+enum FileUpdatePolicy {
+  kFailIfExists = 0,
+  kTruncateIfExists = 1,
+  kAppendIfExists = 2,
+};
+
 class MountImpl {
  public:
   virtual ~MountImpl() {
@@ -55,8 +61,9 @@ class MountImpl {
   virtual std::unique_ptr<DirectoryImpl> opendir(const char* path) = 0;
 
   virtual std::unique_ptr<RandomAccessInputStream> fopen(const char* path) = 0;
-  virtual std::unique_ptr<FileImpl> openForAppend(const char* path) = 0;
-  virtual std::unique_ptr<FileImpl> createOrReplace(const char* path) = 0;
+
+  virtual std::unique_ptr<OutputStream> fopenForWrite(
+      const char* path, FileUpdatePolicy update_policy) = 0;
 
  protected:
   MountImpl(std::function<void()> unmount_fn) : unmount_fn_(unmount_fn) {}
@@ -106,12 +113,13 @@ class Mount {
                           : mount_->fopen(path);
   }
 
-  File openForAppend(const char* path) {
-    return status_ != kOk ? File(status_) : File(mount_->openForAppend(path));
-  }
-
-  File createOrReplace(const char* path) {
-    return status_ != kOk ? File(status_) : File(mount_->createOrReplace(path));
+  // Always creates the file if it doesn't already exist. If the file does
+  // exist, the behavior is dictated by the `update_policy`.
+  std::unique_ptr<OutputStream> fopenForWrite(const char* path,
+                                              FileUpdatePolicy update_policy) {
+    return status_ != kOk
+               ? std::unique_ptr<OutputStream>(new NullOutputStream(status_))
+               : mount_->fopenForWrite(path, update_policy);
   }
 
   void close() {

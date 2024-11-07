@@ -30,9 +30,8 @@ class ArduinoMountImpl : public MountImpl {
 
   std::unique_ptr<RandomAccessInputStream> fopen(const char* path) override;
 
-  std::unique_ptr<FileImpl> createOrReplace(const char* path) override;
-
-  std::unique_ptr<FileImpl> openForAppend(const char* path) override;
+  std::unique_ptr<OutputStream> fopenForWrite(
+      const char* path, FileUpdatePolicy update_policy) override;
 
  private:
   FS& fs_;

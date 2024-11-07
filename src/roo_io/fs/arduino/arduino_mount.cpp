@@ -105,26 +105,38 @@ std::unique_ptr<RandomAccessInputStream> ArduinoMountImpl::fopen(
       new ArduinoFileInputStream(std::move(f)));
 }
 
-std::unique_ptr<FileImpl> ArduinoMountImpl::createOrReplace(const char* path) {
-  fs::File f = fs_.open(path, "w", true);
-  roo_io::Status status = roo_io::kOk;
-  if (!f) {
-    status = roo_io::kOpenError;
+std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
+    const char* path, FileUpdatePolicy update_policy) {
+  if (read_only_) {
+    return std::unique_ptr<OutputStream>(
+        new NullOutputStream(kReadOnlyFilesystem));
   }
-  return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
-}
-
-std::unique_ptr<FileImpl> ArduinoMountImpl::openForAppend(const char* path) {
-  fs::File f = fs_.open(path, "a", false);
-  roo_io::Status status = roo_io::kOk;
-  if (!f) {
-    if (!fs_.exists(path)) {
-      status = roo_io::kNotFound;
-    } else {
-      status = roo_io::kOpenError;
+  fs::File f;
+  if (update_policy == kFailIfExists) {
+    f = fs_.open(path);
+    if (f) {
+      return std::unique_ptr<OutputStream>(
+          new NullOutputStream(f.isDirectory() ? kIsDirectory : kFileExists));
+    }
+    f = fs_.open(path, "w");
+  } else {
+    // Try to just open, but if it fails, check if not a directory to return a
+    // more specific error.
+    f = fs_.open(path, update_policy == kTruncateIfExists ? "w" : "a");
+    if (!f) {
+      f = fs_.open(path);
+      if (f.isDirectory()) {
+        return std::unique_ptr<OutputStream>(
+            new NullOutputStream(kIsDirectory));
+      }
+      return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
     }
   }
-  return std::unique_ptr<FileImpl>(new ArduinoFileImpl(std::move(f), status));
+  if (!f) {
+    return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
+  }
+  return std::unique_ptr<OutputStream>(
+      new ArduinoFileOutputStream(std::move(f)));
 }
 
 }  // namespace roo_io
