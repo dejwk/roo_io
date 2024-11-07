@@ -35,6 +35,20 @@ Mount Filesystem::mount() {
   return Mount(impl);
 }
 
+const char* GetFileName(const char* path) {
+  size_t i = 0;
+  size_t pos = 0;
+  char* p = (char*)path;
+  while (*p) {
+    i++;
+    if (*p == '/' || *p == '\\') {
+      pos = i;
+    }
+    p++;
+  }
+  return path + pos;
+}
+
 Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
   Stat stat = fs.stat(path);
   if (!stat.ok()) return stat.status();
@@ -49,18 +63,55 @@ Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
   }
 }
 
-const char* GetFileName(const char* path) {
-  size_t i = 0;
-  size_t pos = 0;
-  char* p = (char*)path;
-  while (*p) {
-    i++;
-    if (*p == '/' || *p == '\\') {
-      pos = i;
+// namespace {
+
+// int GetLongestSubdirName(const char* path) {
+//   int max = 0;
+//   int curr = 0;
+//   int beg = 0;
+//   int pos = beg;
+//   while (true) {
+//     while (path[pos] != 0 && path[pos] != '/') {
+//       ++curr;
+//       ++pos;
+//       if (curr > max) max = curr;
+//     }
+//     if (path[pos] == 0) return max;
+//     ++pos;
+//     beg = pos;
+//     curr = 0;
+//   }
+// }
+
+// }
+
+Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
+  Stat stat = fs.stat(path);
+  if (!stat.ok()) return stat.status();
+  if (stat.exists()) {
+    if (stat.isFile()) {
+      return kNotDirectory;
+    } else {
+      return kDirectoryExists;
     }
-    p++;
   }
-  return path + pos;
+
+  std::unique_ptr<char[]> path_copy(strdup(path));
+  int pos = 0;
+  char* p = path_copy.get();
+  while (true) {
+    while (*p == '/') ++p;
+    while (*p != 0 && *p != '/') ++p;
+    bool end = (*p == 0);
+    if (!end) {
+      // Temporarily truncate.
+      *p = 0;
+    }
+    Status s = fs.mkdir(path_copy.get());
+    if (s != kOk && s != kDirectoryExists) return s;
+    if (end) return kOk;
+    *p = '/';
+  }
 }
 
 }  // namespace roo_io

@@ -160,4 +160,6 @@ const char* GetFileName(const char* path);
 
 Status DeleteRecursively(roo_io::Mount& fs, const char* path);
 
+Status MkDirRecursively(roo_io::Mount& fs, const char* path);
+
 }  // namespace roo_io
