@@ -16,6 +16,8 @@ cc_library(
     deps = [
         "//lib/roo_logging",
         "//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
+        "//roo_testing/frameworks/esp-idf-v4.4.1/components/fatfs",
+        "//roo_testing/frameworks/esp-idf-v4.4.1/components/driver:sdspi",
     ],
 )
 
