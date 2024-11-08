@@ -44,6 +44,8 @@ const char* StatusAsString(Status status) {
       return "out of memory";
     case kUnknownIOError:
       return "unknown I/O error";
+    case kTooManyFilesOpen:
+      return "too many files open";
     default:
       return "unknown error";
   }

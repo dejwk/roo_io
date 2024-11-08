@@ -23,6 +23,7 @@ enum Status {
   kInvalidPath,
   kOutOfMemory,
   kUnknownIOError,
+  kTooManyFilesOpen,
 };
 
 const char* StatusAsString(Status status);
