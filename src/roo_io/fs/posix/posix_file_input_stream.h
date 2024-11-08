@@ -14,7 +14,7 @@ class PosixFileInputStream : public RandomAccessInputStream {
   PosixFileInputStream(Status error) : file_(nullptr), size_(-1), status_(error) {}
 
   PosixFileInputStream(FILE* file)
-      : file_(file), status_(file_ != nullptr ? kOk : kClosed) {}
+      : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
 
   int read(uint8_t* buf, unsigned int count) override {
     if (status_ != kOk && status_ != kEndOfStream) return -1;
