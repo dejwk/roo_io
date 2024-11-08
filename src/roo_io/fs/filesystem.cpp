@@ -97,7 +97,6 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
   }
 
   std::unique_ptr<char[]> path_copy(strdup(path));
-  int pos = 0;
   char* p = path_copy.get();
   while (true) {
     while (*p == '/') ++p;
@@ -112,6 +111,39 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
     if (end) return kOk;
     *p = '/';
   }
+}
+
+namespace {
+
+class DirectoryErrorImpl : public DirectoryImpl {
+ public:
+  DirectoryErrorImpl(Status status) : status_(status) {}
+
+  const char* path() const override { return nullptr; }
+  const char* name() const override { return nullptr; }
+
+  bool isOpen() const override { return false; }
+  Status status() const override { return status_; }
+  bool close() override { return true; }
+  void rewind() override {}
+  Entry read() override { return Entry(); }
+
+ private:
+  Status status_;
+};
+
+}  // namespace
+
+std::unique_ptr<DirectoryImpl> DirectoryError(Status error) {
+  return std::unique_ptr<DirectoryImpl>(new DirectoryErrorImpl(error));
+}
+
+std::unique_ptr<RandomAccessInputStream> InputError(Status error) {
+  return std::unique_ptr<RandomAccessInputStream>(new NullInputStream(error));
+}
+
+std::unique_ptr<OutputStream> OutputError(Status error) {
+  return std::unique_ptr<OutputStream>(new NullOutputStream(error));
 }
 
 }  // namespace roo_io

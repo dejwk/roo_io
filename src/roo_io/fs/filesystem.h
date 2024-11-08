@@ -14,7 +14,7 @@ class Stat {
   enum Type { kNone, kDir, kFile };
 
   Stat(Type type, uint64_t size) : status_(kOk), type_(type), size_(size) {}
-  Stat(Status error) : status_(error), type_(kNone), size_(0) {}
+  Stat(Status error = kClosed) : status_(error), type_(kNone), size_(0) {}
 
   Status status() const { return status_; }
 
@@ -155,6 +155,10 @@ class Filesystem {
  private:
   std::weak_ptr<MountImpl> mount_;
 };
+
+std::unique_ptr<DirectoryImpl> DirectoryError(Status error);
+std::unique_ptr<RandomAccessInputStream> InputError(Status error);
+std::unique_ptr<OutputStream> OutputError(Status error);
 
 const char* GetFileName(const char* path);
 

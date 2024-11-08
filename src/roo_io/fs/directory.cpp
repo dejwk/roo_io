@@ -2,7 +2,9 @@
 
 namespace roo_io {
 
-bool Directory::isOpen() const { return dir_ == nullptr ? false : dir_->isOpen(); }
+bool Directory::isOpen() const {
+  return dir_ == nullptr ? false : dir_->isOpen();
+}
 
 Status Directory::status() const {
   return status_ != kOk ? status_ : dir_->status();
@@ -17,9 +19,13 @@ bool Directory::close() {
   return (status_ == kOk);
 }
 
-const char* Directory::path() const { return status_ != kOk ? "" : dir_->path(); }
+const char* Directory::path() const {
+  return status_ != kOk ? "" : dir_->path();
+}
 
-const char* Directory::name() const { return status_ != kOk ? "" : dir_->name(); }
+const char* Directory::name() const {
+  return status_ != kOk ? "" : dir_->name();
+}
 
 void Directory::rewind() {
   if (dir_ != nullptr) dir_->rewind();
