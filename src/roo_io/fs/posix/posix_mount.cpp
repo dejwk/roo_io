@@ -10,6 +10,7 @@
 
 #include "roo_io/fs/posix/posix_directory.h"
 #include "roo_io/fs/posix/posix_file_input_stream.h"
+#include "roo_io/fs/posix/posix_file_output_stream.h"
 #include "sys/stat.h"
 
 namespace roo_io {
@@ -125,7 +126,7 @@ Status PosixMountImpl::mkdir(const char* path) {
   if (read_only_) return kReadOnlyFilesystem;
   auto full_path = cat(mount_point_.get(), path);
   if (full_path.get() == nullptr) return kOutOfMemory;
-  if (::mkdir(full_path.get(), 0x777) == 0) return kOk;
+  if (::mkdir(full_path.get(), 0777) == 0) return kOk;
   switch (errno) {
     case EEXIST:
       return kDirectoryExists;
@@ -252,41 +253,21 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
   const char* mode;
   FILE* f = ::fopen(full_path.get(), Policy2Mode(update_policy));
   if (f != nullptr) {
-    // return std::unique_ptr<OutputStream>(
-    //     new PosixFileOutputStream(f));
+    return std::unique_ptr<OutputStream>(new PosixFileOutputStream(f));
   }
-
-  assert(false);
-  //   fs::File f;
-  //   if (update_policy == kFailIfExists) {
-  //     f = fs_.open(path);
-  //     if (f) {
-  //       return std::unique_ptr<OutputStream>(
-  //           new NullOutputStream(f.isDirectory() ? kIsDirectory :
-  //           kFileExists));
-  //     }
-  //     f = fs_.open(path, "w");
-  //   } else {
-  //     // Try to just open, but if it fails, check if not a directory to
-  //     return
-  //     a
-  //     // more specific error.
-  //     f = fs_.open(path, update_policy == kTruncateIfExists ? "w" : "a");
-  //     if (!f) {
-  //       f = fs_.open(path);
-  //       if (f.isDirectory()) {
-  //         return std::unique_ptr<OutputStream>(
-  //             new NullOutputStream(kIsDirectory));
-  //       }
-  //       return std::unique_ptr<OutputStream>(new
-  //       NullOutputStream(kOpenError));
-  //     }
-  //   }
-  //   if (!f) {
-  //     return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
-  //   }
-  //   return std::unique_ptr<OutputStream>(
-  //       new ArduinoFileOutputStream(std::move(f)));
+  switch (errno) {
+    case ENAMETOOLONG:
+    case EINVAL:
+      return OutputError(kInvalidPath);
+    case ENOENT:
+      return OutputError(kNotFound);
+    case ENOTDIR:
+      return OutputError(kNotDirectory);
+    case ENFILE:
+      return OutputError(kTooManyFilesOpen);
+    default:
+      return OutputError(kUnknownIOError);
+  }
 }
 
 }  // namespace roo_io

@@ -18,10 +18,10 @@ class Stat {
 
   Status status() const { return status_; }
 
-  bool ok() const { return status_ == kOk; }
+  bool ok() const { return status_ == kOk || status_ == kNotFound; }
   bool isFile() const { return ok() && type_ == kFile; }
   bool isDirectory() const { return ok() && type_ == kDir; }
-  bool exists() const { return ok() && type_ != kNone; }
+  bool exists() const { return status_ == kOk; }
   uint64_t size() const { return size_; }
 
  private:

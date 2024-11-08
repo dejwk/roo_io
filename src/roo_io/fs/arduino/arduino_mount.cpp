@@ -13,7 +13,7 @@ Stat ArduinoMountImpl::stat(const char* path) const {
     return kInvalidPath;
   }
   fs::File f = fs_.open(path);
-  if (!f) return Stat(Stat::kNone, 0);
+  if (!f) return Stat(kNotFound);
   return f.isDirectory() ? Stat(Stat::kDir, 0) : Stat(Stat::kFile, f.size());
 }
 
