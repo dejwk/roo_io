@@ -250,21 +250,23 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
   if (read_only_) {
     return OutputError(kReadOnlyFilesystem);
   }
-  const char* mode;
   FILE* f = ::fopen(full_path.get(), Policy2Mode(update_policy));
   if (f != nullptr) {
     return std::unique_ptr<OutputStream>(new PosixFileOutputStream(f));
   }
   switch (errno) {
     case ENAMETOOLONG:
-    case EINVAL:
       return OutputError(kInvalidPath);
     case ENOENT:
       return OutputError(kNotFound);
     case ENOTDIR:
       return OutputError(kNotDirectory);
+    case EISDIR:
+      return OutputError(kIsDirectory);
     case ENFILE:
       return OutputError(kTooManyFilesOpen);
+    case ENOMEM:
+      return OutputError(kOutOfMemory);
     default:
       return OutputError(kUnknownIOError);
   }

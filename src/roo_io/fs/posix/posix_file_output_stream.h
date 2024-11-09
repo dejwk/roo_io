@@ -26,6 +26,10 @@ class PosixFileOutputStream : public OutputStream {
           status_ = kOutOfMemory;
           break;
         }
+        case ENOSPC: {
+          status_ = kNoSpaceLeftOnDevice;
+          break;
+        }
         default:
           status_ = kUnknownIOError;
           break;
