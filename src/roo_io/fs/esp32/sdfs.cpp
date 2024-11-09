@@ -8,18 +8,22 @@
 
 #if (defined(ESP32) || defined(ROO_TESTING))
 
-#include "driver/spi_master.h"
 #include "driver/sdspi_host.h"
+#include "driver/spi_common.h"
+#include "driver/spi_master.h"
 #include "esp_vfs_fat.h"
 #include "roo_io/fs/posix/posix_mount.h"
-#include "driver/spi_common.h"
 
 namespace roo_io {
 namespace esp32 {
 
-SdFs::SdFs(uint8_t pinSdCs, spi_host_device_t spi_host)
+SdFs::SdFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
+           spi_host_device_t spi_host)
     : spi_host_(spi_host),
-      pin_cs_((gpio_num_t)pinSdCs),
+      pin_sck_((gpio_num_t)pin_sck),
+      pin_miso_((gpio_num_t)pin_miso),
+      pin_mosi_((gpio_num_t)pin_mosi),
+      pin_cs_((gpio_num_t)pin_cs),
       mount_point_("/sd"),
       max_files_(5),
       format_if_empty_(false),
@@ -50,26 +54,24 @@ std::unique_ptr<MountImpl> SdFs::mountImpl(std::function<void()> unmount_fn) {
 #endif
   mount_base_path_.append(mount_point_);
 
-  spi_bus_config_t spi_cfg = {
-        .mosi_io_num = 13,
-        .miso_io_num = 12,
-        .sclk_io_num = 14,
-        .quadwp_io_num = -1,
-        .quadhd_io_num = -1,
-        .data4_io_num = -1,
-        .data5_io_num = -1,
-        .data6_io_num = -1,
-        .data7_io_num = -1,
-        .max_transfer_sz = 0,
-        .flags = 0,
-        .intr_flags = 0
-  };
+  spi_bus_config_t spi_cfg = {.mosi_io_num = pin_mosi_,
+                              .miso_io_num = pin_miso_,
+                              .sclk_io_num = pin_sck_,
+                              .quadwp_io_num = -1,
+                              .quadhd_io_num = -1,
+                              .data4_io_num = -1,
+                              .data5_io_num = -1,
+                              .data6_io_num = -1,
+                              .data7_io_num = -1,
+                              .max_transfer_sz = 0,
+                              .flags = 0,
+                              .intr_flags = 0};
   esp_err_t ret;
   ret = spi_bus_initialize(spi_host_, &spi_cfg, SDSPI_DEFAULT_DMA);
   if (ret != ESP_OK) {
-        LOG(ERROR) << "Failed to initialize bus.";
-        return nullptr;
-    }
+    LOG(ERROR) << "Failed to initialize bus.";
+    return nullptr;
+  }
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
   sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
@@ -81,8 +83,8 @@ std::unique_ptr<MountImpl> SdFs::mountImpl(std::function<void()> unmount_fn) {
       .max_files = max_files_,
       .allocation_unit_size = 16 * 1024};
 
-  ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host,
-                                          &dev_config, &mount_config, &card_);
+  ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
+                                &mount_config, &card_);
 
   if (ret != ESP_OK) {
     if (ret == ESP_FAIL) {
@@ -105,9 +107,6 @@ void SdFs::unmountImpl() {
   LOG(INFO) << "Unmounting SD card";
   CHECK_NOTNULL(card_);
 
-  sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-  dev_config.host_id = spi_host_;
-  dev_config.gpio_cs = pin_cs_;
   esp_err_t ret = esp_vfs_fat_sdcard_unmount(mount_base_path_.c_str(), card_);
   if (ret != ESP_OK) {
     LOG(ERROR) << "Unmounting card failed: " << esp_err_to_name(ret);
