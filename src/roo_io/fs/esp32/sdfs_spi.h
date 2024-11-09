@@ -7,10 +7,10 @@
 namespace roo_io {
 namespace esp32 {
 
-class SdFs : public Filesystem {
+class SdFsSpi : public Filesystem {
  public:
-  SdFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
-       spi_host_device_t spi_host = HSPI_HOST);
+  SdFsSpi(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
+          spi_host_device_t spi_host = HSPI_HOST);
 
   const char* mount_point() const;
   void set_mount_point(const char* mount_point);
