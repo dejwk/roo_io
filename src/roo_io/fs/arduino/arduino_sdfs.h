@@ -18,15 +18,14 @@ class ArduinoSDFS : public Filesystem {
   }
 
  protected:
-  std::unique_ptr<MountImpl> mountImpl(
-      std::function<void()> unmount_fn) override {
+  MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override {
     digitalWrite(ss_pin_, LOW);
     if (!sd_.begin(ss_pin_, spi_, frequency_)) {
       digitalWrite(ss_pin_, HIGH);
-      return nullptr;
+      return MountImpl::MountError(kMountError);
     }
-    return std::unique_ptr<MountImpl>(
-        new ArduinoMountImpl(sd_, false, unmount_fn));
+    return MountImpl::Mounted(std::unique_ptr<MountImpl>(
+        new ArduinoMountImpl(sd_, false, unmount_fn)));
   }
 
   void unmountImpl() override {

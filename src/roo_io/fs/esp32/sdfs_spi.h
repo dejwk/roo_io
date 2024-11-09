@@ -22,8 +22,7 @@ class SdFsSpi : public Filesystem {
   void set_format_if_empty(bool format_if_empty);
 
  protected:
-  std::unique_ptr<MountImpl> mountImpl(
-      std::function<void()> unmount_fn) override;
+  MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 
   void unmountImpl() override;
 

@@ -17,8 +17,8 @@
 namespace roo_io {
 namespace esp32 {
 
-SdFsSpi::SdFsSpi(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
-           spi_host_device_t spi_host)
+SdFsSpi::SdFsSpi(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
+                 uint8_t pin_cs, spi_host_device_t spi_host)
     : spi_host_(spi_host),
       pin_sck_((gpio_num_t)pin_sck),
       pin_miso_((gpio_num_t)pin_miso),
@@ -45,7 +45,7 @@ void SdFsSpi::set_format_if_empty(bool format_if_empty) {
   format_if_empty_ = format_if_empty;
 }
 
-std::unique_ptr<MountImpl> SdFsSpi::mountImpl(std::function<void()> unmount_fn) {
+MountImpl::MountResult SdFsSpi::mountImpl(std::function<void()> unmount_fn) {
   LOG(INFO) << "Mounting SD card";
 #if defined(ROO_TESTING)
   mount_base_path_ = FakeEsp32().fs_root();
@@ -70,7 +70,7 @@ std::unique_ptr<MountImpl> SdFsSpi::mountImpl(std::function<void()> unmount_fn) 
   ret = spi_bus_initialize(spi_host_, &spi_cfg, SDSPI_DEFAULT_DMA);
   if (ret != ESP_OK) {
     LOG(ERROR) << "Failed to initialize bus.";
-    return nullptr;
+    return MountImpl::MountError(kMountError);
   }
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
@@ -96,11 +96,11 @@ std::unique_ptr<MountImpl> SdFsSpi::mountImpl(std::function<void()> unmount_fn) 
                     "Make sure SD card lines have pull-up resistors in place."
                  << esp_err_to_name(ret);
     }
-    return nullptr;
+    return MountImpl::MountError(kMountError);
   }
 
-  return std::unique_ptr<MountImpl>(
-      new PosixMountImpl(mount_base_path_.c_str(), false, unmount_fn));
+  return MountImpl::Mounted(std::unique_ptr<MountImpl>(
+      new PosixMountImpl(mount_base_path_.c_str(), false, unmount_fn)));
 }
 
 void SdFsSpi::unmountImpl() {

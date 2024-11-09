@@ -38,6 +38,15 @@ enum FileUpdatePolicy {
 
 class MountImpl {
  public:
+  struct MountResult {
+    Status status;
+    std::unique_ptr<MountImpl> mount;
+  };
+
+  static MountResult Mounted(std::unique_ptr<MountImpl> mount_impl);
+
+  static MountResult MountError(Status status);
+
   virtual ~MountImpl() {
     if (unmount_fn_ != nullptr) unmount_fn_();
   }
@@ -147,7 +156,7 @@ class Filesystem {
  protected:
   Filesystem() = default;
 
-  virtual std::unique_ptr<MountImpl> mountImpl(
+  virtual MountImpl::MountResult mountImpl(
       std::function<void()> unmount_fn) = 0;
 
   virtual void unmountImpl() = 0;

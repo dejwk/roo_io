@@ -21,13 +21,25 @@ Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
 
 }  // namespace
 
+MountImpl::MountResult MountImpl::Mounted(
+    std::unique_ptr<MountImpl> mount_impl) {
+  return MountImpl::MountResult{.status = kOk, .mount = std::move(mount_impl)};
+}
+
+MountImpl::MountResult MountImpl::MountError(Status status) {
+  return MountImpl::MountResult{.status = status, .mount = nullptr};
+}
+
 Mount Filesystem::mount() {
   std::shared_ptr<MountImpl> existing = mount_.lock();
   if (existing != nullptr) {
     return Mount(existing);
   }
-  auto impl = std::shared_ptr<MountImpl>(
-      mountImpl([this]() { unmountImpl(); }).release());
+  MountImpl::MountResult mount_result = mountImpl([this]() { unmountImpl(); });
+  if (mount_result.status != kOk) {
+    return Mount(mount_result.status);
+  }
+  auto impl = std::shared_ptr<MountImpl>(mount_result.mount.release());
   if (impl == nullptr) {
     return Mount(kMountError);
   }
