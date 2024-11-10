@@ -1,4 +1,4 @@
-#include "roo_io/fs/esp32/sdfs_spi.h"
+#include "roo_io/fs/esp32/sdspi.h"
 
 #if defined(ROO_TESTING)
 
@@ -17,7 +17,7 @@
 namespace roo_io {
 namespace esp32 {
 
-SdFsSpi::SdFsSpi(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
+SdSpiFs::SdSpiFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
                  uint8_t pin_cs, spi_host_device_t spi_host)
     : spi_host_(spi_host),
       pin_sck_((gpio_num_t)pin_sck),
@@ -29,23 +29,23 @@ SdFsSpi::SdFsSpi(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
       format_if_empty_(false),
       spi_frequency_(20000000) {}
 
-const char* SdFsSpi::mount_point() const { return mount_point_.c_str(); }
+const char* SdSpiFs::mount_point() const { return mount_point_.c_str(); }
 
-void SdFsSpi::set_mount_point(const char* mount_point) {
+void SdSpiFs::set_mount_point(const char* mount_point) {
   mount_point_ = mount_point;
 }
 
-uint8_t SdFsSpi::max_files() const { return max_files_; }
+uint8_t SdSpiFs::max_files() const { return max_files_; }
 
-void SdFsSpi::set_max_files(uint8_t max_files) { max_files_ = max_files; }
+void SdSpiFs::set_max_files(uint8_t max_files) { max_files_ = max_files; }
 
-bool SdFsSpi::format_if_empty() const { return format_if_empty_; }
+bool SdSpiFs::format_if_empty() const { return format_if_empty_; }
 
-void SdFsSpi::set_format_if_empty(bool format_if_empty) {
+void SdSpiFs::set_format_if_empty(bool format_if_empty) {
   format_if_empty_ = format_if_empty;
 }
 
-MountImpl::MountResult SdFsSpi::mountImpl(std::function<void()> unmount_fn) {
+MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   LOG(INFO) << "Mounting SD card";
 #if defined(ROO_TESTING)
   mount_base_path_ = FakeEsp32().fs_root();
@@ -103,7 +103,7 @@ MountImpl::MountResult SdFsSpi::mountImpl(std::function<void()> unmount_fn) {
       new PosixMountImpl(mount_base_path_.c_str(), false, unmount_fn)));
 }
 
-void SdFsSpi::unmountImpl() {
+void SdSpiFs::unmountImpl() {
   LOG(INFO) << "Unmounting SD card";
   CHECK_NOTNULL(card_);
 
