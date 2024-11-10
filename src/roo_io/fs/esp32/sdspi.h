@@ -9,6 +9,7 @@ namespace esp32 {
 
 class SdSpiFs : public Filesystem {
  public:
+  SdSpiFs();
   SdSpiFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
           spi_host_device_t spi_host = HSPI_HOST);
 
@@ -20,6 +21,9 @@ class SdSpiFs : public Filesystem {
 
   bool format_if_empty() const;
   void set_format_if_empty(bool format_if_empty);
+
+  void spi_config(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
+                  uint8_t pin_cs, spi_host_device_t spi_host = HSPI_HOST);
 
  protected:
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
@@ -42,6 +46,8 @@ class SdSpiFs : public Filesystem {
   std::string mount_base_path_;
   sdmmc_card_t* card_;
 };
+
+extern SdSpiFs SDSPI;
 
 }  // namespace esp32
 }  // namespace roo_io

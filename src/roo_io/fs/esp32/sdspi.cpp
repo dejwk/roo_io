@@ -29,6 +29,29 @@ SdSpiFs::SdSpiFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
       format_if_empty_(false),
       spi_frequency_(20000000) {}
 
+void SdSpiFs::spi_config(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
+                         uint8_t pin_cs, spi_host_device_t spi_host) {
+  pin_sck_ = (gpio_num_t)pin_sck;
+  pin_miso_ = (gpio_num_t)pin_miso;
+  pin_mosi_ = (gpio_num_t)pin_mosi;
+  pin_cs_ = (gpio_num_t)pin_cs;
+  spi_host_ = spi_host;
+}
+
+#if CONFIG_IDF_TARGET_ESP32
+
+SdSpiFs::SdSpiFs() : SdSpiFs(18, 19, 23, -1, HSPI_HOST) {}
+
+#elif CONFIG_IDF_TARGET_ESP32S2
+
+SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, HSPI_HOST) {}
+
+#else
+
+SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, HSPI_HOST) {}
+
+#endif
+
 const char* SdSpiFs::mount_point() const { return mount_point_.c_str(); }
 
 void SdSpiFs::set_mount_point(const char* mount_point) {
@@ -115,6 +138,8 @@ void SdSpiFs::unmountImpl() {
   card_ = nullptr;
   mount_base_path_.clear();
 }
+
+SdSpiFs SDSPI;
 
 }  // namespace esp32
 }  // namespace roo_io
