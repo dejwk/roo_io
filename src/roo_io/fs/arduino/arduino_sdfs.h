@@ -19,7 +19,7 @@ class ArduinoSdFs : public Filesystem {
   void unmountImpl() override;
 
   SDFS& sd_;
-  SPIClass& spi_;
+  decltype(SPI)& spi_;
   uint8_t ss_pin_;
   uint32_t frequency_;
 };
