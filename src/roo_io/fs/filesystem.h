@@ -149,9 +149,17 @@ class Mount {
 
 class Filesystem {
  public:
+  enum MediaPresence {
+    kMediaAbsent = 0,
+    kMediaPresent = 1,
+    kMediaPresenceUnknown = 2
+  };
+
   Mount mount();
 
   bool isMounted() const { return !mount_.expired(); }
+
+  virtual MediaPresence checkMediaPresence() = 0;
 
  protected:
   Filesystem() = default;

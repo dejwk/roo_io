@@ -77,24 +77,24 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
 #endif
   mount_base_path_.append(mount_point_);
 
-  spi_bus_config_t spi_cfg = {.mosi_io_num = pin_mosi_,
-                              .miso_io_num = pin_miso_,
-                              .sclk_io_num = pin_sck_,
-                              .quadwp_io_num = -1,
-                              .quadhd_io_num = -1,
-                              .data4_io_num = -1,
-                              .data5_io_num = -1,
-                              .data6_io_num = -1,
-                              .data7_io_num = -1,
-                              .max_transfer_sz = 0,
-                              .flags = 0,
-                              .intr_flags = 0};
-  esp_err_t ret;
-  ret = spi_bus_initialize(spi_host_, &spi_cfg, SDSPI_DEFAULT_DMA);
-  if (ret != ESP_OK) {
-    LOG(ERROR) << "Failed to initialize bus.";
-    return MountImpl::MountError(kMountError);
-  }
+  // spi_bus_config_t spi_cfg = {.mosi_io_num = pin_mosi_,
+  //                             .miso_io_num = pin_miso_,
+  //                             .sclk_io_num = pin_sck_,
+  //                             .quadwp_io_num = -1,
+  //                             .quadhd_io_num = -1,
+  //                             .data4_io_num = -1,
+  //                             .data5_io_num = -1,
+  //                             .data6_io_num = -1,
+  //                             .data7_io_num = -1,
+  //                             .max_transfer_sz = 0,
+  //                             .flags = 0,
+  //                             .intr_flags = 0};
+  // esp_err_t ret;
+  // ret = spi_bus_initialize(spi_host_, &spi_cfg, SDSPI_DEFAULT_DMA);
+  // if (ret != ESP_OK) {
+  //   LOG(ERROR) << "Failed to initialize bus.";
+  //   return MountImpl::MountError(kMountError);
+  // }
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
   sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
@@ -106,8 +106,8 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
       .max_files = max_files_,
       .allocation_unit_size = 16 * 1024};
 
-  ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
-                                &mount_config, &card_);
+  esp_err_t ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host,
+                                          &dev_config, &mount_config, &card_);
 
   if (ret != ESP_OK) {
     if (ret == ESP_FAIL) {
@@ -134,9 +134,13 @@ void SdSpiFs::unmountImpl() {
   if (ret != ESP_OK) {
     LOG(ERROR) << "Unmounting card failed: " << esp_err_to_name(ret);
   }
-  spi_bus_free(spi_host_);
+  // spi_bus_free(spi_host_);
   card_ = nullptr;
   mount_base_path_.clear();
+}
+
+Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
+  return kMediaPresenceUnknown;
 }
 
 SdSpiFs SDSPI;

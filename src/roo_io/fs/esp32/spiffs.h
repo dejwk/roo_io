@@ -22,6 +22,8 @@ class SpiffsFs : public Filesystem {
   bool format_if_empty() const;
   void set_format_if_empty(bool format_if_empty);
 
+  MediaPresence checkMediaPresence() override;
+
  protected:
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 

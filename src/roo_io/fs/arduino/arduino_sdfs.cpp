@@ -17,6 +17,10 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
 
 void ArduinoSdFs::unmountImpl() { sd_.end(); }
 
+Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
+  return sd_.totalBytes() > 0 ? kMediaPresent : kMediaAbsent;
+}
+
 ArduinoSdFs SD;
 
 }  // namespace roo_io

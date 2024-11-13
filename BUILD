@@ -20,6 +20,7 @@ cc_library(
         "//roo_testing/frameworks/esp-idf-v4.4.1/components/fatfs",
         "//roo_testing/frameworks/esp-idf-v4.4.1/components/spiffs",
         "//roo_testing/frameworks/esp-idf-v4.4.1/components/driver:sdspi",
+        "//roo_testing/libraries/SdFat",
     ],
 )
 

@@ -1,4 +1,11 @@
 #include "roo_io/fs/sdfat/sdfat_spi.h"
+#include "roo_io/fs/sdfat/sdfat_mount.h"
+
+#ifdef ROO_TESTING
+#include <string>
+#include "roo_testing/devices/microcontroller/esp32/fake_esp32.h"
+#include "roo_io/fs/posix/posix_mount.h"
+#endif
 
 namespace roo_io {
 
@@ -13,13 +20,33 @@ SdFatSpiFs::SdFatSpiFs(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin,
       ss_pin_(ss_pin),
       frequency_(freq) {}
 
+Filesystem::MediaPresence SdFatSpiFs::checkMediaPresence() {
+  if (isMounted()) {
+    cid_t cid;
+    return sd_.card()->readCID(&cid) ? kMediaPresent : kMediaAbsent;
+  } else {
+    bool ok = sd_.cardBegin(SdSpiConfig(ss_pin_, SHARED_SPI, frequency_, &spi_));
+    if (ok) {
+      sd_.end();
+    }
+    return ok ? kMediaPresent : kMediaAbsent;
+  }
+}
+
 MountImpl::MountResult SdFatSpiFs::mountImpl(std::function<void()> unmount_fn) {
   long time = millis();
   if (!sd_.begin(SdSpiConfig(ss_pin_, SHARED_SPI, frequency_, &spi_))) {
     return MountImpl::MountError(kMountError);
   }
+#ifdef ROO_TESTING
+  std::string mount_point = FakeEsp32().fs_root();
+  mount_point += "/sd";
+  return MountImpl::Mounted(
+      std::unique_ptr<MountImpl>(new PosixMountImpl(mount_point.c_str(), false, unmount_fn)));
+#else
   return MountImpl::Mounted(
       std::unique_ptr<MountImpl>(new SdFatMountImpl(sd_, false, unmount_fn)));
+#endif
 }
 
 void SdFatSpiFs::unmountImpl() {

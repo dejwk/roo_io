@@ -13,6 +13,8 @@ class ArduinoSdFs : public Filesystem {
   ArduinoSdFs(uint8_t ss_pin = SS, SDFS& sd = ::SD, SPIClass& spi = SPI,
               uint32_t freq = 20000000);
 
+  MediaPresence checkMediaPresence() override;
+
  protected:
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 

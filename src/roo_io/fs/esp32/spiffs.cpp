@@ -8,8 +8,13 @@
 
 #if (defined(ESP32) || defined(ROO_TESTING))
 
+#include "esp32-hal.h"
 #include "esp_spiffs.h"
 #include "roo_io/fs/posix/posix_mount.h"
+
+#if !defined(MLOG_roo_io)
+#define MLOG_roo_io 0
+#endif
 
 namespace roo_io {
 namespace esp32 {
@@ -47,7 +52,7 @@ void SpiffsFs::set_format_if_empty(bool format_if_empty) {
 }
 
 MountImpl::MountResult SpiffsFs::mountImpl(std::function<void()> unmount_fn) {
-  LOG(INFO) << "Mounting SPIFFS";
+  MLOG(roo_io) << "Mounting SPIFFS";
   std::string mount_base_path;
 #if defined(ROO_TESTING)
   mount_base_path = FakeEsp32().fs_root();
@@ -66,46 +71,39 @@ MountImpl::MountResult SpiffsFs::mountImpl(std::function<void()> unmount_fn) {
     }
   }
   if (ret != ESP_OK) {
-    log_e("Mounting SPIFFS failed! Error: %d", ret);
+    LOG(ERROR) << "Mounting SPIFFS failed! Error: " << esp_err_to_name(ret);
     return MountImpl::MountError(kMountError);
   }
-
-  if (ret != ESP_OK) {
-    if (ret == ESP_FAIL) {
-      LOG(ERROR) << "Failed to mount filesystem. "
-                    "If you want the card to be formatted, set the "
-                    "EXAMPLE_FORMAT_IF_MOUNT_FAILED menuconfig option.";
-    } else {
-      LOG(ERROR) << "Failed to initialize the card (%s). "
-                    "Make sure SD card lines have pull-up resistors in place."
-                 << esp_err_to_name(ret);
-    }
-    return MountImpl::MountError(kMountError);
-  }
-
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mount_base_path.c_str(), false, unmount_fn)));
 }
 
 void SpiffsFs::unmountImpl() {
-  LOG(INFO) << "Unmounting SPIFFS";
+  MLOG(roo_io) << "Unmounting SPIFFS";
   esp_err_t err = esp_vfs_spiffs_unregister(partition_label());
   if (err) {
-    log_e("Unmounting SPIFFS failed! Error: %d", err);
+    LOG(ERROR) << "Unmounting SPIFFS failed! Error: " << esp_err_to_name(err);
     return;
   }
   mounted_partition_label_.clear();
 }
 
 Status SpiffsFs::format() {
-  // disableCore0WDT();
-  // esp_err_t err = esp_SpiffsFs_format(partition_label_.c_str());
-  // enableCore0WDT();
-  // if (err) {
-  //   // log_e("Formatting SpiffsFs failed! Error: %d", err);
-  //   return kUnknownIOError;
-  // }
+  disableCore0WDT();
+  esp_err_t err = esp_spiffs_format(partition_label_.c_str());
+  enableCore0WDT();
+  if (err) {
+    LOG(ERROR) << "Formatting SpiffsFs failed! Error: " << esp_err_to_name(err);
+    return kUnknownIOError;
+  }
   return kOk;
+}
+
+Filesystem::MediaPresence SpiffsFs::checkMediaPresence() {
+  if (isMounted()) return Filesystem::kMediaPresent;
+  Mount m = mount();
+  if (m.ok()) return Filesystem::kMediaPresent;
+  return Filesystem::kMediaAbsent;
 }
 
 SpiffsFs SPIFFS;
