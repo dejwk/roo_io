@@ -129,4 +129,22 @@ unsigned int WriteByteArray(OutputIterator& out, const uint8_t* source,
   return written_total;
 }
 
+template <typename OutputIterator>
+void WriteVarU64(OutputIterator& out, uint64_t data) {
+  char buffer[10];
+  if (data <= 0x7F) {
+    // Fast-path and special-case for data == 0.
+    out.write(data);
+    return;
+  }
+
+  size_t size = 0;
+  while (data > 0) {
+    buffer[size++] = (uint8_t)((data & 0x7F) | 0x80);
+    data >>= 7;
+  }
+  buffer[size - 1] &= 0x7F;
+  out.write(buffer, size);
+}
+
 }  // namespace roo_io

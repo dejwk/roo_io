@@ -119,4 +119,20 @@ unsigned int ReadByteArray(InputIterator& in, uint8_t* result,
   return read_total;
 }
 
+template <typename InputIterator>
+uint64_t ReadVarU64(InputIterator& in) {
+  uint64_t result = 0;
+  int read;
+  int shift = 0;
+  do {
+    read = in.get();
+    if (in.status() != kOk) {
+      return 0;
+    }
+    result |= ((uint64_t)(read & 0x7F) << shift);
+    shift += 7;
+  } while ((read & 0x80) != 0);
+  return result;
+}
+
 }  // namespace roo_io
