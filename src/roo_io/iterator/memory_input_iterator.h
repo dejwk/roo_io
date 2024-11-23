@@ -25,8 +25,24 @@ class UnsafeMemoryIterator {
 
   PtrType ptr() const { return ptr_; }
 
- private:
+ protected:
   PtrType ptr_;
+};
+
+template <typename PtrType>
+class UnsafeMultipassMemoryIterator : public UnsafeMemoryIterator<PtrType> {
+ public:
+  SafeMultipassMemoryIterator(PtrType begin)
+      : SafeMemoryIterator(begin), begin_(begin) {}
+
+  uint64_t position() const { return ptr_ - begin_; }
+
+  void rewind() { ptr_ = begin_; }
+
+  void seek(uint64_t position) { ptr_ = begin_ + position; }
+
+ private:
+  PtrType begin_;
 };
 
 // Iterator that reads from memory, starting at the specified `begin` address,
@@ -69,9 +85,27 @@ class SafeMemoryIterator {
 
   Status status() const { return ptr_ == nullptr ? kEndOfStream : kOk; }
 
- private:
+  PtrType ptr() const { return ptr_; }
+
+ protected:
   PtrType ptr_;
   PtrType end_;
+};
+
+template <typename PtrType>
+class SafeMultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
+ public:
+  SafeMultipassMemoryIterator(PtrType begin, PtrType end)
+      : SafeMemoryIterator(begin, end), begin_(begin) {}
+
+  uint64_t position() const { return ptr_ - begin_; }
+
+  void rewind() { ptr_ = begin_; }
+
+  void seek(uint64_t position) { ptr_ = begin_ + position; }
+
+ private:
+  PtrType begin_;
 };
 
 }  // namespace roo_io
