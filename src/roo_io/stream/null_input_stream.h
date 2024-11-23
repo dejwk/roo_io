@@ -1,10 +1,10 @@
 #pragma once
 
-#include "roo_io/stream/random_access_input_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
-class NullInputStream : public RandomAccessInputStream {
+class NullInputStream : public MultipassInputStream {
  public:
   NullInputStream(Status error = kClosed) : status_(error) {}
 

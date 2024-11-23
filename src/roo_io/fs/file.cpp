@@ -22,9 +22,9 @@ const char* File::name() const { return status_ != kOk ? "" : file_->name(); }
 
 uint64_t File::size() const { return status_ != kOk ? 0 : file_->size(); }
 
-std::unique_ptr<RandomAccessInputStream> File::asInputStream() && {
+std::unique_ptr<MultipassInputStream> File::asInputStream() && {
   if (status_ != kOk) {
-    return std::unique_ptr<RandomAccessInputStream>(
+    return std::unique_ptr<MultipassInputStream>(
         new NullInputStream(status_));
   }
   return std::move(*file_).asInputStream();

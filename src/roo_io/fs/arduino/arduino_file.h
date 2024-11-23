@@ -6,9 +6,9 @@
 #include "roo_io/fs/arduino/arduino_file_input_stream.h"
 #include "roo_io/fs/arduino/arduino_file_output_stream.h"
 #include "roo_io/fs/file.h"
-#include "roo_io/stream/output_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 #include "roo_io/stream/null_input_stream.h"
-#include "roo_io/stream/random_access_input_stream.h"
+#include "roo_io/stream/output_stream.h"
 
 namespace roo_io {
 
@@ -33,19 +33,18 @@ class ArduinoFileImpl : public FileImpl {
 
   const char* name() const override { return file_.name(); }
 
-  std::unique_ptr<RandomAccessInputStream> asInputStream() && override {
-    return std::unique_ptr<RandomAccessInputStream>(
-        status_ == kOk
-            ? (RandomAccessInputStream*)new ArduinoFileInputStream(
-                  std::move(file_))
-            : (RandomAccessInputStream*)new NullInputStream(status_));
+  std::unique_ptr<MultipassInputStream> asInputStream() && override {
+    return std::unique_ptr<MultipassInputStream>(
+        status_ == kOk ? (MultipassInputStream*)new ArduinoFileInputStream(
+                             std::move(file_))
+                       : (MultipassInputStream*)new NullInputStream(status_));
   }
 
   std::unique_ptr<OutputStream> asOutputStream() && override {
     return std::unique_ptr<OutputStream>(
-        status_ == kOk ? (OutputStream*)new ArduinoFileOutputStream(
-                             std::move(file_))
-                       : (OutputStream*)new NullOutputStream(status_));
+        status_ == kOk
+            ? (OutputStream*)new ArduinoFileOutputStream(std::move(file_))
+            : (OutputStream*)new NullOutputStream(status_));
   }
 
  private:

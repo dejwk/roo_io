@@ -25,7 +25,7 @@ class FileIterable {
 
    private:
     Mount mount_;
-    std::unique_ptr<RandomAccessInputStream> input_;
+    std::unique_ptr<MultipassInputStream> input_;
     BufferedInputStreamIterator itr_;
   };
 

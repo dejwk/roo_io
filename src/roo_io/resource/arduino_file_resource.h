@@ -13,8 +13,8 @@ class ArduinoFileResource : public Resource {
  public:
   ArduinoFileResource(fs::FS& fs, String path) : fs_(fs), path_(std::move(path)) {}
 
-  std::unique_ptr<RandomAccessInputStream> open() const override {
-    return std::unique_ptr<RandomAccessInputStream>(
+  std::unique_ptr<MultipassInputStream> open() const override {
+    return std::unique_ptr<MultipassInputStream>(
         new ArduinoFileInputStream(fs_.open(path_)));
   }
 

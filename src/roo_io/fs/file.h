@@ -4,10 +4,10 @@
 
 #include <memory>
 
+#include "roo_io/stream/multipass_input_stream.h"
 #include "roo_io/stream/null_input_stream.h"
 #include "roo_io/stream/null_output_stream.h"
 #include "roo_io/stream/output_stream.h"
-#include "roo_io/stream/random_access_input_stream.h"
 
 namespace roo_io {
 
@@ -23,7 +23,7 @@ class FileImpl {
   virtual const char* path() const = 0;
   virtual const char* name() const = 0;
 
-  virtual std::unique_ptr<RandomAccessInputStream> asInputStream() && = 0;
+  virtual std::unique_ptr<MultipassInputStream> asInputStream() && = 0;
   virtual std::unique_ptr<OutputStream> asOutputStream() && = 0;
 
  protected:
@@ -50,7 +50,7 @@ class File {
 
   uint64_t size() const;
 
-  std::unique_ptr<RandomAccessInputStream> asInputStream() &&;
+  std::unique_ptr<MultipassInputStream> asInputStream() &&;
 
   std::unique_ptr<OutputStream> asOutputStream() &&;
 

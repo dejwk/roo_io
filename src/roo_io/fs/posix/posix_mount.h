@@ -25,7 +25,7 @@ class PosixMountImpl : public MountImpl {
 
   std::unique_ptr<DirectoryImpl> opendir(const char* path) override;
 
-  std::unique_ptr<RandomAccessInputStream> fopen(const char* path) override;
+  std::unique_ptr<MultipassInputStream> fopen(const char* path) override;
 
   std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) override;

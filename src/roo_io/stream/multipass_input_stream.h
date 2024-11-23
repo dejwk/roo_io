@@ -8,7 +8,7 @@ namespace roo_io {
 
 // Virtualizes access to files, memory, or other sources. Represents an 'open'
 // resource with a 'file pointer'.
-class RandomAccessInputStream : public InputStream {
+class MultipassInputStream : public InputStream {
  public:
   // Returns the size of the resource in bytes. The stream must be open.
   virtual uint64_t size() const = 0;
@@ -19,6 +19,11 @@ class RandomAccessInputStream : public InputStream {
 
   // Returns true on success.
   virtual bool seek(uint64_t offset) = 0;
+
+  // Returns true on success.
+  bool skip(uint64_t count) override {
+    return seek(position() + count);
+  }
 };
 
 }  // namespace roo_io

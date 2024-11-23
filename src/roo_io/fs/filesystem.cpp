@@ -150,8 +150,8 @@ std::unique_ptr<DirectoryImpl> DirectoryError(Status error) {
   return std::unique_ptr<DirectoryImpl>(new DirectoryErrorImpl(error));
 }
 
-std::unique_ptr<RandomAccessInputStream> InputError(Status error) {
-  return std::unique_ptr<RandomAccessInputStream>(new NullInputStream(error));
+std::unique_ptr<MultipassInputStream> InputError(Status error) {
+  return std::unique_ptr<MultipassInputStream>(new NullInputStream(error));
 }
 
 std::unique_ptr<OutputStream> OutputError(Status error) {

@@ -2,11 +2,11 @@
 
 #include <SdFat.h>
 
-#include "roo_io/stream/random_access_input_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
-class SdFatFileInputStream : public RandomAccessInputStream {
+class SdFatFileInputStream : public MultipassInputStream {
  public:
   SdFatFileInputStream(Status error) : file_(), status_(error) {}
 

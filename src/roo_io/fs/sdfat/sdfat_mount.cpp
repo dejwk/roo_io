@@ -95,7 +95,7 @@ std::unique_ptr<DirectoryImpl> SdFatMountImpl::opendir(const char* path) {
       new SdFatDirectoryImpl(path, std::move(f), kOk));
 }
 
-std::unique_ptr<RandomAccessInputStream> SdFatMountImpl::fopen(
+std::unique_ptr<MultipassInputStream> SdFatMountImpl::fopen(
     const char* path) {
   FsFile f = fs_.open(path, O_RDONLY);
   if (!f.isOpen()) {
@@ -105,7 +105,7 @@ std::unique_ptr<RandomAccessInputStream> SdFatMountImpl::fopen(
       return InputError(kOpenError);
     }
   }
-  return std::unique_ptr<RandomAccessInputStream>(
+  return std::unique_ptr<MultipassInputStream>(
       new SdFatFileInputStream(std::move(f)));
 }
 

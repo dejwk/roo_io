@@ -198,7 +198,7 @@ std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
   }
 }
 
-std::unique_ptr<RandomAccessInputStream> PosixMountImpl::fopen(
+std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(
     const char* path) {
   if (mount_point_ == nullptr) return InputError(kNotMounted);
   if (path == nullptr || path[0] != '/') {
@@ -208,7 +208,7 @@ std::unique_ptr<RandomAccessInputStream> PosixMountImpl::fopen(
   if (full_path.get() == nullptr) return InputError(kOutOfMemory);
   FILE* f = ::fopen(full_path.get(), "r");
   if (f != nullptr) {
-    return std::unique_ptr<RandomAccessInputStream>(
+    return std::unique_ptr<MultipassInputStream>(
         new PosixFileInputStream(f));
   }
   switch (errno) {

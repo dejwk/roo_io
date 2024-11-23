@@ -5,11 +5,11 @@
 #include <sys/stat.h>
 
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/stream/random_access_input_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
-class PosixFileInputStream : public RandomAccessInputStream {
+class PosixFileInputStream : public MultipassInputStream {
  public:
   PosixFileInputStream(Status error) : file_(nullptr), size_(-1), status_(error) {}
 

@@ -11,7 +11,7 @@ class Resource {
   Resource() = default;
   virtual ~Resource() = default;
 
-  virtual std::unique_ptr<RandomAccessInputStream> open() const = 0;
+  virtual std::unique_ptr<MultipassInputStream> open() const = 0;
 };
 
 }  // namespace roo_io

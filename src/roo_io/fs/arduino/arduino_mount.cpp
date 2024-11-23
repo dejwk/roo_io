@@ -89,19 +89,19 @@ std::unique_ptr<DirectoryImpl> ArduinoMountImpl::opendir(const char* path) {
       new ArduinoDirectoryImpl(std::move(f), status));
 }
 
-std::unique_ptr<RandomAccessInputStream> ArduinoMountImpl::fopen(
+std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
     const char* path) {
   fs::File f = fs_.open(path, "r");
   if (!f) {
     if (!fs_.exists(path)) {
-      return std::unique_ptr<RandomAccessInputStream>(
+      return std::unique_ptr<MultipassInputStream>(
           new NullInputStream(kNotFound));
     } else {
-      return std::unique_ptr<RandomAccessInputStream>(
+      return std::unique_ptr<MultipassInputStream>(
           new NullInputStream(kOpenError));
     }
   }
-  return std::unique_ptr<RandomAccessInputStream>(
+  return std::unique_ptr<MultipassInputStream>(
       new ArduinoFileInputStream(std::move(f)));
 }
 

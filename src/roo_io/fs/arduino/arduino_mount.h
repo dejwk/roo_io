@@ -7,6 +7,7 @@
 #include "roo_io/fs/arduino/arduino_directory.h"
 #include "roo_io/fs/arduino/arduino_file.h"
 #include "roo_io/fs/filesystem.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
@@ -28,7 +29,7 @@ class ArduinoMountImpl : public MountImpl {
 
   std::unique_ptr<DirectoryImpl> opendir(const char* path) override;
 
-  std::unique_ptr<RandomAccessInputStream> fopen(const char* path) override;
+  std::unique_ptr<MultipassInputStream> fopen(const char* path) override;
 
   std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) override;

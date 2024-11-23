@@ -5,6 +5,7 @@
 #include "roo_io/fs/directory.h"
 #include "roo_io/fs/file.h"
 #include "roo_io/status.h"
+#include "roo_io/stream/multipass_input_stream.h"
 #include "roo_logging.h"
 
 namespace roo_io {
@@ -69,7 +70,7 @@ class MountImpl {
 
   virtual std::unique_ptr<DirectoryImpl> opendir(const char* path) = 0;
 
-  virtual std::unique_ptr<RandomAccessInputStream> fopen(const char* path) = 0;
+  virtual std::unique_ptr<MultipassInputStream> fopen(const char* path) = 0;
 
   virtual std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) = 0;
@@ -116,8 +117,8 @@ class Mount {
                           : Directory(mount_->opendir(path));
   }
 
-  std::unique_ptr<RandomAccessInputStream> fopen(const char* path) {
-    return status_ != kOk ? std::unique_ptr<RandomAccessInputStream>(
+  std::unique_ptr<MultipassInputStream> fopen(const char* path) {
+    return status_ != kOk ? std::unique_ptr<MultipassInputStream>(
                                 new NullInputStream(status_))
                           : mount_->fopen(path);
   }
@@ -174,7 +175,7 @@ class Filesystem {
 };
 
 std::unique_ptr<DirectoryImpl> DirectoryError(Status error);
-std::unique_ptr<RandomAccessInputStream> InputError(Status error);
+std::unique_ptr<MultipassInputStream> InputError(Status error);
 std::unique_ptr<OutputStream> OutputError(Status error);
 
 const char* GetFileName(const char* path);

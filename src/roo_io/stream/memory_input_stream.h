@@ -5,7 +5,7 @@
 namespace roo_io {
 
 template <typename PtrType>
-class MemoryInputStream : public RandomAccessInputStream {
+class MemoryInputStream : public MultipassInputStream {
  public:
   MemoryInputStream(PtrType begin, PtrType end)
       : begin_(begin), end_(end), current_(begin) {}
