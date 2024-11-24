@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "roo_io/stream/random_access_input_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
