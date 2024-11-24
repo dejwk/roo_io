@@ -12,6 +12,7 @@ Stat ArduinoMountImpl::stat(const char* path) const {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!fs_.exists(path)) return Stat(kNotFound);
   fs::File f = fs_.open(path);
   if (!f) return Stat(kNotFound);
   return f.isDirectory() ? Stat(Stat::kDir, 0) : Stat(Stat::kFile, f.size());
@@ -45,9 +46,11 @@ Status ArduinoMountImpl::mkdir(const char* path) {
     return kInvalidPath;
   }
   {
-    fs::File f = fs_.open(path);
-    if (f) {
-      return f.isDirectory() ? kDirectoryExists : kFileExists;
+    if (fs_.exists(path)) {
+      fs::File f = fs_.open(path);
+      if (f) {
+        return f.isDirectory() ? kDirectoryExists : kFileExists;
+      }
     }
   }
   if (read_only_) return kReadOnlyFilesystem;
@@ -113,8 +116,8 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
   }
   fs::File f;
   if (update_policy == kFailIfExists) {
-    f = fs_.open(path);
-    if (f) {
+    if (fs_.exists(path)) {
+      f = fs_.open(path);
       return std::unique_ptr<OutputStream>(
           new NullOutputStream(f.isDirectory() ? kIsDirectory : kFileExists));
     }
@@ -123,7 +126,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     // Try to just open, but if it fails, check if not a directory to return a
     // more specific error.
     f = fs_.open(path, update_policy == kTruncateIfExists ? "w" : "a");
-    if (!f) {
+    if (!f && fs_.exists(path)) {
       f = fs_.open(path);
       if (f.isDirectory()) {
         return std::unique_ptr<OutputStream>(
