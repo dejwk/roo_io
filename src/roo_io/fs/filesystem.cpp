@@ -2,25 +2,6 @@
 
 namespace roo_io {
 
-namespace {
-
-Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
-  if (!dir.ok()) return dir.status();
-  dir.rewind();
-  // LOG(INFO) << "Recursively deleting directory " << file.path();
-  // file.rewindDirectory();
-  while (true) {
-    Directory::Entry entry = dir.read();
-    if (!dir.ok()) return dir.status();
-    if (entry.done()) break;
-    Status s = DeleteRecursively(fs, entry.path());
-    if (s != kOk) return s;
-  }
-  return kOk;
-}
-
-}  // namespace
-
 MountImpl::MountResult MountImpl::Mounted(
     std::unique_ptr<MountImpl> mount_impl) {
   return MountImpl::MountResult{.status = kOk, .mount = std::move(mount_impl)};
@@ -59,70 +40,6 @@ const char* GetFileName(const char* path) {
     p++;
   }
   return path + pos;
-}
-
-Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
-  Stat stat = fs.stat(path);
-  if (!stat.ok()) return stat.status();
-  if (stat.isFile()) {
-    return fs.remove(path);
-  } else {
-    Directory dir = fs.opendir(path);
-    if (!dir.ok()) return dir.status();
-    Status s = DeleteDirContentsRecursively(fs, dir);
-    if (s != kOk) return s;
-    return fs.rmdir(path);
-  }
-}
-
-// namespace {
-
-// int GetLongestSubdirName(const char* path) {
-//   int max = 0;
-//   int curr = 0;
-//   int beg = 0;
-//   int pos = beg;
-//   while (true) {
-//     while (path[pos] != 0 && path[pos] != '/') {
-//       ++curr;
-//       ++pos;
-//       if (curr > max) max = curr;
-//     }
-//     if (path[pos] == 0) return max;
-//     ++pos;
-//     beg = pos;
-//     curr = 0;
-//   }
-// }
-
-// }
-
-Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
-  Stat stat = fs.stat(path);
-  if (!stat.ok()) return stat.status();
-  if (stat.exists()) {
-    if (stat.isFile()) {
-      return kNotDirectory;
-    } else {
-      return kDirectoryExists;
-    }
-  }
-
-  std::unique_ptr<char[]> path_copy(strdup(path));
-  char* p = path_copy.get();
-  while (true) {
-    while (*p == '/') ++p;
-    while (*p != 0 && *p != '/') ++p;
-    bool end = (*p == 0);
-    if (!end) {
-      // Temporarily truncate.
-      *p = 0;
-    }
-    Status s = fs.mkdir(path_copy.get());
-    if (s != kOk && s != kDirectoryExists) return s;
-    if (end) return kOk;
-    *p = '/';
-  }
 }
 
 namespace {
