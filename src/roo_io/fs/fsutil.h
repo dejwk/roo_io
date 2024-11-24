@@ -12,6 +12,8 @@ Status DeleteRecursively(roo_io::Mount& fs, const char* path);
 
 Status MkDirRecursively(roo_io::Mount& fs, const char* path);
 
+Status MkParentDirRecursively(roo_io::Mount& fs, const char* path);
+
 MultipassInputStreamReader OpenDataFile(roo_io::Mount& fs, const char* path);
 
 OutputStreamWriter OpenDataFileForWrite(roo_io::Mount& fs, const char* path,

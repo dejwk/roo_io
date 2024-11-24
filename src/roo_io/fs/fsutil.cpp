@@ -63,6 +63,26 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
   }
 }
 
+Status MkParentDirRecursively(roo_io::Mount& fs, const char* path) {
+  Stat stat = fs.stat(path);
+  if (!stat.ok()) return stat.status();
+  if (stat.exists()) {
+    return kDirectoryExists;
+  }
+
+  std::unique_ptr<char[]> path_copy(strdup(path));
+  char* p = path_copy.get();
+  while (true) {
+    while (*p == '/') ++p;
+    while (*p != 0 && *p != '/') ++p;
+    if (*p == 0) return kOk;
+    *p = 0;
+    Status s = fs.mkdir(path_copy.get());
+    if (s != kOk && s != kDirectoryExists) return s;
+    *p = '/';
+  }
+}
+
 MultipassInputStreamReader OpenDataFile(roo_io::Mount& fs, const char* path) {
   return MultipassInputStreamReader(fs.fopen(path));
 }
