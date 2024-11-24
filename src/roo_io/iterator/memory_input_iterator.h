@@ -29,22 +29,6 @@ class UnsafeMemoryIterator {
   PtrType ptr_;
 };
 
-template <typename PtrType>
-class UnsafeMultipassMemoryIterator : public UnsafeMemoryIterator<PtrType> {
- public:
-  SafeMultipassMemoryIterator(PtrType begin)
-      : SafeMemoryIterator(begin), begin_(begin) {}
-
-  uint64_t position() const { return ptr_ - begin_; }
-
-  void rewind() { ptr_ = begin_; }
-
-  void seek(uint64_t position) { ptr_ = begin_ + position; }
-
- private:
-  PtrType begin_;
-};
-
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
 template <typename PtrType>
@@ -93,16 +77,17 @@ class SafeMemoryIterator {
 };
 
 template <typename PtrType>
-class SafeMultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
+class MultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
  public:
-  SafeMultipassMemoryIterator(PtrType begin, PtrType end)
-      : SafeMemoryIterator(begin, end), begin_(begin) {}
+  MultipassMemoryIterator(PtrType begin, PtrType end)
+      : SafeMemoryIterator<PtrType>(begin, end), begin_(begin) {}
 
-  uint64_t position() const { return ptr_ - begin_; }
+  uint64_t size() const { return SafeMemoryIterator<PtrType>::end_ - begin_; }
+  uint64_t position() const { return SafeMemoryIterator<PtrType>::ptr_ - begin_; }
 
-  void rewind() { ptr_ = begin_; }
+  void rewind() { SafeMemoryIterator<PtrType>::ptr_ = begin_; }
 
-  void seek(uint64_t position) { ptr_ = begin_ + position; }
+  void seek(uint64_t position) { SafeMemoryIterator<PtrType>::ptr_ = begin_ + position; }
 
  private:
   PtrType begin_;
