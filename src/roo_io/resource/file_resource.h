@@ -13,8 +13,8 @@ class FileResource : public Resource {
   FileResource(Filesystem& fs, std::string path)
       : fs_(fs), path_(std::move(path)) {}
 
-  std::unique_ptr<roo_io::InputStream> open() const override {
-    return fs_.mount().openForReading(path_.c_str()).asInputStream();
+  std::unique_ptr<roo_io::MultipassInputStream> open() const override {
+    return fs_.mount().fopen(path_.c_str());
   }
 
  private:
