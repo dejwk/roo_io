@@ -36,7 +36,7 @@ class FileIterable {
 
  private:
   Filesystem& fs_;
-  std::unique_ptr<char[]> path_;
+  std::shared_ptr<char[]> path_;
 };
 
 }  // namespace roo_io
