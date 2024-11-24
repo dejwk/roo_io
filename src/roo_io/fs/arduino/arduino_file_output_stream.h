@@ -29,6 +29,10 @@ class ArduinoFileOutputStream : public OutputStream {
     status_ = kClosed;
   }
 
+  void flush() override {
+    file_.flush();
+  }
+
   Status status() const override { return status_; }
 
  private:

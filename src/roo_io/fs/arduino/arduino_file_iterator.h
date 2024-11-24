@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory>
-
 #include <FS.h>
+
+#include <memory>
 
 namespace roo_io {
 
@@ -10,7 +10,7 @@ static const int kFileIteratorBufferSize = 64;
 
 class ArduinoFileIterator {
  public:
-  ArduinoFileIterator(File file) : rep_(new Rep(std::move(file))) {}
+  ArduinoFileIterator(::File file) : rep_(new Rep(std::move(file))) {}
 
   uint8_t read() { return rep_->read(); }
   void skip(uint32_t count) { rep_->skip(count); }
@@ -18,7 +18,7 @@ class ArduinoFileIterator {
  private:
   class Rep {
    public:
-    Rep(File file);
+    Rep(::File file);
     ~Rep();
     uint8_t read();
     int read(uint8_t* buf, int count);
@@ -30,7 +30,7 @@ class ArduinoFileIterator {
     Rep(Rep&&) = delete;
     Rep& operator=(const Rep&) = delete;
 
-    File file_;
+    ::File file_;
     uint8_t buffer_[kFileIteratorBufferSize];
     uint8_t offset_;
     uint8_t length_;
@@ -43,7 +43,7 @@ class ArduinoFileIterator {
   std::unique_ptr<Rep> rep_;
 };
 
-inline ArduinoFileIterator::Rep::Rep(File file)
+inline ArduinoFileIterator::Rep::Rep(::File file)
     : file_(std::move(file)), offset_(0), length_(0) {}
 
 inline ArduinoFileIterator::Rep::~Rep() { file_.close(); }
@@ -69,4 +69,4 @@ inline void ArduinoFileIterator::Rep::skip(uint32_t count) {
   }
 }
 
-} // namespace roo_io
+}  // namespace roo_io
