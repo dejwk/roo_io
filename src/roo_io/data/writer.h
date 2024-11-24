@@ -131,7 +131,7 @@ unsigned int WriteByteArray(OutputIterator& out, const uint8_t* source,
 
 template <typename OutputIterator>
 void WriteVarU64(OutputIterator& out, uint64_t data) {
-  char buffer[10];
+  uint8_t buffer[10];
   if (data <= 0x7F) {
     // Fast-path and special-case for data == 0.
     out.write(data);

@@ -125,7 +125,7 @@ uint64_t ReadVarU64(InputIterator& in) {
   int read;
   int shift = 0;
   do {
-    read = in.get();
+    read = in.read();
     if (in.status() != kOk) {
       return 0;
     }
