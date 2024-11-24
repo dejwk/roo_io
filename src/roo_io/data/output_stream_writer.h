@@ -13,8 +13,12 @@ class OutputStreamWriter {
  public:
   OutputStreamWriter() : out_() {}
 
+  OutputStreamWriter(OutputStreamWriter&& other) = default;
+
   OutputStreamWriter(std::unique_ptr<roo_io::OutputStream> os)
       : os_(std::move(os)), out_(*os_) {}
+
+  ~OutputStreamWriter() { close(); }
 
   void reset(std::unique_ptr<roo_io::OutputStream> os) {
     if (os_ != nullptr) os_->close();
@@ -26,8 +30,14 @@ class OutputStreamWriter {
     return out_.ok();
   }
 
+  void flush() {
+    if (os_ == nullptr) return;
+    out_.flush();
+  }
+
   void close() {
     if (os_ == nullptr) return;
+    out_.flush();
     os_->close();
     os_ = nullptr;
     out_.reset();

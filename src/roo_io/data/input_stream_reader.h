@@ -13,8 +13,12 @@ class InputStreamReader {
  public:
   InputStreamReader() : in_() {}
 
+  InputStreamReader(InputStreamReader&& other) = default;
+
   InputStreamReader(std::unique_ptr<roo_io::InputStream> is)
-      : is_(std::move(is)), in_(*is) {}
+      : is_(std::move(is)), in_(*is_) {}
+
+  ~InputStreamReader() { close(); }
 
   void reset(std::unique_ptr<roo_io::InputStream> is) {
     if (is_ != nullptr) is_->close();

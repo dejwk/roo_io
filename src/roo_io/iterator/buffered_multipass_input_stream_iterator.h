@@ -79,14 +79,14 @@ inline BufferedMultipassInputStreamIterator::Rep::Rep()
 
 inline BufferedMultipassInputStreamIterator::Rep::Rep(
     roo_io::MultipassInputStream& input)
-    : input_(&input), offset_(0), length_(0), status_(kOk) {}
+    : input_(&input), offset_(0), length_(0), status_(input.status()) {}
 
 inline void BufferedMultipassInputStreamIterator::Rep::reset(
     roo_io::MultipassInputStream* input) {
   input_ = input;
   offset_ = 0;
   length_ = 0;
-  status_ = input != nullptr && input->isOpen() ? kOk : kClosed;
+  status_ = input != nullptr ? input->status() : kClosed;
 }
 
 inline uint64_t BufferedMultipassInputStreamIterator::Rep::size() const {

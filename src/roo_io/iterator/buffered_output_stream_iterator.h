@@ -69,13 +69,13 @@ inline BufferedOutputStreamIterator::Rep::Rep()
     : output_(nullptr), offset_(0), status_(kClosed) {}
 
 inline BufferedOutputStreamIterator::Rep::Rep(roo_io::OutputStream& output)
-    : output_(&output), offset_(0), status_(kOk) {}
+    : output_(&output), offset_(0), status_(output.status()) {}
 
 inline void BufferedOutputStreamIterator::Rep::reset(
     roo_io::OutputStream* output) {
   output_ = output;
   offset_ = 0;
-  status_ = output != nullptr && output->isOpen() ? kOk : kClosed;
+  status_ = (output != nullptr) ? output->status() : kClosed;
 }
 
 inline void BufferedOutputStreamIterator::Rep::writeBuffer() {

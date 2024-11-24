@@ -65,14 +65,14 @@ inline BufferedInputStreamIterator::Rep::Rep()
     : input_(nullptr), offset_(0), length_(0), status_(kClosed) {}
 
 inline BufferedInputStreamIterator::Rep::Rep(roo_io::InputStream& input)
-    : input_(&input), offset_(0), length_(0), status_(kOk) {}
+    : input_(&input), offset_(0), length_(0), status_(input.status()) {}
 
 inline void BufferedInputStreamIterator::Rep::reset(
     roo_io::InputStream* input) {
   input_ = input;
   offset_ = 0;
   length_ = 0;
-  status_ = input != nullptr && input->isOpen() ? kOk : kClosed;
+  status_ = input != nullptr ? input->status() : kClosed;
 }
 
 inline uint8_t BufferedInputStreamIterator::Rep::read() {

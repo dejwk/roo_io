@@ -13,8 +13,12 @@ class MultipassInputStreamReader {
  public:
   MultipassInputStreamReader() : in_() {}
 
+  MultipassInputStreamReader(MultipassInputStreamReader&& other) = default;
+
   MultipassInputStreamReader(std::unique_ptr<roo_io::MultipassInputStream> is)
-      : is_(std::move(is)), in_(*is) {}
+      : is_(std::move(is)), in_(*is_) {}
+
+  ~MultipassInputStreamReader() { close(); }
 
   void reset(std::unique_ptr<roo_io::MultipassInputStream> is) {
     if (is_ != nullptr) is_->close();
