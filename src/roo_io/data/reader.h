@@ -1,6 +1,6 @@
 #pragma once
 
-#include "roo_io/byte_order.h"
+#include "roo_io/data/byte_order.h"
 #include "roo_io/iterator/input_iterator.h"
 
 namespace roo_io {
