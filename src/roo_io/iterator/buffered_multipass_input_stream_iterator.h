@@ -4,17 +4,17 @@
 #include <memory>
 
 #include "roo_io/iterator/input_iterator.h"
-#include "roo_io/stream/input_stream.h"
+#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
-static const size_t kInputStreamIteratorBufferSize = 64;
+static const size_t kMultipassInputStreamIteratorBufferSize = 64;
 
-class BufferedInputStreamIterator {
+class BufferedMultipassInputStreamIterator {
  public:
-  BufferedInputStreamIterator() : rep_(new Rep()) {}
+  BufferedMultipassInputStreamIterator() : rep_(new Rep()) {}
 
-  BufferedInputStreamIterator(roo_io::InputStream& input)
+  BufferedMultipassInputStreamIterator(roo_io::MultipassInputStream& input)
       : rep_(new Rep(input)) {}
 
   uint8_t read() { return rep_->read(); }
@@ -24,31 +24,44 @@ class BufferedInputStreamIterator {
   void skip(unsigned int count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
 
+  uint64_t size() const { return rep_->size(); }
+  uint64_t position() const { return rep_->position(); }
+
+  void rewind() { rep_->rewind(); }
+  bool seek(uint64_t position) { return rep_->seek(position); }
+
   bool ok() const { return status() == roo_io::kOk; }
   bool eos() const { return status() == roo_io::kEndOfStream; }
 
-  void reset(roo_io::InputStream& input) { rep_->reset(&input); }
+  void reset(roo_io::MultipassInputStream& input) { rep_->reset(&input); }
   void reset() { rep_->reset(nullptr); }
 
  private:
   class Rep {
    public:
     Rep();
-    Rep(roo_io::InputStream& input);
+    Rep(roo_io::MultipassInputStream& input);
     // ~Rep();
     uint8_t read();
     int read(uint8_t* buf, unsigned int count);
     void skip(unsigned int count);
+
     Status status() const { return status_; }
-    void reset(roo_io::InputStream* input);
+    void reset(roo_io::MultipassInputStream* input);
+
+    uint64_t size() const;
+    uint64_t position() const;
+
+    void rewind();
+    bool seek(uint64_t position);
 
    private:
     Rep(const Rep&) = delete;
     Rep(Rep&&);
     Rep& operator=(const Rep&);
 
-    roo_io::InputStream* input_;
-    uint8_t buffer_[kInputStreamIteratorBufferSize];
+    roo_io::MultipassInputStream* input_;
+    uint8_t buffer_[kMultipassInputStreamIteratorBufferSize];
     uint8_t offset_;
     uint8_t length_;
     Status status_;
@@ -61,26 +74,64 @@ class BufferedInputStreamIterator {
   std::unique_ptr<Rep> rep_;
 };
 
-inline BufferedInputStreamIterator::Rep::Rep()
+inline BufferedMultipassInputStreamIterator::Rep::Rep()
     : input_(nullptr), offset_(0), length_(0), status_(kClosed) {}
 
-inline BufferedInputStreamIterator::Rep::Rep(roo_io::InputStream& input)
+inline BufferedMultipassInputStreamIterator::Rep::Rep(
+    roo_io::MultipassInputStream& input)
     : input_(&input), offset_(0), length_(0), status_(kOk) {}
 
-inline void BufferedInputStreamIterator::Rep::reset(
-    roo_io::InputStream* input) {
+inline void BufferedMultipassInputStreamIterator::Rep::reset(
+    roo_io::MultipassInputStream* input) {
   input_ = input;
   offset_ = 0;
   length_ = 0;
   status_ = input != nullptr && input->isOpen() ? kOk : kClosed;
 }
 
-inline uint8_t BufferedInputStreamIterator::Rep::read() {
+inline uint64_t BufferedMultipassInputStreamIterator::Rep::size() const {
+  return input_->size();
+}
+
+inline uint64_t BufferedMultipassInputStreamIterator::Rep::position() const {
+  return input_->position() + offset_ - length_;
+}
+
+inline void BufferedMultipassInputStreamIterator::Rep::rewind() {
+  uint64_t file_pos = input_->position();
+  if (file_pos <= length_) {
+    // Keep the buffer data and length.
+    offset_ = 0;
+  } else {
+    // Reset the buffer.
+    input_->seek(0);
+    offset_ = 0;
+    length_ = 0;
+    status_ = input_->status();
+  }
+}
+
+inline bool BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
+  uint64_t file_pos = input_->position();
+  if (file_pos <= position + length_ && file_pos >= position) {
+    // Seek within the area we have in the buffer.
+    offset_ = position + length_ - file_pos;
+  } else {
+    // Seek outside the buffer. Just seek in the file and reset the buffer.
+    bool result = input_->seek(position);
+    offset_ = 0;
+    length_ = 0;
+    status_ = input_->status();
+    return result;
+  }
+}
+
+inline uint8_t BufferedMultipassInputStreamIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
   if (status_ != kOk) return 0;
-  int len = input_->read(buffer_, kInputStreamIteratorBufferSize);
+  int len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
   if (len <= 0) {
     offset_ = 0;
     length_ = 0;
@@ -92,8 +143,8 @@ inline uint8_t BufferedInputStreamIterator::Rep::read() {
   return buffer_[0];
 }
 
-inline int BufferedInputStreamIterator::Rep::read(uint8_t* buf,
-                                                  unsigned int count) {
+inline int BufferedMultipassInputStreamIterator::Rep::read(uint8_t* buf,
+                                                           unsigned int count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.
     if (count > (length_ - offset_)) count = length_ - offset_;
@@ -105,7 +156,7 @@ inline int BufferedInputStreamIterator::Rep::read(uint8_t* buf,
     // Already done; return the last status.
     status_ == kEndOfStream ? 0 : status_;
   }
-  if (count >= kInputStreamIteratorBufferSize) {
+  if (count >= kMultipassInputStreamIteratorBufferSize) {
     // Skip buffering; read directly into the client's buffer.
     int len = input_->read(buf, count);
     if (len <= 0) {
@@ -115,7 +166,7 @@ inline int BufferedInputStreamIterator::Rep::read(uint8_t* buf,
     }
     return len;
   }
-  int len = input_->read(buffer_, kInputStreamIteratorBufferSize);
+  int len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
   if (len <= 0) {
     offset_ = 0;
     length_ = 0;
@@ -129,7 +180,8 @@ inline int BufferedInputStreamIterator::Rep::read(uint8_t* buf,
   return count;
 }
 
-inline void BufferedInputStreamIterator::Rep::skip(unsigned int count) {
+inline void BufferedMultipassInputStreamIterator::Rep::skip(
+    unsigned int count) {
   unsigned int remaining = (length_ - offset_);
   if (count < remaining) {
     offset_ += count;

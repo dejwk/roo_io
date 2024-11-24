@@ -26,8 +26,10 @@ class BufferedOutputStreamIterator {
   void flush() { rep_->flush(); }
 
   Status status() const { return rep_->status(); }
+  bool ok() const { return status() == roo_io::kOk; }
 
-  void reset(roo_io::OutputStream& output) { rep_->reset(output); }
+  void reset() { rep_->reset(nullptr); }
+  void reset(roo_io::OutputStream& output) { rep_->reset(&output); }
 
  private:
   class Rep {
@@ -41,7 +43,8 @@ class BufferedOutputStreamIterator {
     void flush();
 
     Status status() const { return status_; }
-    void reset(roo_io::OutputStream& output);
+
+    void reset(roo_io::OutputStream* output);
 
    private:
     Rep(const Rep&) = delete;
@@ -69,10 +72,10 @@ inline BufferedOutputStreamIterator::Rep::Rep(roo_io::OutputStream& output)
     : output_(&output), offset_(0), status_(kOk) {}
 
 inline void BufferedOutputStreamIterator::Rep::reset(
-    roo_io::OutputStream& output) {
-  output_ = &output;
+    roo_io::OutputStream* output) {
+  output_ = output;
   offset_ = 0;
-  status_ = output.isOpen() ? kOk : kClosed;
+  status_ = output != nullptr && output->isOpen() ? kOk : kClosed;
 }
 
 inline void BufferedOutputStreamIterator::Rep::writeBuffer() {
