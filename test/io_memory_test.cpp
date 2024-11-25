@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "roo_io/data_reader.h"
+#include "roo_io/data/reader.h"
 #include "roo_io/iterator/memory_input_iterator.h"
 
 namespace roo_io {

@@ -2,7 +2,7 @@
 #include <memory>
 
 #include "gtest/gtest.h"
-#include "roo_io/fill.h"
+#include "roo_io/memory/fill.h"
 
 using namespace testing;
 
