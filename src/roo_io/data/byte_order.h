@@ -34,6 +34,13 @@ struct Swapper<uint16_t> {
 };
 
 template <>
+struct Swapper<uint64_t> {
+  constexpr uint64_t operator()(uint64_t in) const {
+    return BYTE_ORDER == LITTLE_ENDIAN ? htobe64(in) : htole64(in);
+  }
+};
+
+template <>
 struct Swapper<uint32_t> {
   constexpr uint32_t operator()(uint32_t in) const {
     return BYTE_ORDER == LITTLE_ENDIAN ? htobe32(in) : htole32(in);
@@ -64,6 +71,12 @@ constexpr storage_type Convert(storage_type in) {
 }
 
 }  // namespace byte_order
+
+// A convenience function that swaps the bytes in the integer type.
+template <typename storage_type>
+constexpr storage_type bswap(storage_type in) {
+  return byte_order::Swapper<storage_type>()(in);
+}
 
 // A convenience function to convert an integer type from
 // host-native byte order to the specified byte order.
