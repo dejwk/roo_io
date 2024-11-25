@@ -44,12 +44,12 @@ TEST(Load, SignedNegative) {
 
 TEST(Load, Float) {
   float num = 34664315.451;
-  EXPECT_EQ(num, LoadFloat((const uint8_t*)(const char*)&num));
+  EXPECT_EQ(num, LoadHostNative<float>((const uint8_t*)(const char*)&num));
 }
 
 TEST(Load, Double) {
   double num = 34664315.451;
-  EXPECT_EQ(num, LoadDouble((const uint8_t*)(const char*)&num));
+  EXPECT_EQ(num, LoadHostNative<double>((const uint8_t*)(const char*)&num));
 }
 
 }  // namespace roo_io

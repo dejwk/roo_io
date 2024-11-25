@@ -1,6 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstring>
 
 namespace roo_io {
 
@@ -86,16 +87,13 @@ inline constexpr int64_t LoadLeS64(const uint8_t *source) {
   return (int64_t)LoadLeU64(source);
 }
 
-// Loads a platform-native (implementation-dependent) single-precision float
-// from the specified memory address.
-inline constexpr float LoadFloat(const uint8_t *source) {
-  return *(float *)((const char *)source);
-}
-
-// Loads a platform-native (implementation-dependent) double-precision float
-// from the specified memory address.
-inline constexpr double LoadDouble(const uint8_t *source) {
-  return *(double *)((const char *)source);
+// Loads a platform-native (implementation-dependent) datum from the specified
+// memory address. T must be default-constructible and have trivial destructor.
+template <typename T>
+inline constexpr T LoadHostNative(const uint8_t *source) {
+  T result;
+  memcpy(&result, source, sizeof(result));
+  return result;
 }
 
 }  // namespace roo_io
