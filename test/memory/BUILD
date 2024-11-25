@@ -20,3 +20,14 @@ cc_test(
         "//lib/roo_io:testing",
     ],
 )
+
+cc_test(
+    name = "store_test",
+    srcs = [
+        "store_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+    ],
+)
