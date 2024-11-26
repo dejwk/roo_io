@@ -19,8 +19,8 @@ class BufferedOutputStreamIterator {
 
   void write(uint8_t v) { rep_->write(v); }
 
-  int write(const uint8_t* buf, unsigned int len) {
-    return rep_->write(buf, len);
+  unsigned int write(const uint8_t* buf, unsigned int count) {
+    return rep_->write(buf, count);
   }
 
   void flush() { rep_->flush(); }
@@ -39,7 +39,7 @@ class BufferedOutputStreamIterator {
     // ~Rep();
 
     void write(uint8_t v);
-    int write(const uint8_t* buf, unsigned int len);
+    unsigned int write(const uint8_t* buf, unsigned int count);
     void flush();
 
     Status status() const { return status_; }
@@ -93,8 +93,8 @@ inline void BufferedOutputStreamIterator::Rep::write(uint8_t v) {
   }
 }
 
-inline int BufferedOutputStreamIterator::Rep::write(const uint8_t* buf,
-                                                    unsigned int len) {
+inline unsigned int BufferedOutputStreamIterator::Rep::write(const uint8_t* buf,
+                                                             unsigned int len) {
   if (offset_ > 0 || len < kOutputStreamIteratorBufferSize) {
     int cap = kOutputStreamIteratorBufferSize - offset_;
     if (len > cap) len = cap;
@@ -105,7 +105,7 @@ inline int BufferedOutputStreamIterator::Rep::write(const uint8_t* buf,
     }
     return len;
   }
-  if (status_ != roo_io::kOk) return -1;
+  if (status_ != roo_io::kOk) return 0;
   int result = output_->writeFully(buf, len);
   if (result < len) {
     status_ = output_->status();
