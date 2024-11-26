@@ -4,8 +4,13 @@
 
 namespace roo_io {
 
-// Iterator that reads from memory, starting at the specified address. The
-// caller must ensure that the iterator does not overflow the input.
+// An 'infinite' iterator that reads from memory, starting at the specified
+// address. The caller must ensure that the iterator does not overflow the
+// actual input.
+//
+// Memory footprint is a single pointer (4 bytes on 32-bit architectures).
+//
+// Implements the 'input iterator' template contract.
 template <typename PtrType>
 class UnsafeMemoryIterator {
  public:
@@ -13,7 +18,7 @@ class UnsafeMemoryIterator {
 
   uint8_t read() { return *ptr_++; }
 
-  int read(uint8_t* result, unsigned int count) {
+  unsigned int read(uint8_t* result, unsigned int count) {
     memcpy(result, ptr_, count);
     ptr_ += count;
     return count;
@@ -31,6 +36,10 @@ class UnsafeMemoryIterator {
 
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
+//
+// Memory footprint is two pointers (8 bytes on 32-bit architectures).
+//
+// Implements the 'input iterator' template contract.
 template <typename PtrType>
 class SafeMemoryIterator {
  public:
@@ -44,7 +53,7 @@ class SafeMemoryIterator {
     return *ptr_++;
   }
 
-  int read(uint8_t* result, unsigned int count) {
+  unsigned int read(uint8_t* result, unsigned int count) {
     if (ptr_ == end_ || ptr_ == nullptr) {
       ptr_ = nullptr;
       return 0;
@@ -76,6 +85,12 @@ class SafeMemoryIterator {
   PtrType end_;
 };
 
+// Iterator that reads from memory, starting at the specified `begin` address,
+// and up to the specified `end` address.
+//
+// Memory footprint is three pointers (12 bytes on 32-bit architectures).
+//
+// Implements the 'multipass input iterator' template contract.
 template <typename PtrType>
 class MultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
  public:
@@ -83,11 +98,16 @@ class MultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
       : SafeMemoryIterator<PtrType>(begin, end), begin_(begin) {}
 
   uint64_t size() const { return SafeMemoryIterator<PtrType>::end_ - begin_; }
-  uint64_t position() const { return SafeMemoryIterator<PtrType>::ptr_ - begin_; }
+
+  uint64_t position() const {
+    return SafeMemoryIterator<PtrType>::ptr_ - begin_;
+  }
 
   void rewind() { SafeMemoryIterator<PtrType>::ptr_ = begin_; }
 
-  void seek(uint64_t position) { SafeMemoryIterator<PtrType>::ptr_ = begin_ + position; }
+  void seek(uint64_t position) {
+    SafeMemoryIterator<PtrType>::ptr_ = begin_ + position;
+  }
 
  private:
   PtrType begin_;

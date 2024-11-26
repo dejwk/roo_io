@@ -15,10 +15,10 @@ class UnsafeMemoryOutputIterator {
 
   void write(uint8_t v) { *ptr_++ = v; }
 
-  int write(const uint8_t* buf, unsigned int len) {
-    memcpy(ptr_, buf, len);
-    ptr_ += len;
-    return len;
+  unsigned int write(const uint8_t* buf, unsigned int count) {
+    memcpy(ptr_, buf, count);
+    ptr_ += count;
+    return count;
   }
 
   Status status() const { return kOk; }
@@ -45,17 +45,17 @@ class SafeMemoryOutputIterator {
     *ptr_++ = v;
   }
 
-  int write(const uint8_t* buf, unsigned int len) {
+  unsigned int write(const uint8_t* buf, unsigned int count) {
     if (ptr_ == nullptr) return -1;
-    if (len > end_ - ptr_) {
-      len = end_ - ptr_;
-      memcpy(ptr_, buf, len);
+    if (count > end_ - ptr_) {
+      count = end_ - ptr_;
+      memcpy(ptr_, buf, count);
       ptr_ = nullptr;
-      return len;
+      return count;
     }
-    memcpy(ptr_, buf, len);
-    ptr_ += len;
-    return len;
+    memcpy(ptr_, buf, count);
+    ptr_ += count;
+    return count;
   }
 
   Status status() const { return ptr_ == nullptr ? kNoSpaceLeftOnDevice : kOk; }
