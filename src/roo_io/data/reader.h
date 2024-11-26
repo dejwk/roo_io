@@ -7,11 +7,11 @@ namespace roo_io {
 
 // Helper to read various data structures from consecutive bytes, assuming a
 // specified byte order.
-template <int byte_order>
+template <ByteOrder byte_order>
 class DataReader;
 
 template <>
-class DataReader<BIG_ENDIAN> {
+class DataReader<kBigEndian> {
  public:
   template <typename InputIterator>
   constexpr uint16_t read_u16(InputIterator& in) const {
@@ -42,7 +42,7 @@ class DataReader<BIG_ENDIAN> {
 };
 
 template <>
-class DataReader<LITTLE_ENDIAN> {
+class DataReader<kLittleEndian> {
  public:
   template <typename InputIterator>
   constexpr uint16_t read_u16(InputIterator& in) const {
@@ -72,17 +72,17 @@ class DataReader<LITTLE_ENDIAN> {
   }
 };
 
-template <typename InputIterator, int byte_order>
+template <typename InputIterator, ByteOrder byte_order>
 constexpr uint16_t ReadU16(InputIterator& in) {
   return DataReader<byte_order>().read_u16(in);
 }
 
-template <typename InputIterator, int byte_order>
+template <typename InputIterator, ByteOrder byte_order>
 constexpr uint32_t ReadU24(InputIterator& in) {
   return DataReader<byte_order>().read_u24(in);
 }
 
-template <typename InputIterator, int byte_order>
+template <typename InputIterator, ByteOrder byte_order>
 constexpr uint32_t ReadU32(InputIterator& in) {
   return DataReader<byte_order>().read_u32(in);
 }
@@ -90,19 +90,19 @@ constexpr uint32_t ReadU32(InputIterator& in) {
 // Convenience helper to read network-encoded (big-endian) uint16.
 template <typename InputIterator>
 constexpr uint16_t ReadU16be(InputIterator& in) {
-  return DataReader<BIG_ENDIAN>().read_u16(in);
+  return DataReader<kBigEndian>().read_u16(in);
 }
 
 // Convenience helper to read network-encoded (big-endian) uint24.
 template <typename InputIterator>
 constexpr uint32_t ReadU24be(InputIterator& in) {
-  return DataReader<BIG_ENDIAN>().read_u24(in);
+  return DataReader<kBigEndian>().read_u24(in);
 }
 
 // Convenience helper to read network-encoded (big-endian) uint32.
 template <typename InputIterator>
 constexpr uint32_t ReadU32be(InputIterator& in) {
-  return DataReader<BIG_ENDIAN>().read_u32(in);
+  return DataReader<kBigEndian>().read_u32(in);
 }
 
 template <typename InputIterator>

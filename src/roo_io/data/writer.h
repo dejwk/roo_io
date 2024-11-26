@@ -7,11 +7,11 @@ namespace roo_io {
 
 // Helper to write numbers from consecutive bytes, assuming a specified
 // byte order.
-template <int byte_order>
+template <int ByteOrder>
 class DataWriter;
 
 template <>
-class DataWriter<BIG_ENDIAN> {
+class DataWriter<kBigEndian> {
  public:
   template <typename OutputIterator>
   constexpr void write_u16(OutputIterator& out, uint16_t v) const {
@@ -47,7 +47,7 @@ class DataWriter<BIG_ENDIAN> {
 };
 
 template <>
-class DataWriter<LITTLE_ENDIAN> {
+class DataWriter<kLittleEndian> {
  public:
   template <typename OutputIterator>
   constexpr void write_u16(OutputIterator& out, uint16_t v) const {
@@ -82,17 +82,17 @@ class DataWriter<LITTLE_ENDIAN> {
   }
 };
 
-template <typename OutputIterator, int byte_order>
+template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU16(OutputIterator& in, uint16_t v) {
   DataWriter<byte_order>().write_u16(in, v);
 }
 
-template <typename OutputIterator, int byte_order>
+template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU24(OutputIterator& in, uint32_t v) {
   DataWriter<byte_order>().write_u24(in, v);
 }
 
-template <typename OutputIterator, int byte_order>
+template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU32(OutputIterator& in, uint32_t v) {
   DataWriter<byte_order>().write_u32(in, v);
 }
@@ -100,19 +100,19 @@ constexpr void WriteU32(OutputIterator& in, uint32_t v) {
 // Convenience helper to write network-encoded (big-endian) uint16.
 template <typename OutputIterator>
 constexpr void WriteU16be(OutputIterator& in, uint16_t v) {
-  DataWriter<BIG_ENDIAN>().write_u16(in, v);
+  DataWriter<kBigEndian>().write_u16(in, v);
 }
 
 // Convenience helper to write network-encoded (big-endian) uint24.
 template <typename OutputIterator>
 constexpr void WriteU24be(OutputIterator& in, uint32_t v) {
-  DataWriter<BIG_ENDIAN>().write_u24(in, v);
+  DataWriter<kBigEndian>().write_u24(in, v);
 }
 
 // Convenience helper to write network-encoded (big-endian) uint32.
 template <typename OutputIterator>
 constexpr void WriteU32be(OutputIterator& in, uint32_t v) {
-  DataWriter<BIG_ENDIAN>().write_u32(in, v);
+  DataWriter<kBigEndian>().write_u32(in, v);
 }
 
 template <typename OutputIterator>
