@@ -4,12 +4,12 @@
 
 #include "roo_io/status.h"
 
-// Iterators define a template contract for streams of bytes, to be used for
-// performance-critical applications where it is desirable that byte reads are
-// inlined. An example application is to read byte-by-byte from a buffered file
-// stream.
+// Input iterators define a template contract for streams of bytes, to be used
+// for performance-critical applications where it is desirable that byte reads
+// are inlined. An example application is to read byte-by-byte from a buffered
+// file stream.
 
-// The most basic, 'input iterator' contract, is as follows:
+// The baseline 'input iterator' contract is as follows:
 //
 // class MyInputIterator {
 //  public:
@@ -58,7 +58,7 @@
 //   Status status() const;
 // };
 
-// The more advanced, 'multipass input iterator' contract is as follows:
+// The more advanced 'multipass input iterator' contract is as follows:
 //
 // class MyMultipassInputIterator {
 //  public:
