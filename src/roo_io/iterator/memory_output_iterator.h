@@ -29,11 +29,16 @@ class UnsafeMemoryOutputIterator {
   uint8_t* ptr_;
 };
 
-class SafeMemoryOutputIterator {
+// Iterator that writes to memory, starting at the specified address. Won't
+// write past the end address (returning kNoSpaceLeftOnDevice if such write is
+// attempted). must ensure that the iterator does not overflow the output.
+class MemoryOutputIterator {
  public:
-  SafeMemoryOutputIterator(uint8_t* ptr, const uint8_t* end)
+  MemoryOutputIterator(uint8_t* ptr, const uint8_t* end)
       : ptr_(ptr), end_(end) {}
 
+  // Writes `v`, or sets status to 'kNoSpaceLeftOnDevice' if there is no more
+  // space.
   void write(uint8_t v) {
     if (ptr_ == nullptr) {
       return;
@@ -45,8 +50,11 @@ class SafeMemoryOutputIterator {
     *ptr_++ = v;
   }
 
+  // Writes the `count` bytes, or writes as many bytes as possible and sets
+  // status to 'kNoSpaceLeftOnDevice' if there is not enough space to write
+  // `count` butes.
   unsigned int write(const uint8_t* buf, unsigned int count) {
-    if (ptr_ == nullptr) return -1;
+    if (ptr_ == nullptr) return 0;
     if (count > end_ - ptr_) {
       count = end_ - ptr_;
       memcpy(ptr_, buf, count);
