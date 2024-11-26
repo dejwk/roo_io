@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include "roo_io/iterator/input_iterator.h"
 
 namespace roo_io {
@@ -12,9 +14,9 @@ namespace roo_io {
 //
 // Implements the 'input iterator' template contract.
 template <typename PtrType>
-class UnsafeMemoryIterator {
+class UnsafeGenericMemoryIterator {
  public:
-  UnsafeMemoryIterator(PtrType ptr) : ptr_(ptr) {}
+  UnsafeGenericMemoryIterator(PtrType ptr) : ptr_(ptr) {}
 
   uint8_t read() { return *ptr_++; }
 
@@ -34,6 +36,8 @@ class UnsafeMemoryIterator {
   PtrType ptr_;
 };
 
+using UnsafeMemoryIterator = UnsafeGenericMemoryIterator<const uint8_t*>;
+
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
 //
@@ -41,9 +45,10 @@ class UnsafeMemoryIterator {
 //
 // Implements the 'input iterator' template contract.
 template <typename PtrType>
-class SafeMemoryIterator {
+class SafeGenericMemoryIterator {
  public:
-  SafeMemoryIterator(PtrType begin, PtrType end) : ptr_(begin), end_(end) {}
+  SafeGenericMemoryIterator(PtrType begin, PtrType end)
+      : ptr_(begin), end_(end) {}
 
   uint8_t read() {
     if (ptr_ == end_ || ptr_ == nullptr) {
@@ -66,7 +71,7 @@ class SafeMemoryIterator {
     return count;
   }
 
-  void skip(size_t count) {
+  void skip(unsigned int count) {
     if (ptr_ != nullptr) {
       if (end_ - ptr_ <= count) {
         ptr_ += count;
@@ -85,6 +90,8 @@ class SafeMemoryIterator {
   PtrType end_;
 };
 
+using SafeMemoryIterator = SafeGenericMemoryIterator<const uint8_t*>;
+
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
 //
@@ -92,25 +99,30 @@ class SafeMemoryIterator {
 //
 // Implements the 'multipass input iterator' template contract.
 template <typename PtrType>
-class MultipassMemoryIterator : public SafeMemoryIterator<PtrType> {
+class MultipassGenericMemoryIterator
+    : public SafeGenericMemoryIterator<PtrType> {
  public:
-  MultipassMemoryIterator(PtrType begin, PtrType end)
-      : SafeMemoryIterator<PtrType>(begin, end), begin_(begin) {}
+  MultipassGenericMemoryIterator(PtrType begin, PtrType end)
+      : SafeGenericMemoryIterator<PtrType>(begin, end), begin_(begin) {}
 
-  uint64_t size() const { return SafeMemoryIterator<PtrType>::end_ - begin_; }
-
-  uint64_t position() const {
-    return SafeMemoryIterator<PtrType>::ptr_ - begin_;
+  uint64_t size() const {
+    return SafeGenericMemoryIterator<PtrType>::end_ - begin_;
   }
 
-  void rewind() { SafeMemoryIterator<PtrType>::ptr_ = begin_; }
+  uint64_t position() const {
+    return SafeGenericMemoryIterator<PtrType>::ptr_ - begin_;
+  }
+
+  void rewind() { SafeGenericMemoryIterator<PtrType>::ptr_ = begin_; }
 
   void seek(uint64_t position) {
-    SafeMemoryIterator<PtrType>::ptr_ = begin_ + position;
+    SafeGenericMemoryIterator<PtrType>::ptr_ = begin_ + position;
   }
 
  private:
   PtrType begin_;
 };
+
+using MultipassMemoryIterator = MultipassGenericMemoryIterator<const uint8_t*>;
 
 }  // namespace roo_io

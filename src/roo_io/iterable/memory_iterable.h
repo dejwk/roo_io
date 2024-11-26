@@ -8,20 +8,22 @@
 namespace roo_io {
 
 template <typename PtrType>
-class UnsafeMemoryIterable {
+class UnsafeGenericMemoryIterable {
  public:
-  UnsafeMemoryIterable(PtrType ptr) : ptr_(ptr) {}
+  UnsafeGenericMemoryIterable(PtrType ptr) : ptr_(ptr) {}
 
-  UnsafeMemoryIterator<PtrType> iterator() const {
-    return UnsafeMemoryIterator<PtrType>(ptr_);
+  UnsafeGenericMemoryIterator<PtrType> iterator() const {
+    return UnsafeGenericMemoryIterator<PtrType>(ptr_);
   }
 
  private:
   PtrType ptr_;
 };
 
-using DramPtr = UnsafeMemoryIterable<uint8_t*>;
-using ConstDramPtr = UnsafeMemoryIterable<const uint8_t*>;
-using ProgMemPtr = UnsafeMemoryIterable<const uint8_t PROGMEM*>;
+using UnsafeMemoryIterable = UnsafeGenericMemoryIterable<const uint8_t*>;
+
+// using DramPtr = UnsafeMemoryIterable<uint8_t*>;
+// using ConstDramPtr = UnsafeMemoryIterable<const uint8_t*>;
+// using ProgMemPtr = UnsafeMemoryIterable<const uint8_t PROGMEM*>;
 
 }  // namespace roo_io
