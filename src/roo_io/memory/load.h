@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <cstring>
 
+#include "roo_io/data/byte_order.h"
+
 namespace roo_io {
 
 // Loads a big-endian unsigned 16-bit int from the specified memory address.
@@ -94,6 +96,315 @@ inline constexpr T LoadHostNative(const uint8_t *source) {
   T result;
   memcpy(&result, source, sizeof(result));
   return result;
+}
+
+// Variants that can be used in code templated on the byte order.
+
+// Loads an unsigned 16-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr uint16_t LoadU16(const uint8_t *source);
+
+// Loads an unsigned 24-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr uint32_t LoadU24(const uint8_t *source);
+
+// Loads an unsigned 32-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr uint32_t LoadU32(const uint8_t *source);
+
+// Loads an unsigned 64-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr uint64_t LoadU64(const uint8_t *source);
+
+// Loads a signed 16-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr int16_t LoadS16(const uint8_t *source);
+
+// Loads a signed 24-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr int32_t LoadS24(const uint8_t *source);
+
+// Loads a signed 32-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr int32_t LoadS32(const uint8_t *source);
+
+// Loads a signed 64-bit int from the specified memory address.
+template <ByteOrder byte_order>
+inline constexpr int64_t LoadS64(const uint8_t *source);
+
+// Variants that can be used in code templated on the storage type.
+
+// Loads a big-endian integer from the specified memory address.
+template <typename IntegerType>
+inline constexpr IntegerType LoadBeInteger(const uint8_t *source);
+
+// Loads a little-endian integer from the specified memory address.
+template <typename IntegerType>
+inline constexpr IntegerType LoadLeInteger(const uint8_t *source);
+
+// Variant that can be used in code templated on both the byte order and the
+// storage type.
+
+// Loads an integer from the specified memory address.
+template <ByteOrder byte_order, typename IntegerType>
+inline constexpr IntegerType LoadInteger(const uint8_t *source);
+
+// Implementation details below.
+
+template <>
+inline constexpr uint16_t LoadU16<kBigEndian>(const uint8_t *source) {
+  return LoadBeU16(source);
+}
+
+template <>
+inline constexpr uint16_t LoadU16<kLittleEndian>(const uint8_t *source) {
+  return LoadLeU16(source);
+}
+
+template <>
+inline constexpr uint32_t LoadU24<kBigEndian>(const uint8_t *source) {
+  return LoadBeU24(source);
+}
+
+template <>
+inline constexpr uint32_t LoadU24<kLittleEndian>(const uint8_t *source) {
+  return LoadLeU24(source);
+}
+
+template <>
+inline constexpr uint32_t LoadU32<kBigEndian>(const uint8_t *source) {
+  return LoadBeU32(source);
+}
+
+template <>
+inline constexpr uint32_t LoadU32<kLittleEndian>(const uint8_t *source) {
+  return LoadLeU32(source);
+}
+
+template <>
+inline constexpr uint64_t LoadU64<kBigEndian>(const uint8_t *source) {
+  return LoadBeU64(source);
+}
+
+template <>
+inline constexpr uint64_t LoadU64<kLittleEndian>(const uint8_t *source) {
+  return LoadLeU64(source);
+}
+
+template <>
+inline constexpr int16_t LoadS16<kBigEndian>(const uint8_t *source) {
+  return LoadBeS16(source);
+}
+
+template <>
+inline constexpr int16_t LoadS16<kLittleEndian>(const uint8_t *source) {
+  return LoadLeS16(source);
+}
+
+template <>
+inline constexpr int32_t LoadS24<kBigEndian>(const uint8_t *source) {
+  return LoadBeS24(source);
+}
+
+template <>
+inline constexpr int32_t LoadS24<kLittleEndian>(const uint8_t *source) {
+  return LoadLeS24(source);
+}
+
+template <>
+inline constexpr int32_t LoadS32<kBigEndian>(const uint8_t *source) {
+  return LoadBeS32(source);
+}
+
+template <>
+inline constexpr int32_t LoadS32<kLittleEndian>(const uint8_t *source) {
+  return LoadLeS32(source);
+}
+
+template <>
+inline constexpr int64_t LoadS64<kBigEndian>(const uint8_t *source) {
+  return LoadBeS64(source);
+}
+
+template <>
+inline constexpr int64_t LoadS64<kLittleEndian>(const uint8_t *source) {
+  return LoadLeS64(source);
+}
+
+template <>
+inline constexpr uint8_t LoadInteger<kBigEndian, uint8_t>(
+    const uint8_t *source) {
+  return *source;
+}
+
+template <>
+inline constexpr uint8_t LoadInteger<kLittleEndian, uint8_t>(
+    const uint8_t *source) {
+  return *source;
+}
+
+template <>
+inline constexpr uint16_t LoadInteger<kBigEndian, uint16_t>(
+    const uint8_t *source) {
+  return LoadBeU16(source);
+}
+
+template <>
+inline constexpr uint16_t LoadInteger<kLittleEndian, uint16_t>(
+    const uint8_t *source) {
+  return LoadLeU16(source);
+}
+
+template <>
+inline constexpr uint32_t LoadInteger<kBigEndian, uint32_t>(
+    const uint8_t *source) {
+  return LoadBeU32(source);
+}
+
+template <>
+inline constexpr uint32_t LoadInteger<kLittleEndian, uint32_t>(
+    const uint8_t *source) {
+  return LoadLeU32(source);
+}
+
+template <>
+inline constexpr uint64_t LoadInteger<kBigEndian, uint64_t>(
+    const uint8_t *source) {
+  return LoadBeU64(source);
+}
+
+template <>
+inline constexpr uint64_t LoadInteger<kLittleEndian, uint64_t>(
+    const uint8_t *source) {
+  return LoadLeU64(source);
+}
+
+template <>
+inline constexpr int8_t LoadInteger<kBigEndian, int8_t>(
+    const uint8_t *source) {
+  return (int8_t)*source;
+}
+
+template <>
+inline constexpr int8_t LoadInteger<kLittleEndian, int8_t>(
+    const uint8_t *source) {
+  return (int8_t)*source;
+}
+
+template <>
+inline constexpr int16_t LoadInteger<kBigEndian, int16_t>(
+    const uint8_t *source) {
+  return LoadBeS16(source);
+}
+
+template <>
+inline constexpr int16_t LoadInteger<kLittleEndian, int16_t>(
+    const uint8_t *source) {
+  return LoadLeS16(source);
+}
+
+template <>
+inline constexpr int32_t LoadInteger<kBigEndian, int32_t>(
+    const uint8_t *source) {
+  return LoadBeS32(source);
+}
+
+template <>
+inline constexpr int32_t LoadInteger<kLittleEndian, int32_t>(
+    const uint8_t *source) {
+  return LoadLeS32(source);
+}
+
+template <>
+inline constexpr int64_t LoadInteger<kBigEndian, int64_t>(
+    const uint8_t *source) {
+  return LoadBeS64(source);
+}
+
+template <>
+inline constexpr int64_t LoadInteger<kLittleEndian, int64_t>(
+    const uint8_t *source) {
+  return LoadLeS64(source);
+}
+
+template <>
+inline constexpr uint8_t LoadBeInteger<uint8_t>(const uint8_t *source) {
+  return *source;
+}
+
+template <>
+inline constexpr uint8_t LoadLeInteger<uint8_t>(const uint8_t *source) {
+  return *source;
+}
+
+template <>
+inline constexpr uint16_t LoadBeInteger<uint16_t>(const uint8_t *source) {
+  return LoadBeU16(source);
+}
+
+template <>
+inline constexpr uint16_t LoadLeInteger<uint16_t>(const uint8_t *source) {
+  return LoadLeU16(source);
+}
+
+template <>
+inline constexpr uint32_t LoadBeInteger<uint32_t>(const uint8_t *source) {
+  return LoadBeU32(source);
+}
+
+template <>
+inline constexpr uint32_t LoadLeInteger<uint32_t>(const uint8_t *source) {
+  return LoadLeU32(source);
+}
+
+template <>
+inline constexpr uint64_t LoadBeInteger<uint64_t>(const uint8_t *source) {
+  return LoadBeU64(source);
+}
+
+template <>
+inline constexpr uint64_t LoadLeInteger<uint64_t>(const uint8_t *source) {
+  return LoadLeU64(source);
+}
+
+template <>
+inline constexpr int8_t LoadBeInteger<int8_t>(const uint8_t *source) {
+  return (int8_t)*source;
+}
+
+template <>
+inline constexpr int8_t LoadLeInteger<int8_t>(const uint8_t *source) {
+  return (int8_t)*source;
+}
+
+template <>
+inline constexpr int16_t LoadBeInteger<int16_t>(const uint8_t *source) {
+  return LoadBeS16(source);
+}
+
+template <>
+inline constexpr int16_t LoadLeInteger<int16_t>(const uint8_t *source) {
+  return LoadLeS16(source);
+}
+
+template <>
+inline constexpr int32_t LoadBeInteger<int32_t>(const uint8_t *source) {
+  return LoadBeS32(source);
+}
+
+template <>
+inline constexpr int32_t LoadLeInteger<int32_t>(const uint8_t *source) {
+  return LoadLeS32(source);
+}
+
+template <>
+inline constexpr int64_t LoadBeInteger<int64_t>(const uint8_t *source) {
+  return LoadBeS64(source);
+}
+
+template <>
+inline constexpr int64_t LoadLeInteger<int64_t>(const uint8_t *source) {
+  return LoadLeS64(source);
 }
 
 }  // namespace roo_io
