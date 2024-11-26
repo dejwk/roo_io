@@ -48,6 +48,16 @@ TEST(UnsafeMemoryIterator, Skip) {
   EXPECT_EQ(kOk, itr.status());
 }
 
+TEST(UnsafeMemoryIterator, Movable) {
+  UnsafeMemoryIterator itr(data);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  UnsafeMemoryIterator itr2 = std::move(itr);
+  EXPECT_EQ('B', itr2.read());
+  EXPECT_EQ(kOk, itr2.status());
+}
+
 TEST(SafeMemoryIterator, Initialization) {
   MemoryIterator itr(data, data + 8);
   EXPECT_EQ(itr.ptr(), data);
@@ -122,6 +132,16 @@ TEST(SafeMemoryIterator, SkipPastEos) {
   EXPECT_EQ(kEndOfStream, itr.status());
   itr.skip(3);
   EXPECT_EQ(kEndOfStream, itr.status());
+}
+
+TEST(SafeMemoryIterator, Movable) {
+  MemoryIterator itr(data, data + 8);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  MemoryIterator itr2 = std::move(itr);
+  EXPECT_EQ('B', itr2.read());
+  EXPECT_EQ(kOk, itr2.status());
 }
 
 TEST(MultipassMemoryIterator, Initialization) {
@@ -250,6 +270,16 @@ TEST(MultipassMemoryIterator, ReadByByteWithSeek) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
+}
+
+TEST(MultipassMemoryIterator, Movable) {
+  MultipassMemoryIterator itr(data, data + 8);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  MultipassMemoryIterator itr2 = std::move(itr);
+  EXPECT_EQ('B', itr2.read());
+  EXPECT_EQ(kOk, itr2.status());
 }
 
 }

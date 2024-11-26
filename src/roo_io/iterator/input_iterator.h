@@ -13,6 +13,10 @@
 //
 // class MyInputIterator {
 //  public:
+//   // Iterator must be movable.
+//   //
+//   // MyInputIterator(MyInputIterator&& other);
+//
 //   // Reads a single byte, and updates `status()`.
 //   // The caller can rely on the returned value only if `status()` is `kOk`.
 //   // If the status was not 'kOk' prior to the call, leaves it as, is and
@@ -62,6 +66,10 @@
 //
 // class MyMultipassInputIterator {
 //  public:
+//   // Iterator must be movable.
+//   //
+//   MyMultipassInputIterator(MyMultipassInputIterator&& other);
+//
 //   // Same as in the 'input iterator' above.
 //   //
 //   uint8_t read();

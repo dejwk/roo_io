@@ -11,6 +11,10 @@
 
 // class MyOutputIterator {
 //  public:
+//   // Output iterator must be movable.
+//   //
+//   // MyOutputIterator(MyOutputIterator&& other);
+//
 //   // Writes a single byte. Updates `status()`.
 //   //
 //   // If the status is not `kOk` before the call, the call has no effect.

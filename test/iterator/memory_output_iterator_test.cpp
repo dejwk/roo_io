@@ -85,4 +85,20 @@ TEST(MemoryOutputIterator, WriteByBlockPastCapacity) {
   EXPECT_STREQ("ABCDE   ", (const char*)buf);
 }
 
+TEST(MemoryOutputIterator, Movable) {
+  uint8_t buf[] = "        ";
+  MemoryOutputIterator itr(buf, buf + 8);
+  EXPECT_EQ(buf, itr.ptr());
+  EXPECT_EQ(kOk, itr.status());
+  itr.write('A');
+  EXPECT_EQ(kOk, itr.status());
+  MemoryOutputIterator itr2 = std::move(itr);
+  EXPECT_EQ(kOk, itr2.status());
+  itr2.write('B');
+  EXPECT_EQ(kOk, itr2.status());
+  itr2.write('C');
+  EXPECT_EQ(kOk, itr2.status());
+  EXPECT_STREQ("ABC     ", (const char*)buf);
+}
+
 }
