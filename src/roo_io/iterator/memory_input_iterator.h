@@ -67,13 +67,13 @@ class SafeGenericMemoryIterator {
       count = end_ - ptr_;
     }
     memcpy(result, ptr_, count);
-    ptr_ = nullptr;
+    ptr_ += count;
     return count;
   }
 
   void skip(unsigned int count) {
     if (ptr_ != nullptr) {
-      if (end_ - ptr_ <= count) {
+      if (count <= end_ - ptr_) {
         ptr_ += count;
       } else {
         ptr_ = nullptr;
@@ -90,7 +90,7 @@ class SafeGenericMemoryIterator {
   PtrType end_;
 };
 
-using SafeMemoryIterator = SafeGenericMemoryIterator<const uint8_t*>;
+using MemoryIterator = SafeGenericMemoryIterator<const uint8_t*>;
 
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
