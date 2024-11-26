@@ -110,13 +110,16 @@ class MultipassGenericMemoryIterator
   }
 
   uint64_t position() const {
-    return SafeGenericMemoryIterator<PtrType>::ptr_ - begin_;
+    return SafeGenericMemoryIterator<PtrType>::ptr_ == nullptr
+               ? size()
+               : SafeGenericMemoryIterator<PtrType>::ptr_ - begin_;
   }
 
   void rewind() { SafeGenericMemoryIterator<PtrType>::ptr_ = begin_; }
 
   void seek(uint64_t position) {
-    SafeGenericMemoryIterator<PtrType>::ptr_ = begin_ + position;
+    SafeGenericMemoryIterator<PtrType>::ptr_ =
+        (position > size()) ? nullptr : begin_ + position;
   }
 
  private:

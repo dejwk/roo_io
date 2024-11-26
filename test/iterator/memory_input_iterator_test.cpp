@@ -124,4 +124,132 @@ TEST(SafeMemoryIterator, SkipPastEos) {
   EXPECT_EQ(kEndOfStream, itr.status());
 }
 
+TEST(MultipassMemoryIterator, Initialization) {
+  MultipassMemoryIterator itr(data, data + 8);
+  EXPECT_EQ(data, itr.ptr());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(8, itr.size());
+}
+
+TEST(MultipassMemoryIterator, Empty) {
+  MultipassMemoryIterator itr(data, data);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(0, itr.size());
+  itr.read();
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(0, itr.size());
+}
+
+TEST(MultipassMemoryIterator, ReadByByteWithRewind) {
+  MultipassMemoryIterator itr(data, data + 3);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(2, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.rewind();
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(2, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('C', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.read();
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.read();
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.rewind();
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+}
+
+TEST(MultipassMemoryIterator, ReadByByteWithSeek) {
+  MultipassMemoryIterator itr(data, data + 3);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(2);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(2, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('C', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(1);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(2, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(3);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.read();
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.read();
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(1);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(2, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(4);
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(100);
+  EXPECT_EQ(kEndOfStream, itr.status());
+  EXPECT_EQ(3, itr.position());
+  EXPECT_EQ(3, itr.size());
+  itr.seek(0);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(0, itr.position());
+  EXPECT_EQ(3, itr.size());
+  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(1, itr.position());
+  EXPECT_EQ(3, itr.size());
+}
+
 }

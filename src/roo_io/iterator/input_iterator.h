@@ -82,9 +82,11 @@
 //   // the beginning. The method can return different value each time it is
 //   // called, e.g. when the underlying data source is concurrently written to.
 //   //
-//   // If the status was not `kOk` prior to the call, leaves it as is and
-//   // returns zero. In case of error, updates the status accordingly,
-//   // and returns zero.
+//   // If the status was not `kOk` and not `kEndOfStream` at the time of the
+//   // call, leaves it as is and returns zero.
+//   //
+//   // In case of error, updates the status accordingly, and returns zero.
+//   //
 //   uint64_t size();
 //
 //   // Returns the current byte offset relative to the beginning of the stream.
