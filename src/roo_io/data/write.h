@@ -60,7 +60,7 @@ constexpr void WriteLeU64(OutputIterator& out, uint64_t v) {
 }
 
 template <typename OutputIterator>
-unsigned int WriteByteArray(OutputIterator& out, const uint8_t* source,
+unsigned int WriteByteArray(OutputIterator& out, const byte* source,
                             unsigned int count) {
   unsigned int written_total = 0;
   while (count > 0) {
@@ -75,7 +75,7 @@ unsigned int WriteByteArray(OutputIterator& out, const uint8_t* source,
 
 template <typename OutputIterator>
 void WriteVarU64(OutputIterator& out, uint64_t data) {
-  uint8_t buffer[10];
+  byte buffer[10];
   if (data <= 0x7F) {
     // Fast-path and special-case for data == 0.
     out.write(data);
@@ -84,7 +84,7 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
 
   size_t size = 0;
   while (data > 0) {
-    buffer[size++] = (uint8_t)((data & 0x7F) | 0x80);
+    buffer[size++] = (byte)((data & 0x7F) | 0x80);
     data >>= 7;
   }
   buffer[size - 1] &= 0x7F;

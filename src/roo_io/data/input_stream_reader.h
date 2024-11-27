@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "roo_io/data/byte_order.h"
-#include "roo_io/data/reader.h"
+#include "roo_io/data/read.h"
 #include "roo_io/iterator/buffered_input_stream_iterator.h"
 #include "roo_io/stream/input_stream.h"
 
@@ -33,7 +33,7 @@ class InputStreamReader {
     in_.reset();
   }
 
-  uint8_t read() { return is_ == nullptr ? 0 : in_.read(); }
+  byte read() { return is_ == nullptr ? 0 : in_.read(); }
 
   void skip(unsigned int count) {
     if (is_ != nullptr) in_.skip(count);
@@ -41,13 +41,15 @@ class InputStreamReader {
 
   Status status() const { return in_.status(); }
 
-  uint16_t readU16be() { return is_ == nullptr ? 0 : ReadU16be(in_); }
+  uint16_t readU8() { return is_ == nullptr ? 0 : ReadU8(in_); }
 
-  uint32_t readU24be() { return is_ == nullptr ? 0 : ReadU24be(in_); }
+  uint16_t readBeU16() { return is_ == nullptr ? 0 : ReadBeU16(in_); }
 
-  uint32_t readU32be() { return is_ == nullptr ? 0 : ReadU32be(in_); }
+  uint32_t readBeU24() { return is_ == nullptr ? 0 : ReadBeU24(in_); }
 
-  unsigned int readByteArray(uint8_t* result, unsigned int count) {
+  uint32_t readBeU32() { return is_ == nullptr ? 0 : ReadBeU32(in_); }
+
+  unsigned int readByteArray(byte* result, unsigned int count) {
     return (is_ == nullptr) ? 0 : ReadByteArray(in_, result, count);
   }
 

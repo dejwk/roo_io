@@ -12,7 +12,7 @@ class MemoryInputStream : public MultipassInputStream {
 
   bool isOpen() const override { return current_ != nullptr; }
 
-  int read(uint8_t* buf, unsigned int count) override {
+  int read(byte* buf, unsigned int count) override {
     if (current_ == nullptr) return -1;
     if (count > end_ - current_) {
       count = end_ - current_;

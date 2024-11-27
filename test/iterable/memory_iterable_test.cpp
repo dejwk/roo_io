@@ -4,7 +4,7 @@
 
 namespace roo_io {
 
-const uint8_t data[] = "ABCDEFGH";
+const byte data[] = "ABCDEFGH";
 
 TEST(UnsafeMemoryIterable, Basic) {
   UnsafeMemoryIterable obj(data);

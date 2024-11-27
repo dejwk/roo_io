@@ -17,9 +17,9 @@ class BufferedInputStreamIterator {
   BufferedInputStreamIterator(roo_io::InputStream& input)
       : rep_(new Rep(input)) {}
 
-  uint8_t read() { return rep_->read(); }
+  byte read() { return rep_->read(); }
 
-  int read(uint8_t* buf, unsigned int count) { return rep_->read(buf, count); }
+  int read(byte* buf, unsigned int count) { return rep_->read(buf, count); }
 
   void skip(unsigned int count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
@@ -36,8 +36,8 @@ class BufferedInputStreamIterator {
     Rep();
     Rep(roo_io::InputStream& input);
     // ~Rep();
-    uint8_t read();
-    int read(uint8_t* buf, unsigned int count);
+    byte read();
+    int read(byte* buf, unsigned int count);
     void skip(unsigned int count);
     Status status() const { return status_; }
     void reset(roo_io::InputStream* input);
@@ -48,9 +48,9 @@ class BufferedInputStreamIterator {
     Rep& operator=(const Rep&);
 
     roo_io::InputStream* input_;
-    uint8_t buffer_[kInputStreamIteratorBufferSize];
-    uint8_t offset_;
-    uint8_t length_;
+    byte buffer_[kInputStreamIteratorBufferSize];
+    byte offset_;
+    byte length_;
     Status status_;
   };
 
@@ -75,7 +75,7 @@ inline void BufferedInputStreamIterator::Rep::reset(
   status_ = input != nullptr ? input->status() : kClosed;
 }
 
-inline uint8_t BufferedInputStreamIterator::Rep::read() {
+inline byte BufferedInputStreamIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
@@ -92,7 +92,7 @@ inline uint8_t BufferedInputStreamIterator::Rep::read() {
   return buffer_[0];
 }
 
-inline int BufferedInputStreamIterator::Rep::read(uint8_t* buf,
+inline int BufferedInputStreamIterator::Rep::read(byte* buf,
                                                   unsigned int count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.

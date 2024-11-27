@@ -7,6 +7,12 @@ namespace roo_io {
 
 // Unsigned.
 
+// Reads an unsigned 8-bit int from the specified iterator.
+template <typename InputIterator>
+constexpr uint8_t ReadU8(InputIterator& in) {
+  return (uint8_t)in.read();
+}
+
 // Reads a big-endian unsigned 16-bit int from the specified iterator.
 template <typename InputIterator>
 constexpr uint16_t ReadBeU16(InputIterator& in) {
@@ -60,6 +66,12 @@ constexpr uint64_t ReadLeU64(InputIterator& in) {
 }
 
 // Signed.
+
+// Reads a signed 8-bit int from the specified iterator.
+template <typename InputIterator>
+constexpr int8_t ReadS8(InputIterator& in) {
+  return (int8_t)in.read();
+}
 
 // Reads a big-endian signed 16-bit int from the specified iterator.
 template <typename InputIterator>
@@ -119,7 +131,7 @@ constexpr int64_t ReadLeS64(InputIterator& in) {
 }
 
 template <typename InputIterator>
-unsigned int ReadByteArray(InputIterator& in, uint8_t* result,
+unsigned int ReadByteArray(InputIterator& in, byte* result,
                            unsigned int count) {
   unsigned int read_total = 0;
   while (count > 0) {
@@ -276,7 +288,8 @@ struct HostNativeReader {
   template <typename Itr>
   T read(Itr& itr) const {
     T result;
-    if (ReadByteArray(itr, (uint8_t*)&result, sizeof(result)) == sizeof(result)) {
+    if (ReadByteArray(itr, (byte*)&result, sizeof(result)) ==
+        sizeof(result)) {
       return result;
     }
     return T();

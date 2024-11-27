@@ -43,7 +43,7 @@ class OutputStreamWriter {
 
   Status status() const { return out_.status(); }
 
-  void write(uint8_t v) {
+  void write(byte v) {
     if (os_ != nullptr) out_.write(v);
   }
 
@@ -59,7 +59,7 @@ class OutputStreamWriter {
     if (os_ != nullptr) WriteBeU32(out_, v);
   }
 
-  unsigned int writeByteArray(const uint8_t* source, unsigned int count) {
+  unsigned int writeByteArray(const byte* source, unsigned int count) {
     return (os_ == nullptr) ? 0 : WriteByteArray(out_, source, count);
   }
 

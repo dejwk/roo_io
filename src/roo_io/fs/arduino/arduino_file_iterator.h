@@ -12,7 +12,7 @@ class ArduinoFileIterator {
  public:
   ArduinoFileIterator(::File file) : rep_(new Rep(std::move(file))) {}
 
-  uint8_t read() { return rep_->read(); }
+  byte read() { return rep_->read(); }
   void skip(uint32_t count) { rep_->skip(count); }
 
  private:
@@ -20,8 +20,8 @@ class ArduinoFileIterator {
    public:
     Rep(::File file);
     ~Rep();
-    uint8_t read();
-    int read(uint8_t* buf, int count);
+    byte read();
+    int read(byte* buf, int count);
     // void advance(uint32_t count);
     void skip(uint32_t count);
 
@@ -31,9 +31,9 @@ class ArduinoFileIterator {
     Rep& operator=(const Rep&) = delete;
 
     ::File file_;
-    uint8_t buffer_[kFileIteratorBufferSize];
-    uint8_t offset_;
-    uint8_t length_;
+    byte buffer_[kFileIteratorBufferSize];
+    byte offset_;
+    byte length_;
   };
 
   // We keep the content on the heap for the following reasons:
@@ -48,7 +48,7 @@ inline ArduinoFileIterator::Rep::Rep(::File file)
 
 inline ArduinoFileIterator::Rep::~Rep() { file_.close(); }
 
-inline uint8_t ArduinoFileIterator::Rep::read() {
+inline byte ArduinoFileIterator::Rep::read() {
   if (offset_ >= length_) {
     length_ = file_.read(buffer_, kFileIteratorBufferSize);
     offset_ = 0;

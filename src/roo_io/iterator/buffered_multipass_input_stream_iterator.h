@@ -17,9 +17,9 @@ class BufferedMultipassInputStreamIterator {
   BufferedMultipassInputStreamIterator(roo_io::MultipassInputStream& input)
       : rep_(new Rep(input)) {}
 
-  uint8_t read() { return rep_->read(); }
+  byte read() { return rep_->read(); }
 
-  int read(uint8_t* buf, unsigned int count) { return rep_->read(buf, count); }
+  int read(byte* buf, unsigned int count) { return rep_->read(buf, count); }
 
   void skip(unsigned int count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
@@ -42,8 +42,8 @@ class BufferedMultipassInputStreamIterator {
     Rep();
     Rep(roo_io::MultipassInputStream& input);
     // ~Rep();
-    uint8_t read();
-    int read(uint8_t* buf, unsigned int count);
+    byte read();
+    int read(byte* buf, unsigned int count);
     void skip(unsigned int count);
 
     Status status() const { return status_; }
@@ -61,9 +61,9 @@ class BufferedMultipassInputStreamIterator {
     Rep& operator=(const Rep&);
 
     roo_io::MultipassInputStream* input_;
-    uint8_t buffer_[kMultipassInputStreamIteratorBufferSize];
-    uint8_t offset_;
-    uint8_t length_;
+    byte buffer_[kMultipassInputStreamIteratorBufferSize];
+    byte offset_;
+    byte length_;
     Status status_;
   };
 
@@ -126,7 +126,7 @@ inline bool BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
   }
 }
 
-inline uint8_t BufferedMultipassInputStreamIterator::Rep::read() {
+inline byte BufferedMultipassInputStreamIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
@@ -143,7 +143,7 @@ inline uint8_t BufferedMultipassInputStreamIterator::Rep::read() {
   return buffer_[0];
 }
 
-inline int BufferedMultipassInputStreamIterator::Rep::read(uint8_t* buf,
+inline int BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
                                                            unsigned int count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.

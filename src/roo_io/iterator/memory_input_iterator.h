@@ -18,9 +18,9 @@ class UnsafeGenericMemoryIterator {
  public:
   UnsafeGenericMemoryIterator(PtrType ptr) : ptr_(ptr) {}
 
-  uint8_t read() { return *ptr_++; }
+  byte read() { return *ptr_++; }
 
-  unsigned int read(uint8_t* result, unsigned int count) {
+  unsigned int read(byte* result, unsigned int count) {
     memcpy(result, ptr_, count);
     ptr_ += count;
     return count;
@@ -36,7 +36,7 @@ class UnsafeGenericMemoryIterator {
   PtrType ptr_;
 };
 
-using UnsafeMemoryIterator = UnsafeGenericMemoryIterator<const uint8_t*>;
+using UnsafeMemoryIterator = UnsafeGenericMemoryIterator<const byte*>;
 
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
@@ -50,7 +50,7 @@ class SafeGenericMemoryIterator {
   SafeGenericMemoryIterator(PtrType begin, PtrType end)
       : ptr_(begin), end_(end) {}
 
-  uint8_t read() {
+  byte read() {
     if (ptr_ == end_ || ptr_ == nullptr) {
       ptr_ = nullptr;
       return 0;
@@ -58,7 +58,7 @@ class SafeGenericMemoryIterator {
     return *ptr_++;
   }
 
-  unsigned int read(uint8_t* result, unsigned int count) {
+  unsigned int read(byte* result, unsigned int count) {
     if (ptr_ == end_ || ptr_ == nullptr) {
       ptr_ = nullptr;
       return 0;
@@ -90,7 +90,7 @@ class SafeGenericMemoryIterator {
   PtrType end_;
 };
 
-using MemoryIterator = SafeGenericMemoryIterator<const uint8_t*>;
+using MemoryIterator = SafeGenericMemoryIterator<const byte*>;
 
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
@@ -126,6 +126,6 @@ class MultipassGenericMemoryIterator
   PtrType begin_;
 };
 
-using MultipassMemoryIterator = MultipassGenericMemoryIterator<const uint8_t*>;
+using MultipassMemoryIterator = MultipassGenericMemoryIterator<const byte*>;
 
 }  // namespace roo_io

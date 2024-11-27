@@ -6,7 +6,7 @@
 namespace roo_io {
 
 TEST(Read, Unsigned) {
-  uint8_t data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+  byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
   MultipassMemoryIterator itr(data, data + 8);
   EXPECT_EQ(ReadBeU16(itr), 0x1234);
   itr.rewind();
@@ -27,7 +27,7 @@ TEST(Read, Unsigned) {
 }
 
 TEST(Read, UnsignedTemplated) {
-  uint8_t data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+  byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
   MultipassMemoryIterator itr(data, data + 8);
   EXPECT_EQ(IntegerReader<kBigEndian>().readU16(itr), 0x1234);
   itr.rewind();
@@ -48,7 +48,7 @@ TEST(Read, UnsignedTemplated) {
 }
 
 TEST(Read, SignedNegative) {
-  uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
   MultipassMemoryIterator itr(data, data + 8);
 
   EXPECT_EQ(ReadBeS16(itr), -1 - 0x0001);
@@ -70,7 +70,7 @@ TEST(Read, SignedNegative) {
 }
 
 TEST(Read, SignedNegativeTemplated) {
-  uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
   MultipassMemoryIterator itr(data, data + 8);
 
   EXPECT_EQ(IntegerReader<kBigEndian>().readS16(itr), -1 - 0x0001);
@@ -94,13 +94,13 @@ TEST(Read, SignedNegativeTemplated) {
 
 TEST(Read, Float) {
   float num = 34664315.451;
-  UnsafeMemoryIterator itr((const uint8_t*)&num);
+  UnsafeMemoryIterator itr((const byte*)&num);
   EXPECT_EQ(num, HostNativeReader<float>().read(itr));
 }
 
 TEST(Read, Double) {
   double num = 34664315.451;
-  UnsafeMemoryIterator itr((const uint8_t*)&num);
+  UnsafeMemoryIterator itr((const byte*)&num);
   EXPECT_EQ(num, HostNativeReader<double>().read(itr));
 }
 

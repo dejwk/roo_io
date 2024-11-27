@@ -10,7 +10,7 @@ using namespace testing;
 
 namespace roo_io {
 
-void TrivialPatternFill(uint8_t* buf, const uint8_t* val, int pattern_size,
+void TrivialPatternFill(byte* buf, const byte* val, int pattern_size,
                         uint32_t repetitions) {
   while (repetitions-- > 0) {
     for (int i = 0; i < pattern_size; ++i) {
@@ -23,7 +23,7 @@ namespace {
 
 // Sets the nth bit (as specified by offset) in the specified buffer,
 // to the specified value.
-inline void fillBit(uint8_t* buf, uint32_t offset, bool value) {
+inline void fillBit(byte* buf, uint32_t offset, bool value) {
   buf += (offset / 8);
   offset %= 8;
   if (value) {
@@ -35,7 +35,7 @@ inline void fillBit(uint8_t* buf, uint32_t offset, bool value) {
 
 // Sets the nth nibble (as specified by offset) in the specified buffer,
 // to the specified value.
-inline void fillNibble(uint8_t* buf, uint32_t offset, uint8_t value) {
+inline void fillNibble(byte* buf, uint32_t offset, byte value) {
   buf += (offset / 2);
   offset %= 2;
   if (offset == 0) {
@@ -49,14 +49,14 @@ inline void fillNibble(uint8_t* buf, uint32_t offset, uint8_t value) {
 
 }  // namespace
 
-void TrivialBitFill(uint8_t* buf, uint32_t offset, int16_t count, bool value) {
+void TrivialBitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
   while (count-- > 0) {
     fillBit(buf, offset++, value);
   }
 }
 
-void TrivialNibbleFill(uint8_t* buf, uint32_t offset, int16_t count,
-                       uint8_t value) {
+void TrivialNibbleFill(byte* buf, uint32_t offset, int16_t count,
+                       byte value) {
   while (count-- > 0) {
     fillNibble(buf, offset++, value);
   }
@@ -64,19 +64,19 @@ void TrivialNibbleFill(uint8_t* buf, uint32_t offset, int16_t count,
 
 class ByteBuffer {
  public:
-  ByteBuffer(uint32_t size) : size_(size), data_(new uint8_t[size + 1]) {
+  ByteBuffer(uint32_t size) : size_(size), data_(new byte[size + 1]) {
     memset(data_.get(), 0, size + 1);
   }
 
   uint32_t size() const { return size_; }
-  const uint8_t* data() const { return data_.get(); }
-  uint8_t* data() { return data_.get(); }
+  const byte* data() const { return data_.get(); }
+  byte* data() { return data_.get(); }
 
   ~ByteBuffer() { EXPECT_EQ(0, data_.get()[size_]) << "Write-over detected"; }
 
  private:
   uint32_t size_;
-  std::unique_ptr<uint8_t[]> data_;
+  std::unique_ptr<byte[]> data_;
 };
 
 std::ostream& operator<<(std::ostream& os, const ByteBuffer& buf) {
@@ -98,19 +98,19 @@ class FillerTester {
  public:
   FillerTester(uint32_t size) : size_(size), actual_(size), expected_(size) {}
 
-  void patternFill2(uint32_t pos, uint32_t count, const uint8_t* val) {
+  void patternFill2(uint32_t pos, uint32_t count, const byte* val) {
     TrivialPatternFill(expected_.data() + pos, val, 2, count);
     PatternFill<2>(actual_.data() + pos, count, val);
     EXPECT_EQ(expected_, actual_);
   }
 
-  void patternFill3(uint32_t pos, uint32_t count, const uint8_t* val) {
+  void patternFill3(uint32_t pos, uint32_t count, const byte* val) {
     TrivialPatternFill(expected_.data() + pos, val, 3, count);
     PatternFill<3>(actual_.data() + pos, count, val);
     EXPECT_EQ(expected_, actual_);
   }
 
-  void patternFill4(uint32_t pos, uint32_t count, const uint8_t* val) {
+  void patternFill4(uint32_t pos, uint32_t count, const byte* val) {
     TrivialPatternFill(expected_.data() + pos, val, 4, count);
     PatternFill<4>(actual_.data() + pos, count, val);
     EXPECT_EQ(expected_, actual_);
@@ -122,7 +122,7 @@ class FillerTester {
     EXPECT_EQ(expected_, actual_);
   }
 
-  void nibbleFill(uint32_t offset, int16_t count, uint8_t value) {
+  void nibbleFill(uint32_t offset, int16_t count, byte value) {
     EXPECT_LT(value, 16);
     TrivialNibbleFill(expected_.data(), offset, count, value);
     NibbleFill(actual_.data(), offset, count, value);
@@ -135,7 +135,7 @@ class FillerTester {
   ByteBuffer expected_;
 };
 
-uint8_t pattern[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+byte pattern[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
 
 TEST(PatternFill2, Empty) {
   FillerTester tester(32);
@@ -177,7 +177,7 @@ TEST(PatternFill2, LongMisaligned) {
 
 TEST(PatternFill2, LongMisalignedEq) {
   FillerTester tester(32);
-  uint8_t pattern[] = {0x12, 0x12};
+  byte pattern[] = {0x12, 0x12};
   tester.patternFill2(3, 12, pattern);
 }
 
@@ -223,7 +223,7 @@ TEST(PatternFill3, LongMisaligned) {
 
 TEST(PatternFill3, LongMisalignedEq) {
   FillerTester tester(50);
-  uint8_t pattern[] = {0x12, 0x12};
+  byte pattern[] = {0x12, 0x12};
   tester.patternFill3(3, 12, pattern);
 }
 
@@ -239,7 +239,7 @@ TEST(PatternFill3, VeryLongMisaligned) {
 
 TEST(PatternFill3, VeryLongMisalignedEq) {
   FillerTester tester(80);
-  uint8_t pattern[] = {0x12, 0x12};
+  byte pattern[] = {0x12, 0x12};
   tester.patternFill3(3, 19, pattern);
 }
 
@@ -295,7 +295,7 @@ TEST(PatternFill4, LongMisaligned3) {
 
 TEST(PatternFill4, LongMisalignedEq) {
   FillerTester tester(60);
-  uint8_t pattern[] = {0x12, 0x12};
+  byte pattern[] = {0x12, 0x12};
   tester.patternFill4(3, 12, pattern);
 }
 
@@ -311,7 +311,7 @@ TEST(PatternFill4, VeryLongMisaligned) {
 
 TEST(PatternFill4, VeryLongMisalignedEq) {
   FillerTester tester(100);
-  uint8_t pattern[] = {0x12, 0x12};
+  byte pattern[] = {0x12, 0x12};
   tester.patternFill4(5, 19, pattern);
 }
 

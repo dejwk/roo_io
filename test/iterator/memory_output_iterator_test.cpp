@@ -5,14 +5,14 @@
 namespace roo_io {
 
 TEST(MemoryOutputIterator, Initialization) {
-  uint8_t buf[5];
+  byte buf[5];
   MemoryOutputIterator itr(buf, buf + 5);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
 }
 
 TEST(MemoryOutputIterator, Empty) {
-  uint8_t buf[] = "ABCDE";
+  byte buf[] = "ABCDE";
   MemoryOutputIterator itr(buf, buf);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
@@ -24,7 +24,7 @@ TEST(MemoryOutputIterator, Empty) {
 }
 
 TEST(MemoryOutputIterator, WriteByByte) {
-  uint8_t buf[] = "        ";
+  byte buf[] = "        ";
   MemoryOutputIterator itr(buf, buf + 8);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
@@ -38,7 +38,7 @@ TEST(MemoryOutputIterator, WriteByByte) {
 }
 
 TEST(MemoryOutputIterator, WriteByBytePastCapacity) {
-  uint8_t buf[] = "        ";
+  byte buf[] = "        ";
   MemoryOutputIterator itr(buf, buf + 3);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
@@ -56,13 +56,13 @@ TEST(MemoryOutputIterator, WriteByBytePastCapacity) {
 }
 
 TEST(MemoryOutputIterator, WriteByBlockTillCapacity) {
-  uint8_t buf[] = "        ";
+  byte buf[] = "        ";
   MemoryOutputIterator itr(buf, buf + 5);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ(3, itr.write((const uint8_t*)"ABC", 3));
+  EXPECT_EQ(3, itr.write((const byte*)"ABC", 3));
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ(2, itr.write((const uint8_t*)"DE", 2));
+  EXPECT_EQ(2, itr.write((const byte*)"DE", 2));
   EXPECT_EQ(kOk, itr.status());
   itr.write('D');
   EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
@@ -72,21 +72,21 @@ TEST(MemoryOutputIterator, WriteByBlockTillCapacity) {
 }
 
 TEST(MemoryOutputIterator, WriteByBlockPastCapacity) {
-  uint8_t buf[] = "        ";
+  byte buf[] = "        ";
   MemoryOutputIterator itr(buf, buf + 5);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ(3, itr.write((const uint8_t*)"ABC", 3));
+  EXPECT_EQ(3, itr.write((const byte*)"ABC", 3));
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ(2, itr.write((const uint8_t*)"DEF", 3));
+  EXPECT_EQ(2, itr.write((const byte*)"DEF", 3));
   EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
-  EXPECT_EQ(0, itr.write((const uint8_t*)"GHI", 3));
+  EXPECT_EQ(0, itr.write((const byte*)"GHI", 3));
   EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
   EXPECT_STREQ("ABCDE   ", (const char*)buf);
 }
 
 TEST(MemoryOutputIterator, Movable) {
-  uint8_t buf[] = "        ";
+  byte buf[] = "        ";
   MemoryOutputIterator itr(buf, buf + 8);
   EXPECT_EQ(buf, itr.ptr());
   EXPECT_EQ(kOk, itr.status());

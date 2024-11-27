@@ -17,9 +17,9 @@ class BufferedOutputStreamIterator {
   BufferedOutputStreamIterator(roo_io::OutputStream& output)
       : rep_(new Rep(output)) {}
 
-  void write(uint8_t v) { rep_->write(v); }
+  void write(byte v) { rep_->write(v); }
 
-  unsigned int write(const uint8_t* buf, unsigned int count) {
+  unsigned int write(const byte* buf, unsigned int count) {
     return rep_->write(buf, count);
   }
 
@@ -38,8 +38,8 @@ class BufferedOutputStreamIterator {
     Rep(roo_io::OutputStream& output);
     // ~Rep();
 
-    void write(uint8_t v);
-    unsigned int write(const uint8_t* buf, unsigned int count);
+    void write(byte v);
+    unsigned int write(const byte* buf, unsigned int count);
     void flush();
 
     Status status() const { return status_; }
@@ -53,8 +53,8 @@ class BufferedOutputStreamIterator {
     void writeBuffer();
 
     roo_io::OutputStream* output_;
-    uint8_t buffer_[kOutputStreamIteratorBufferSize];
-    uint8_t offset_;
+    byte buffer_[kOutputStreamIteratorBufferSize];
+    byte offset_;
     Status status_;
   };
 
@@ -86,14 +86,14 @@ inline void BufferedOutputStreamIterator::Rep::writeBuffer() {
   offset_ = 0;
 }
 
-inline void BufferedOutputStreamIterator::Rep::write(uint8_t v) {
+inline void BufferedOutputStreamIterator::Rep::write(byte v) {
   buffer_[offset_++] = v;
   if (offset_ >= kOutputStreamIteratorBufferSize) {
     writeBuffer();
   }
 }
 
-inline unsigned int BufferedOutputStreamIterator::Rep::write(const uint8_t* buf,
+inline unsigned int BufferedOutputStreamIterator::Rep::write(const byte* buf,
                                                              unsigned int len) {
   if (offset_ > 0 || len < kOutputStreamIteratorBufferSize) {
     int cap = kOutputStreamIteratorBufferSize - offset_;

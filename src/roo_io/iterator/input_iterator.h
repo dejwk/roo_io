@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "roo_io/byte.h"
 #include "roo_io/status.h"
 
 // Input iterators define a template contract for streams of bytes, to be used
@@ -23,7 +24,7 @@
 //   // returns an arbitrary value. Otherwise, if it fails, updates the status
 //   // and returns an arbitrary value.
 //   //
-//   uint8_t read();
+//   byte read();
 //
 //   // Reads up to `count` bytes into `result`, and updates `status()`. Returns
 //   // the number of bytes read, which must be greater than zero on success
@@ -42,7 +43,7 @@
 //   // that have been read before the error was encountered (possibly zero, but
 //   // might be greater than zero).
 //   //
-//   unsigned int read(uint8_t* result, unsigned int count);
+//   unsigned int read(byte* result, unsigned int count);
 //
 //   // Skips over the specified count of bytes. Updates the `status()`.
 //   //
@@ -72,11 +73,11 @@
 //
 //   // Same as in the 'input iterator' above.
 //   //
-//   uint8_t read();
+//   byte read();
 //
 //   // Same as in the 'input iterator' above.
 //   //
-//   unsigned int read(uint8_t* result, unsigned int count);
+//   unsigned int read(byte* result, unsigned int count);
 //
 //   // Same as in the 'input iterator' above.
 //   //

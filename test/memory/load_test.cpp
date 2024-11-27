@@ -2,11 +2,12 @@
 
 #include "gtest/gtest.h"
 
-uint8_t data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
-
 namespace roo_io {
 
+const byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+
 TEST(Load, Unsigned) {
+  EXPECT_EQ(LoadU8(data), 0x12);
   EXPECT_EQ(LoadBeU16(data), 0x1234);
   EXPECT_EQ(LoadLeU16(data), 0x3412);
   EXPECT_EQ(LoadBeU24(data), 0x123456);
@@ -47,6 +48,7 @@ TEST(Load, UnsignedTemplated) {
 }
 
 TEST(Load, SignedSimple) {
+  EXPECT_EQ(LoadS8(data), 0x12);
   EXPECT_EQ(LoadBeS16(data), 0x1234);
   EXPECT_EQ(LoadLeS16(data), 0x3412);
   EXPECT_EQ(LoadBeS24(data), 0x123456);
@@ -58,8 +60,9 @@ TEST(Load, SignedSimple) {
 }
 
 TEST(Load, SignedNegative) {
-  uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  const byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
 
+  EXPECT_EQ(LoadS8(data), -1);
   EXPECT_EQ(LoadBeS16(data), -1 - 0x0001);
   EXPECT_EQ(LoadLeS16(data), -1 - 0x0100);
   EXPECT_EQ(LoadBeS24(data), -1 - 0x000102);
@@ -71,7 +74,7 @@ TEST(Load, SignedNegative) {
 }
 
 TEST(Load, SignedNegativeTemplated) {
-  uint8_t data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  const byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
 
   EXPECT_EQ(LoadS16<kBigEndian>(data), -1 - 0x0001);
   EXPECT_EQ(LoadS16<kLittleEndian>(data), -1 - 0x0100);

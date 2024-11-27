@@ -4,7 +4,7 @@
 
 namespace roo_io {
 
-const uint8_t data[] = "ABCDEFGH";
+const byte data[] = "ABCDEFGH";
 
 TEST(UnsafeMemoryIterator, Initialization) {
   UnsafeMemoryIterator itr(data);
@@ -29,7 +29,7 @@ TEST(UnsafeMemoryIterator, ReadByByte) {
 TEST(UnsafeMemoryIterator, ReadArray) {
   UnsafeMemoryIterator itr(data);
   EXPECT_EQ('A', itr.read());
-  uint8_t buf[] = "BCD";
+  byte buf[] = "BCD";
   EXPECT_EQ(3, itr.read(buf, 3));
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ('B', buf[0]);
@@ -88,7 +88,7 @@ TEST(SafeMemoryIterator, ReadByByte) {
 TEST(SafeMemoryIterator, ReadArray) {
   MemoryIterator itr(data, data + 8);
   EXPECT_EQ('A', itr.read());
-  uint8_t buf[] = "BCD";
+  byte buf[] = "BCD";
   EXPECT_EQ(3, itr.read(buf, 3));
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ('B', buf[0]);
@@ -101,7 +101,7 @@ TEST(SafeMemoryIterator, ReadArray) {
 TEST(SafeMemoryIterator, ReadArrayPastEos) {
   MemoryIterator itr(data, data + 3);
   EXPECT_EQ('A', itr.read());
-  uint8_t buf[] = "BCD";
+  byte buf[] = "BCD";
   EXPECT_EQ(2, itr.read(buf, 3));
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ('B', buf[0]);

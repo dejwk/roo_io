@@ -20,7 +20,7 @@ class UnsafeGenericMemoryIterable {
   PtrType ptr_;
 };
 
-using UnsafeMemoryIterable = UnsafeGenericMemoryIterable<const uint8_t*>;
+using UnsafeMemoryIterable = UnsafeGenericMemoryIterable<const byte*>;
 
 template <typename PtrType>
 class SafeGenericMemoryIterable {
@@ -37,7 +37,7 @@ class SafeGenericMemoryIterable {
   PtrType end_;
 };
 
-using MemoryIterable = SafeGenericMemoryIterable<const uint8_t*>;
+using MemoryIterable = SafeGenericMemoryIterable<const byte*>;
 
 template <typename PtrType>
 class MultipassGenericMemoryIterable {
@@ -56,6 +56,6 @@ class MultipassGenericMemoryIterable {
   PtrType end_;
 };
 
-using MultipassMemoryIterable = MultipassGenericMemoryIterable<const uint8_t*>;
+using MultipassMemoryIterable = MultipassGenericMemoryIterable<const byte*>;
 
 }  // namespace roo_io

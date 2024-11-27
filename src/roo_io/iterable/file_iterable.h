@@ -15,9 +15,9 @@ class FileIterable {
     FileIterator(Filesystem& fs, const char* path)
         : mount_(fs.mount()), input_(mount_.fopen(path)), itr_(*input_) {}
 
-    uint8_t read() { return itr_.read(); }
+    byte read() { return itr_.read(); }
 
-    int read(uint8_t* buf, unsigned int count) { return itr_.read(buf, count); }
+    int read(byte* buf, unsigned int count) { return itr_.read(buf, count); }
 
     void skip(unsigned int count) { itr_.skip(count); }
 

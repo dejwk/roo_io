@@ -13,7 +13,7 @@ class ArduinoFileInputStream : public MultipassInputStream {
   ArduinoFileInputStream(fs::File file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
 
-  int read(uint8_t* buf, unsigned int count) override {
+  int read(byte* buf, unsigned int count) override {
     int result = file_.read(buf, count);
     if (result == 0 && status_ == roo_io::kOk) {
       status_ = kEndOfStream;

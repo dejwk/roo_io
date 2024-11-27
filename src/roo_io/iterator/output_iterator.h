@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 
+#include "roo_io/byte.h"
 #include "roo_io/status.h"
 
 // Output iterators define a template contract for writing streams of bytes, to
@@ -19,7 +20,7 @@
 //   //
 //   // If the status is not `kOk` before the call, the call has no effect.
 //   //
-//   void write(uint8_t v);
+//   void write(byte v);
 //
 //   // Writes up to `count` bytes from the `buffer`. Updates `status()`.
 //   // Returns the number of bytes written, which must be greater than zero on
@@ -33,7 +34,7 @@
 //   // that have been written before the error was encountered (possibly zero,
 //   // but might be greater than zero).
 //   //
-//   unsigned int write(const uint8_t* buf, unsigned int count);
+//   unsigned int write(const byte* buf, unsigned int count);
 //
 //   // Returns the status of the underlying stream. Updated by write
 //   // operations. Always 'kOk' or failure (never 'kEndOfStream').
