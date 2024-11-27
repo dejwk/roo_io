@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "roo_io/data/byte_order.h"
-#include "roo_io/data/reader.h"
+#include "roo_io/data/read.h"
 #include "roo_io/iterator/buffered_multipass_input_stream_iterator.h"
 #include "roo_io/stream/multipass_input_stream.h"
 

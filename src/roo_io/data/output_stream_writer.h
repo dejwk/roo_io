@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "roo_io/data/byte_order.h"
-#include "roo_io/data/writer.h"
+#include "roo_io/data/write.h"
 #include "roo_io/iterator/buffered_output_stream_iterator.h"
 #include "roo_io/stream/output_stream.h"
 
@@ -26,9 +26,7 @@ class OutputStreamWriter {
     out_.reset(*os_);
   }
 
-  bool ok() const {
-    return out_.ok();
-  }
+  bool ok() const { return out_.ok(); }
 
   void flush() {
     if (os_ == nullptr) return;
