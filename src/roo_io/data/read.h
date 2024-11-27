@@ -285,11 +285,10 @@ constexpr uint64_t ReadU64(InputIterator& in) {
 template <typename T>
 struct HostNativeReader {
  public:
-  template <typename Itr>
-  T read(Itr& itr) const {
+  template <typename InputIterator>
+  T read(InputIterator& in) const {
     T result;
-    if (ReadByteArray(itr, (byte*)&result, sizeof(result)) ==
-        sizeof(result)) {
+    if (ReadByteArray(in, (byte*)&result, sizeof(result)) == sizeof(result)) {
       return result;
     }
     return T();
