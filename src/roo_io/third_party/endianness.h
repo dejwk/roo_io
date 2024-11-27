@@ -68,15 +68,16 @@
 #  error "UNKNOWN Platform / endianness. Configure endianness checks for this platform or set explicitly."
 #endif
 
-#if defined(bswap16) || defined(bswap32) || defined(bswap64) || defined(bswapf) || defined(bswapd)
-#  error "unexpected define!" // freebsd may define these; probably just need to undefine them
-#endif
+// #if defined(bswap16) || defined(bswap32) || defined(bswap64) || defined(bswapf) || defined(bswapd)
+// #  error "unexpected define!" // freebsd may define these; probably just need to undefine them
+// #endif
 
 /* Define byte-swap functions, using fast processor-native built-ins where possible */
 #if defined(_MSC_VER) // needs to be first because msvc doesn't short-circuit after failing defined(__has_builtin)
 #  define bswap16(x)     _byteswap_ushort((x))
 #  define bswap32(x)     _byteswap_ulong((x))
 #  define bswap64(x)     _byteswap_uint64((x))
+#elif defined(ESP32)  // endian.h already defines these.
 #elif (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
 #  define bswap16(x)     __builtin_bswap16((x))
 #  define bswap32(x)     __builtin_bswap32((x))
@@ -87,6 +88,7 @@
 #  define bswap64(x)     __builtin_bswap64((x))
 #else
     /* even in this case, compilers often optimize by using native instructions */
+
     static inline uint16_t bswap16(uint16_t x) {
 		return ((( x  >> 8 ) & 0xffu ) | (( x  & 0xffu ) << 8 ));
 	}
