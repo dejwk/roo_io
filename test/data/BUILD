@@ -11,9 +11,9 @@ cc_test(
 )
 
 cc_test(
-    name = "reader_test",
+    name = "read_test",
     srcs = [
-        "reader_test.cpp",
+        "read_test.cpp",
     ],
     linkstatic = 1,
     deps = [
