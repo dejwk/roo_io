@@ -5,114 +5,58 @@
 
 namespace roo_io {
 
-// Helper to write numbers from consecutive bytes, assuming a specified
-// byte order.
-template <int ByteOrder>
-class DataWriter;
-
-template <>
-class DataWriter<kBigEndian> {
- public:
-  template <typename OutputIterator>
-  constexpr void write_u16(OutputIterator& out, uint16_t v) const {
-    out.write((v >> 8) & 0xFF);
-    out.write((v >> 0) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u24(OutputIterator& out, uint32_t v) const {
-    out.write((v >> 16) & 0xFF);
-    out.write((v >> 8) & 0xFF);
-    out.write((v >> 0) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u32(OutputIterator& out, uint32_t v) const {
-    out.write((v >> 24) & 0xFF);
-    out.write((v >> 16) & 0xFF);
-    out.write((v >> 8) & 0xFF);
-    out.write((v >> 0) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u64(OutputIterator& out, uint64_t v) const {
-    write_u32(out, (v >> 32) & 0xFFFFFFFFLL);
-    write_u32(out, (v >> 0) & 0xFFFFFFFFLL);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_float(OutputIterator& out, float v) const {
-    write_u32(out, *reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(&v)));
-  }
-};
-
-template <>
-class DataWriter<kLittleEndian> {
- public:
-  template <typename OutputIterator>
-  constexpr void write_u16(OutputIterator& out, uint16_t v) const {
-    out.write((v >> 0) & 0xFF);
-    out.write((v >> 8) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u24(OutputIterator& out, uint32_t v) const {
-    out.write((v >> 0) & 0xFF);
-    out.write((v >> 8) & 0xFF);
-    out.write((v >> 16) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u32(OutputIterator& out, uint32_t v) const {
-    out.write((v >> 0) & 0xFF);
-    out.write((v >> 8) & 0xFF);
-    out.write((v >> 16) & 0xFF);
-    out.write((v >> 24) & 0xFF);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_u64(OutputIterator& out, uint64_t v) const {
-    write_u32(out, (v >> 0) & 0xFFFFFFFFLL);
-    write_u32(out, (v >> 32) & 0xFFFFFFFFLL);
-  }
-
-  template <typename OutputIterator>
-  constexpr void write_float(OutputIterator& out, float v) const {
-    write_u32(out, *reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(&v)));
-  }
-};
-
-template <typename OutputIterator, ByteOrder byte_order>
-constexpr void WriteU16(OutputIterator& in, uint16_t v) {
-  DataWriter<byte_order>().write_u16(in, v);
-}
-
-template <typename OutputIterator, ByteOrder byte_order>
-constexpr void WriteU24(OutputIterator& in, uint32_t v) {
-  DataWriter<byte_order>().write_u24(in, v);
-}
-
-template <typename OutputIterator, ByteOrder byte_order>
-constexpr void WriteU32(OutputIterator& in, uint32_t v) {
-  DataWriter<byte_order>().write_u32(in, v);
-}
-
-// Convenience helper to write network-encoded (big-endian) uint16.
 template <typename OutputIterator>
-constexpr void WriteU16be(OutputIterator& in, uint16_t v) {
-  DataWriter<kBigEndian>().write_u16(in, v);
+constexpr void WriteBeU16(OutputIterator& out, uint16_t v) {
+  out.write((v >> 8) & 0xFF);
+  out.write((v >> 0) & 0xFF);
 }
 
-// Convenience helper to write network-encoded (big-endian) uint24.
 template <typename OutputIterator>
-constexpr void WriteU24be(OutputIterator& in, uint32_t v) {
-  DataWriter<kBigEndian>().write_u24(in, v);
+constexpr void WriteBeU24(OutputIterator& out, uint32_t v) {
+  out.write((v >> 16) & 0xFF);
+  out.write((v >> 8) & 0xFF);
+  out.write((v >> 0) & 0xFF);
 }
 
-// Convenience helper to write network-encoded (big-endian) uint32.
 template <typename OutputIterator>
-constexpr void WriteU32be(OutputIterator& in, uint32_t v) {
-  DataWriter<kBigEndian>().write_u32(in, v);
+constexpr void WriteBeU32(OutputIterator& out, uint32_t v) {
+  out.write((v >> 24) & 0xFF);
+  out.write((v >> 16) & 0xFF);
+  out.write((v >> 8) & 0xFF);
+  out.write((v >> 0) & 0xFF);
+}
+
+template <typename OutputIterator>
+constexpr void WriteBeU64(OutputIterator& out, uint64_t v) {
+  WriteBeU32(out, (v >> 32) & 0xFFFFFFFFLL);
+  WriteBeU32(out, (v >> 0) & 0xFFFFFFFFLL);
+}
+
+template <typename OutputIterator>
+constexpr void WriteLeU16(OutputIterator& out, uint16_t v) {
+  out.write((v >> 0) & 0xFF);
+  out.write((v >> 8) & 0xFF);
+}
+
+template <typename OutputIterator>
+constexpr void WriteLeU24(OutputIterator& out, uint32_t v) {
+  out.write((v >> 0) & 0xFF);
+  out.write((v >> 8) & 0xFF);
+  out.write((v >> 16) & 0xFF);
+}
+
+template <typename OutputIterator>
+constexpr void WriteLeU32(OutputIterator& out, uint32_t v) {
+  out.write((v >> 0) & 0xFF);
+  out.write((v >> 8) & 0xFF);
+  out.write((v >> 16) & 0xFF);
+  out.write((v >> 24) & 0xFF);
+}
+
+template <typename OutputIterator>
+constexpr void WriteLeU64(OutputIterator& out, uint64_t v) {
+  write_u32(out, (v >> 0) & 0xFFFFFFFFLL);
+  write_u32(out, (v >> 32) & 0xFFFFFFFFLL);
 }
 
 template <typename OutputIterator>
@@ -145,6 +89,75 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   }
   buffer[size - 1] &= 0x7F;
   out.write(buffer, size);
+}
+
+// Helper to write numbers to output iterators, templated on a byte order.
+template <int ByteOrder>
+class NumberWriter;
+
+template <>
+class NumberWriter<kBigEndian> {
+ public:
+  template <typename OutputIterator>
+  constexpr void writeU16(OutputIterator& out, uint16_t v) const {
+    WriteBeU16(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU24(OutputIterator& out, uint32_t v) const {
+    WriteBeU24(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU32(OutputIterator& out, uint32_t v) const {
+    WriteBeU32(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU64(OutputIterator& out, uint64_t v) const {
+    WriteBeU32(out, (v >> 32) & 0xFFFFFFFFLL);
+    WriteBeU32(out, (v >> 0) & 0xFFFFFFFFLL);
+  }
+};
+
+template <>
+class NumberWriter<kLittleEndian> {
+ public:
+  template <typename OutputIterator>
+  constexpr void writeU16(OutputIterator& out, uint16_t v) const {
+    WriteLeU16(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU24(OutputIterator& out, uint32_t v) const {
+    WriteLeU24(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU32(OutputIterator& out, uint32_t v) const {
+    WriteLeU32(out, v);
+  }
+
+  template <typename OutputIterator>
+  constexpr void writeU64(OutputIterator& out, uint64_t v) const {
+    WriteLeU32(out, (v >> 0) & 0xFFFFFFFFLL);
+    WriteLeU32(out, (v >> 32) & 0xFFFFFFFFLL);
+  }
+};
+
+template <typename OutputIterator, ByteOrder byte_order>
+constexpr void WriteU16(OutputIterator& in, uint16_t v) {
+  NumberWriter<byte_order>().writeU16(in, v);
+}
+
+template <typename OutputIterator, ByteOrder byte_order>
+constexpr void WriteU24(OutputIterator& in, uint32_t v) {
+  NumberWriter<byte_order>().writeU24(in, v);
+}
+
+template <typename OutputIterator, ByteOrder byte_order>
+constexpr void WriteU32(OutputIterator& in, uint32_t v) {
+  NumberWriter<byte_order>().writeU32(in, v);
 }
 
 }  // namespace roo_io
