@@ -290,16 +290,20 @@ constexpr uint64_t ReadU64(InputIterator& in) {
   return IntegerReader<byte_order>().readU64(in);
 }
 
+// Allows reading platform-native (implementation-dependent) data from an input
+// iterator. T must be default-constructible and have trivial destructor.
 template <typename T>
 struct HostNativeReader {
  public:
+  // Reads T from the iterator. If T cannot be fully read, a default value is
+  // returned.
   template <typename InputIterator>
-  T read(InputIterator& in) const {
+  T read(InputIterator& in, T default_value = T()) const {
     T result;
     if (ReadByteArray(in, (byte*)&result, sizeof(result)) == sizeof(result)) {
       return result;
     }
-    return T();
+    return default_value;
   }
 };
 
