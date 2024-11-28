@@ -40,10 +40,11 @@ class PosixFileInputStream : public MultipassInputStream {
     return 0;
   }
 
-  bool seek(uint64_t offset) override {
-    if (status_ != kOk && status_ != kEndOfStream) return false;
+  void seek(uint64_t offset) override {
+    if (status_ != kOk && status_ != kEndOfStream) return;
     if (::fseek(file_, offset, SEEK_SET) == 0) {
-      return true;
+      status_ = kOk;
+      return;
     }
     switch (errno) {
       case EFBIG:
@@ -55,13 +56,13 @@ class PosixFileInputStream : public MultipassInputStream {
         status_ = kUnknownIOError;
         break;
     }
-    return false;
   }
 
-  bool skip(uint64_t count) override {
-    if (status_ != kOk && status_ != kEndOfStream) return false;
+  void skip(uint64_t count) override {
+    if (status_ != kOk) return;
     if (::fseek(file_, count, SEEK_CUR) == 0) {
-      return true;
+      if (position() > size()) status_ = kEndOfStream;
+      return;
     }
     switch (errno) {
       case EFBIG:
@@ -73,11 +74,9 @@ class PosixFileInputStream : public MultipassInputStream {
         status_ = kUnknownIOError;
         break;
     }
-    return false;
   }
 
   uint64_t position() const override {
-    if (status_ != kOk && status_ != kEndOfStream) return false;
     return (::ftell(file_));
   }
 

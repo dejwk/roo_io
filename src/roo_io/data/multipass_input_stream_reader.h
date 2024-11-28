@@ -48,8 +48,8 @@ class MultipassInputStreamReader {
     if (is_ != nullptr) in_.rewind();
   }
 
-  bool seek(uint64_t position) {
-    return is_ == nullptr ? false : in_.seek(position);
+  void seek(uint64_t position) {
+    if (is_ != nullptr) in_.seek(position);
   }
 
   byte read() { return is_ == nullptr ? 0 : in_.read(); }

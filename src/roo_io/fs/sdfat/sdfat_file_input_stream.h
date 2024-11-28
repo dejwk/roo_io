@@ -25,9 +25,26 @@ class SdFatFileInputStream : public MultipassInputStream {
     return 0;
   }
 
-  bool seek(uint64_t offset) override { return file_.seek(offset); }
+  void seek(uint64_t offset) override {
+    if (status_ != kOk && status_ != kEndOfStream) return;
+    status_ = file_.seek(offset) ? kOk : kSeekError;
+  }
 
-  bool skip(uint64_t count) override { return file_.seekCur(count); }
+  void skip(uint64_t count) override {
+    if (status_ != kOk) return;
+    if (count < 64) {
+      byte buf[count];
+      readFully(buf, count);
+      return;
+    }
+    if (!file_.seekCur(count)) {
+      status_ = kSeekError;
+      return;
+    }
+    if (file_.position() > file_.size()) {
+      status_ = kEndOfStream;
+    }
+  }
 
   uint64_t position() const override { return file_.position(); }
 

@@ -18,12 +18,10 @@ class MultipassInputStream : public InputStream {
   virtual uint64_t position() const = 0;
 
   // Returns true on success.
-  virtual bool seek(uint64_t offset) = 0;
+  virtual void seek(uint64_t offset) = 0;
 
   // Returns true on success.
-  bool skip(uint64_t count) override {
-    return seek(position() + count);
-  }
+  virtual void skip(uint64_t count) = 0;
 };
 
 }  // namespace roo_io

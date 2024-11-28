@@ -14,7 +14,7 @@ class NullInputStream : public MultipassInputStream {
 
   size_t read(byte* buf, size_t count) override { return 0; }
 
-  bool skip(uint64_t count) override { return 0; }
+  void skip(uint64_t count) override {}
 
   Status status() const override { return status_; }
 
@@ -22,7 +22,7 @@ class NullInputStream : public MultipassInputStream {
 
   uint64_t position() const override { return 0; }
 
-  bool seek(uint64_t offset) override { return false; }
+  void seek(uint64_t offset) override {}
 
  private:
   Status status_;

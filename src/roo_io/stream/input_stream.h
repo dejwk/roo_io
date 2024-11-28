@@ -37,8 +37,7 @@ class InputStream {
     return read_total;
   }
 
-  // Returns true on success.
-  virtual bool skip(uint64_t count) = 0;
+  virtual void skip(uint64_t count) = 0;
 
   // Returns the status of the most recent I/O operation.
   virtual Status status() const = 0;

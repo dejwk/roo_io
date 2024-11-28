@@ -28,7 +28,7 @@ class BufferedMultipassInputStreamIterator {
   uint64_t position() const { return rep_->position(); }
 
   void rewind() { rep_->rewind(); }
-  bool seek(uint64_t position) { return rep_->seek(position); }
+  void seek(uint64_t position) { rep_->seek(position); }
 
   bool ok() const { return status() == roo_io::kOk; }
   bool eos() const { return status() == roo_io::kEndOfStream; }
@@ -53,7 +53,7 @@ class BufferedMultipassInputStreamIterator {
     uint64_t position() const;
 
     void rewind();
-    bool seek(uint64_t position);
+    void seek(uint64_t position);
 
    private:
     Rep(const Rep&) = delete;
@@ -111,18 +111,17 @@ inline void BufferedMultipassInputStreamIterator::Rep::rewind() {
   }
 }
 
-inline bool BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
+inline void BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
   uint64_t file_pos = input_->position();
   if (file_pos <= position + length_ && file_pos >= position) {
     // Seek within the area we have in the buffer.
     offset_ = position + length_ - file_pos;
   } else {
     // Seek outside the buffer. Just seek in the file and reset the buffer.
-    bool result = input_->seek(position);
+    input_->seek(position);
     offset_ = 0;
     length_ = 0;
     status_ = input_->status();
-    return result;
   }
 }
 
@@ -188,9 +187,8 @@ inline void BufferedMultipassInputStreamIterator::Rep::skip(size_t count) {
     offset_ = 0;
     length_ = 0;
     if (status_ != kOk) return;
-    if (!input_->skip(count - remaining)) {
-      status_ = kEndOfStream;
-    }
+    input_->skip(count - remaining);
+    status_ = input_->status();
   }
 }
 

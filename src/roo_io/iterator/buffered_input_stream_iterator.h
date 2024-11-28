@@ -136,9 +136,8 @@ inline void BufferedInputStreamIterator::Rep::skip(size_t count) {
     offset_ = 0;
     length_ = 0;
     if (status_ != kOk) return;
-    if (!input_->skip(count - remaining)) {
-      status_ = kEndOfStream;
-    }
+    input_->skip(count - remaining);
+    status_ = input_->status();
   }
 }
 
