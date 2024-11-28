@@ -11,10 +11,10 @@ namespace roo_io {
 
 class PosixFileInputStream : public MultipassInputStream {
  public:
-  PosixFileInputStream(Status error) : file_(nullptr), size_(-1), status_(error) {}
+  PosixFileInputStream(Status error) : file_(nullptr), status_(error) {}
 
   PosixFileInputStream(FILE* file)
-      : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
+      : file_(file), status_(file_ != nullptr ? kOk : kClosed) {}
 
   size_t read(byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
@@ -76,21 +76,16 @@ class PosixFileInputStream : public MultipassInputStream {
     }
   }
 
-  uint64_t position() const override {
-    return (::ftell(file_));
-  }
+  uint64_t position() const override { return (::ftell(file_)); }
 
-  uint64_t size() const override {
+  uint64_t size() override {
     if (status_ != kOk && status_ != kEndOfStream) return 0;
-    if (size_ < 0) {
-      struct stat st;
-      if (::fstat(fileno(file_), &st) != 0) {
-        status_ = kUnknownIOError;
-        return 0;
-      }
-      size_ = st.st_size;
+    struct stat st;
+    if (::fstat(fileno(file_), &st) != 0) {
+      status_ = kUnknownIOError;
+      return 0;
     }
-    return size_;
+    return st.st_size;
   }
 
   bool isOpen() const override {
@@ -116,7 +111,6 @@ class PosixFileInputStream : public MultipassInputStream {
 
  private:
   FILE* file_;
-  mutable int64_t size_;
   mutable Status status_;
 };
 

@@ -11,7 +11,7 @@ namespace roo_io {
 class MultipassInputStream : public InputStream {
  public:
   // Returns the size of the resource in bytes. The stream must be open.
-  virtual uint64_t size() const = 0;
+  virtual uint64_t size() = 0;
 
   // Returns the current position in the stream, in bytes. The stream must be
   // open.

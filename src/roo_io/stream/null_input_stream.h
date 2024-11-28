@@ -18,7 +18,7 @@ class NullInputStream : public MultipassInputStream {
 
   Status status() const override { return status_; }
 
-  uint64_t size() const override { return 0; }
+  uint64_t size() override { return 0; }
 
   uint64_t position() const override { return 0; }
 

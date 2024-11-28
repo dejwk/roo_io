@@ -48,7 +48,7 @@ class ArduinoFileInputStream : public MultipassInputStream {
 
   uint64_t position() const override { return file_.position(); }
 
-  uint64_t size() const override { return file_.size(); }
+  uint64_t size() override { return file_.size(); }
 
   bool isOpen() const override { return file_.operator bool(); }
 
