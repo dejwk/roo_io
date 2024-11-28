@@ -19,7 +19,7 @@ class BufferedOutputStreamIterator {
 
   void write(byte v) { rep_->write(v); }
 
-  unsigned int write(const byte* buf, unsigned int count) {
+  size_t write(const byte* buf, size_t count) {
     return rep_->write(buf, count);
   }
 
@@ -39,7 +39,7 @@ class BufferedOutputStreamIterator {
     // ~Rep();
 
     void write(byte v);
-    unsigned int write(const byte* buf, unsigned int count);
+    size_t write(const byte* buf, size_t count);
     void flush();
 
     Status status() const { return status_; }
@@ -93,8 +93,8 @@ inline void BufferedOutputStreamIterator::Rep::write(byte v) {
   }
 }
 
-inline unsigned int BufferedOutputStreamIterator::Rep::write(const byte* buf,
-                                                             unsigned int len) {
+inline size_t BufferedOutputStreamIterator::Rep::write(const byte* buf,
+                                                       size_t len) {
   if (offset_ > 0 || len < kOutputStreamIteratorBufferSize) {
     int cap = kOutputStreamIteratorBufferSize - offset_;
     if (len > cap) len = cap;

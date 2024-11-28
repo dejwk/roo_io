@@ -35,7 +35,7 @@ class InputStreamReader {
 
   byte read() { return is_ == nullptr ? 0 : in_.read(); }
 
-  void skip(unsigned int count) {
+  void skip(size_t count) {
     if (is_ != nullptr) in_.skip(count);
   }
 
@@ -49,7 +49,7 @@ class InputStreamReader {
 
   uint32_t readBeU32() { return is_ == nullptr ? 0 : ReadBeU32(in_); }
 
-  unsigned int readByteArray(byte* result, unsigned int count) {
+  size_t readByteArray(byte* result, size_t count) {
     return (is_ == nullptr) ? 0 : ReadByteArray(in_, result, count);
   }
 

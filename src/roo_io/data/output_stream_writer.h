@@ -47,6 +47,10 @@ class OutputStreamWriter {
     if (os_ != nullptr) out_.write(v);
   }
 
+  void writeU8(uint8_t v) {
+    if (os_ != nullptr) WriteU8(out_, v);
+  }
+
   void writeBeU16(uint16_t v) {
     if (os_ != nullptr) WriteBeU16(out_, v);
   }
@@ -59,7 +63,11 @@ class OutputStreamWriter {
     if (os_ != nullptr) WriteBeU32(out_, v);
   }
 
-  unsigned int writeByteArray(const byte* source, unsigned int count) {
+  void writeBeU64(uint64_t v) {
+    if (os_ != nullptr) WriteBeU64(out_, v);
+  }
+
+  size_t writeByteArray(const byte* source, size_t count) {
     return (os_ == nullptr) ? 0 : WriteByteArray(out_, source, count);
   }
 

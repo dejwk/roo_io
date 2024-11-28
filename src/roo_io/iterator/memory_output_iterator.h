@@ -15,7 +15,7 @@ class UnsafeMemoryOutputIterator {
 
   void write(byte v) { *ptr_++ = v; }
 
-  unsigned int write(const byte* buf, unsigned int count) {
+  size_t write(const byte* buf, size_t count) {
     memcpy(ptr_, buf, count);
     ptr_ += count;
     return count;
@@ -53,7 +53,7 @@ class MemoryOutputIterator {
   // Writes the `count` bytes, or writes as many bytes as possible and sets
   // status to 'kNoSpaceLeftOnDevice' if there is not enough space to write
   // `count` butes.
-  unsigned int write(const byte* buf, unsigned int count) {
+  size_t write(const byte* buf, size_t count) {
     if (ptr_ == nullptr) return 0;
     if (count > end_ - ptr_) {
       count = end_ - ptr_;

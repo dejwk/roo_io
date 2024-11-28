@@ -136,9 +136,8 @@ constexpr void WriteLeS64(OutputIterator& out, int64_t v) {
 // `count`, it indicates that an I/O error has occurred. The `status()` of the
 // underlying iterator can be used to determine the cause.
 template <typename OutputIterator>
-unsigned int WriteByteArray(OutputIterator& out, const byte* source,
-                            unsigned int count) {
-  unsigned int written_total = 0;
+size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
+  size_t written_total = 0;
   while (count > 0) {
     int written_now = out.write(source, count);
     if (written_now == 0) break;

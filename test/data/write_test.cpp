@@ -173,7 +173,7 @@ TEST(Write, VarU64_150) {
 struct DrippingIterator {
   byte* data;
   byte* end;
-  unsigned int write(const byte* buf, unsigned int count) {
+  size_t write(const byte* buf, size_t count) {
     if (count > 3) count = 3;
     if (count > end - data) count = end - data;
     memcpy(data, buf, count);

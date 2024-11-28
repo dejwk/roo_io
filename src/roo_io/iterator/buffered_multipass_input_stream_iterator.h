@@ -19,9 +19,9 @@ class BufferedMultipassInputStreamIterator {
 
   byte read() { return rep_->read(); }
 
-  int read(byte* buf, unsigned int count) { return rep_->read(buf, count); }
+  int read(byte* buf, size_t count) { return rep_->read(buf, count); }
 
-  void skip(unsigned int count) { rep_->skip(count); }
+  void skip(size_t count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
 
   uint64_t size() const { return rep_->size(); }
@@ -43,8 +43,8 @@ class BufferedMultipassInputStreamIterator {
     Rep(roo_io::MultipassInputStream& input);
     // ~Rep();
     byte read();
-    int read(byte* buf, unsigned int count);
-    void skip(unsigned int count);
+    int read(byte* buf, size_t count);
+    void skip(size_t count);
 
     Status status() const { return status_; }
     void reset(roo_io::MultipassInputStream* input);
@@ -144,7 +144,7 @@ inline byte BufferedMultipassInputStreamIterator::Rep::read() {
 }
 
 inline int BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
-                                                           unsigned int count) {
+                                                           size_t count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.
     if (count > (length_ - offset_)) count = length_ - offset_;
@@ -180,9 +180,8 @@ inline int BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
   return count;
 }
 
-inline void BufferedMultipassInputStreamIterator::Rep::skip(
-    unsigned int count) {
-  unsigned int remaining = (length_ - offset_);
+inline void BufferedMultipassInputStreamIterator::Rep::skip(size_t count) {
+  size_t remaining = (length_ - offset_);
   if (count < remaining) {
     offset_ += count;
   } else {

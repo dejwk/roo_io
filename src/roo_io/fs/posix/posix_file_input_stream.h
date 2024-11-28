@@ -16,7 +16,7 @@ class PosixFileInputStream : public MultipassInputStream {
   PosixFileInputStream(FILE* file)
       : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
 
-  int read(byte* buf, unsigned int count) override {
+  int read(byte* buf, size_t count) override {
     if (status_ != kOk && status_ != kEndOfStream) return -1;
     int result = fread(buf, 1, count, file_);
     if (result == count) return result;

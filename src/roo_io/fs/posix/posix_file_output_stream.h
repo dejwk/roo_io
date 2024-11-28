@@ -16,7 +16,7 @@ class PosixFileOutputStream : public OutputStream {
   PosixFileOutputStream(FILE* file)
       : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
 
-  int write(const byte* buf, unsigned int count) override {
+  int write(const byte* buf, size_t count) override {
     if (status_ != kOk && status_ != kEndOfStream) return -1;
     int result = ::fwrite(buf, 1, count, file_);
     if (result == count) return result;

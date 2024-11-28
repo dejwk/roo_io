@@ -20,13 +20,13 @@ class UnsafeGenericMemoryIterator {
 
   byte read() { return *ptr_++; }
 
-  unsigned int read(byte* result, unsigned int count) {
+  size_t read(byte* result, size_t count) {
     memcpy(result, ptr_, count);
     ptr_ += count;
     return count;
   }
 
-  void skip(unsigned int count) { ptr_ += count; }
+  void skip(size_t count) { ptr_ += count; }
 
   Status status() const { return kOk; }
 
@@ -58,7 +58,7 @@ class SafeGenericMemoryIterator {
     return *ptr_++;
   }
 
-  unsigned int read(byte* result, unsigned int count) {
+  size_t read(byte* result, size_t count) {
     if (ptr_ == end_ || ptr_ == nullptr) {
       ptr_ = nullptr;
       return 0;
@@ -71,7 +71,7 @@ class SafeGenericMemoryIterator {
     return count;
   }
 
-  void skip(unsigned int count) {
+  void skip(size_t count) {
     if (ptr_ != nullptr) {
       if (count <= end_ - ptr_) {
         ptr_ += count;
@@ -112,7 +112,7 @@ class MultipassGenericMemoryIterator {
     return ptr_[position_++];
   }
 
-  unsigned int read(byte* result, unsigned int count) {
+  size_t read(byte* result, size_t count) {
     if (position_ >= size_) {
       eos_ = true;
       return 0;
@@ -125,7 +125,7 @@ class MultipassGenericMemoryIterator {
     return count;
   }
 
-  void skip(unsigned int count) {
+  void skip(size_t count) {
     if (position_ + count <= size_) {
       position_ += count;
     } else {

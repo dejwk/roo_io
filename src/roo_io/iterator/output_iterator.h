@@ -34,7 +34,7 @@
 //   // that have been written before the error was encountered (possibly zero,
 //   // but might be greater than zero).
 //   //
-//   unsigned int write(const byte* buf, unsigned int count);
+//   size_t write(const byte* buf, size_t count);
 //
 //   // Returns the status of the underlying stream. Updated by write
 //   // operations. Always 'kOk' or failure (never 'kEndOfStream').

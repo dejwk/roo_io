@@ -144,7 +144,7 @@ TEST(Read, VarU64_150) {
 struct DrippingIterator {
   const char* data;
   const char* end;
-  unsigned int read(byte* buf, unsigned int count) {
+  size_t read(byte* buf, size_t count) {
     if (count > 3) count = 3;
     if (count > end - data) count = end - data;
     memcpy(buf, data, count);

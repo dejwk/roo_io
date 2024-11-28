@@ -19,11 +19,11 @@ class InputStream {
 
   // Tries to read at least one byte, blocking if necessary. Returns zero on
   // EOF, negative value on error, and the number of bytes read otherwise.
-  virtual int read(byte* buf, unsigned int count) = 0;
+  virtual int read(byte* buf, size_t count) = 0;
 
   // Reads the prescribed number of bytes, blocking if necessary.
-  virtual int readFully(byte* buf, unsigned int count) {
-    unsigned int read_total = 0;
+  virtual int readFully(byte* buf, size_t count) {
+    size_t read_total = 0;
     while (count > 0) {
       int read_now = read(buf, count);
       if (read_now <= 0) break;

@@ -14,7 +14,7 @@ class SdFatFileOutputStream : public OutputStream {
   SdFatFileOutputStream(FsFile file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
 
-  int write(const byte* buf, unsigned int count) override {
+  int write(const byte* buf, size_t count) override {
     int result = file_.write(buf, count);
     if (result == 0 && status_ == roo_io::kOk) {
       status_ = roo_io::kReadError;

@@ -17,9 +17,9 @@ class FileIterable {
 
     byte read() { return itr_.read(); }
 
-    int read(byte* buf, unsigned int count) { return itr_.read(buf, count); }
+    int read(byte* buf, size_t count) { return itr_.read(buf, count); }
 
-    void skip(unsigned int count) { itr_.skip(count); }
+    void skip(size_t count) { itr_.skip(count); }
 
     Status status() const { return itr_.status(); }
 

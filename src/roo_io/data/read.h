@@ -136,11 +136,10 @@ constexpr int64_t ReadLeS64(InputIterator& in) {
 // or that an error was encountered. The `status()` of the underlying iterator
 // can be used to determine the cause.
 template <typename InputIterator>
-unsigned int ReadByteArray(InputIterator& in, byte* result,
-                           unsigned int count) {
-  unsigned int read_total = 0;
+size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
+  size_t read_total = 0;
   while (count > 0) {
-    unsigned int read_now = in.read(result, count);
+    size_t read_now = in.read(result, count);
     if (read_now == 0) break;
     result += read_now;
     read_total += read_now;

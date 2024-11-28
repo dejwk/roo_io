@@ -18,10 +18,10 @@ class OutputStream {
 
   // Tries to write up to count bytes. On success, returns the number of bytes
   // written. On failure, returns < 0.
-  virtual int write(const byte* buf, unsigned int count) = 0;
+  virtual int write(const byte* buf, size_t count) = 0;
 
-  virtual int writeFully(const byte* buf, unsigned int count) {
-    unsigned int written_total = 0;
+  virtual int writeFully(const byte* buf, size_t count) {
+    size_t written_total = 0;
     while (count > 0) {
       int written_now = write(buf, count);
       if (written_now <= 0) break;

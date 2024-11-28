@@ -43,7 +43,7 @@
 //   // that have been read before the error was encountered (possibly zero, but
 //   // might be greater than zero).
 //   //
-//   unsigned int read(byte* result, unsigned int count);
+//   size_t read(byte* result, size_t count);
 //
 //   // Skips over the specified count of bytes. Updates the `status()`.
 //   //
@@ -57,7 +57,7 @@
 //   // The behavior of skip should be equivalent to:
 //   // while (count-- > 0) read();
 //   //
-//   void skip(unsigned int count);
+//   void skip(size_t count);
 //
 //   // Returns `kOk` if the last `read` or `skip` operation succeeded. Returns
 //   // `kEndOfStream` if the last operation moved the stream past the end.
@@ -84,11 +84,11 @@
 //   //
 //   // In case of success or end-of-stream, position pointer is advanced by the
 //   // number of elements read.
-//   unsigned int read(byte* result, unsigned int count);
+//   size_t read(byte* result, size_t count);
 //
 //   // Same as in the 'input iterator' above.
 //   //
-//   void skip(unsigned int count);
+//   void skip(size_t count);
 //
 //   // Same as in the 'input iterator' above.
 //   //
