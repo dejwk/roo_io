@@ -104,6 +104,13 @@ TEST(Read, Double) {
   EXPECT_EQ(num, HostNativeReader<double>().read(itr));
 }
 
+TEST(Read, HostNativeOverflow) {
+  double num = 34664315.451;
+  MemoryIterator itr((const byte*)&num, (const byte*)&num + 2);
+  EXPECT_EQ(5.0, HostNativeReader<double>().read(itr, 5.0));
+  EXPECT_EQ(kEndOfStream, itr.status());
+}
+
 TEST(Read, VarU64_0) {
   byte d[] = {0};
   MemoryIterator i(d, d + 1);
