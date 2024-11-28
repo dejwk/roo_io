@@ -130,6 +130,11 @@ constexpr int64_t ReadLeS64(InputIterator& in) {
   return (int64_t)ReadLeU64(in);
 }
 
+// Reads `count` bytes from the input iterator, storing them in the result.
+// Returns the number of bytes successfully read. If the returned value is
+// smaller than `count`, it indicates that the end of stream has been reached,
+// or that an error was encountered. The `status()` of the underlying iterator
+// can be used to determine the cause.
 template <typename InputIterator>
 unsigned int ReadByteArray(InputIterator& in, byte* result,
                            unsigned int count) {
@@ -144,6 +149,9 @@ unsigned int ReadByteArray(InputIterator& in, byte* result,
   return read_total;
 }
 
+// Reads an unsigned 64-bit integer, encoded using variable-length encoding as
+// defined by Google protocol buffers. (Small numbers take little space; numbers
+// up to 127 take 1 byte).
 template <typename InputIterator>
 uint64_t ReadVarU64(InputIterator& in) {
   uint64_t result = 0;

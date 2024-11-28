@@ -104,5 +104,62 @@ TEST(Read, Double) {
   EXPECT_EQ(num, HostNativeReader<double>().read(itr));
 }
 
+TEST(Read, VarU64_0) {
+  byte d[] = {0};
+  MemoryIterator i(d, d + 1);
+  EXPECT_EQ(0, ReadVarU64(i));
+}
+
+TEST(Read, VarU64_1) {
+  byte d[] = {1};
+  MemoryIterator i(d, d + 1);
+  EXPECT_EQ(1, ReadVarU64(i));
+}
+
+TEST(Read, VarU64_127) {
+  byte d[] = {0x7F};
+  MemoryIterator i(d, d + 1);
+  EXPECT_EQ(127, ReadVarU64(i));
+}
+
+TEST(Read, VarU64_128) {
+  byte d[] = {0x80, 0x01};
+  MemoryIterator i(d, d + 2);
+  EXPECT_EQ(128, ReadVarU64(i));
+}
+
+TEST(Read, VarU64_150) {
+  byte d[] = {0x96, 0x01};
+  MemoryIterator i(d, d + 2);
+  EXPECT_EQ(150, ReadVarU64(i));
+}
+
+struct DrippingIterator {
+  const char* data;
+  const char* end;
+  unsigned int read(byte* buf, unsigned int count) {
+    if (count > 3) count = 3;
+    if (count > end - data) count = end - data;
+    memcpy(buf, data, count);
+    data += count;
+    return count;
+  }
+};
+
+TEST(Read, ByteArray) {
+  const char* in = "ABCDEFGH";
+  DrippingIterator itr{in, in + 8 };
+  char result[] = "        ";
+  EXPECT_EQ(5, ReadByteArray(itr, (byte*)result, 5));
+  EXPECT_STREQ("ABCDE   ", result);
+}
+
+TEST(Read, ByteArrayOverflow) {
+  const char* in = "ABCD";
+  DrippingIterator itr{in, in + 4 };
+  char result[] = "        ";
+  EXPECT_EQ(4, ReadByteArray(itr, (byte*)result, 10));
+  EXPECT_STREQ("ABCD    ", result);
+}
 
 }  // namespace roo_io
