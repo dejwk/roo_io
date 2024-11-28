@@ -1,108 +1,111 @@
 #include "roo_io/memory/store.h"
 
-// For StoreHostNative.
-#include "roo_io/memory/load.h"
-
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "roo_io/memory/load.h"  // For StoreHostNative.
 
-// byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+using namespace testing;
 
 namespace roo_io {
 
 TEST(Store, BeU16) {
-  char data[] = "EAEAEAEA";
-  StoreBeU16(0x4849, (byte*)data);
-  EXPECT_STREQ("HIEAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeU16(0x4849, data);
+  EXPECT_THAT(data, ElementsAre(0x48, 0x49, 9, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, LeU16) {
-  char data[] = "EAEAEAEA";
-  StoreLeU16(0x4849, (byte*)data);
-  EXPECT_STREQ("IHEAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeU16(0x4849, data);
+  EXPECT_THAT(data, ElementsAre(0x49, 0x48, 9, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, BeU24) {
-  char data[] = "EAEAEAEA";
-  StoreBeU24(0x48494A, (byte*)data);
-  EXPECT_STREQ("HIJAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeU24(0x48494A, data);
+  EXPECT_THAT(data, ElementsAre(0x48, 0x49, 0x4A, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, LeU24) {
-  char data[] = "EAEAEAEA";
-  StoreLeU24(0x48494A, (byte*)data);
-  EXPECT_STREQ("JIHAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeU24(0x48494A, data);
+  EXPECT_THAT(data, ElementsAre(0x4A, 0x49, 0x48, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, BeU32) {
-  char data[] = "EAEAEAEA";
-  StoreBeU32(0x48494A4B, (byte*)data);
-  EXPECT_STREQ("HIJKEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeU32(0x48494A4B, data);
+  EXPECT_THAT(data, ElementsAre(0x48, 0x49, 0x4A, 0x4B, 9, 9, 9, 9));
 }
 
 TEST(Store, LeU32) {
-  char data[] = "EAEAEAEA";
-  StoreLeU32(0x48494A4B, (byte*)data);
-  EXPECT_STREQ("KJIHEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeU32(0x48494A4B, data);
+  EXPECT_THAT(data, ElementsAre(0x4B, 0x4A, 0x49, 0x48, 9, 9, 9, 9));
 }
 
 TEST(Store, BeU64) {
-  char data[] = "EAEAEAEAEA";
-  StoreBeU64(0x48494A4B4C4D4E4F, (byte*)data);
-  EXPECT_STREQ("HIJKLMNOEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeU64(0x48494A4B4C4D4E4F, data);
+  EXPECT_THAT(
+      data, ElementsAre(0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F, 9, 9));
 }
 
 TEST(Store, LeU64) {
-  char data[] = "EAEAEAEAEA";
-  StoreLeU64(0x48494A4B4C4D4E4F, (byte*)data);
-  EXPECT_STREQ("ONMLKJIHEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeU64(0x48494A4B4C4D4E4F, data);
+  EXPECT_THAT(
+      data, ElementsAre(0x4F, 0x4E, 0x4D, 0x4C, 0x4B, 0x4A, 0x49, 0x48, 9, 9));
 }
 
 TEST(Store, BeS16) {
-  char data[] = "EAEAEAEA";
-  StoreBeS16(-2, (byte*)data);
-  EXPECT_STREQ("\xFF\xFE" "EAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeS16(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFF, 0xFE, 9, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, LeS16) {
-  char data[] = "EAEAEAEA";
-  StoreLeS16(-2, (byte*)data);
-  EXPECT_STREQ("\xFE\xFF" "EAEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeS16(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFE, 0xFF, 9, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, BeS24) {
-  char data[] = "EAEAEAEA";
-  StoreBeS24(-2, (byte*)data);
-  EXPECT_STREQ("\xFF\xFF\xFE" "AEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeS24(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFF, 0xFF, 0xFE, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, LeS24) {
-  char data[] = "EAEAEAEA";
-  StoreLeS24(-2, (byte*)data);
-  EXPECT_STREQ("\xFE\xFF\xFF" "AEAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeS24(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFE, 0xFF, 0xFF, 9, 9, 9, 9, 9));
 }
 
 TEST(Store, BeS32) {
-  char data[] = "EAEAEAEA";
-  StoreBeS32(-2, (byte*)data);
-  EXPECT_STREQ("\xFF\xFF\xFF\xFE" "EAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeS32(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFF, 0xFF, 0xFF, 0xFE, 9, 9, 9, 9));
 }
 
 TEST(Store, LeS32) {
-  char data[] = "EAEAEAEA";
-  StoreLeS32(-2, (byte*)data);
-  EXPECT_STREQ("\xFE\xFF\xFF\xFF" "EAEA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeS32(-2, data);
+  EXPECT_THAT(data, ElementsAre(0xFE, 0xFF, 0xFF, 0xFF, 9, 9, 9, 9));
 }
 
 TEST(Store, BeS64) {
-  char data[] = "EAEAEAEAEA";
-  StoreBeS64(-2, (byte*)data);
-  EXPECT_STREQ("\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFE" "EA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
+  StoreBeS64(-2, data);
+  EXPECT_THAT(
+      data, ElementsAre(0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 9, 9));
 }
 
 TEST(Store, LeS64) {
-  char data[] = "EAEAEAEAEA";
-  StoreLeS64(-2, (byte*)data);
-  EXPECT_STREQ("\xFE\xFF\xFF\xFF\xFF\xFF\xFF\xFF" "EA", data);
+  byte data[] = {9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
+  StoreLeS64(-2, data);
+  EXPECT_THAT(
+      data, ElementsAre(0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 9, 9));
 }
 
 TEST(Store, Float) {
