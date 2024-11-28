@@ -85,7 +85,7 @@ class SafeGenericMemoryIterator {
 
   PtrType ptr() const { return ptr_; }
 
- protected:
+ private:
   PtrType ptr_;
   PtrType end_;
 };
@@ -95,35 +95,69 @@ using MemoryIterator = SafeGenericMemoryIterator<const byte*>;
 // Iterator that reads from memory, starting at the specified `begin` address,
 // and up to the specified `end` address.
 //
-// Memory footprint is three pointers (12 bytes on 32-bit architectures).
+// Memory footprint is three pointers and a boolean.
 //
 // Implements the 'multipass input iterator' template contract.
 template <typename PtrType>
-class MultipassGenericMemoryIterator
-    : public SafeGenericMemoryIterator<PtrType> {
+class MultipassGenericMemoryIterator {
  public:
   MultipassGenericMemoryIterator(PtrType begin, PtrType end)
-      : SafeGenericMemoryIterator<PtrType>(begin, end), begin_(begin) {}
+      : ptr_(begin), position_(0), size_(end - begin), eos_(false) {}
 
-  uint64_t size() const {
-    return SafeGenericMemoryIterator<PtrType>::end_ - begin_;
+  byte read() {
+    if (position_ >= size_) {
+      eos_ = true;
+      return 0;
+    }
+    return ptr_[position_++];
   }
 
-  uint64_t position() const {
-    return SafeGenericMemoryIterator<PtrType>::ptr_ == nullptr
-               ? size()
-               : SafeGenericMemoryIterator<PtrType>::ptr_ - begin_;
+  unsigned int read(byte* result, unsigned int count) {
+    if (position_ >= size_) {
+      eos_ = true;
+      return 0;
+    }
+    if (count > size_ - position_) {
+      count = size_ - position_;
+    }
+    memcpy(result, ptr_ + position_, count);
+    position_ += count;
+    return count;
   }
 
-  void rewind() { SafeGenericMemoryIterator<PtrType>::ptr_ = begin_; }
+  void skip(unsigned int count) {
+    if (position_ + count <= size_) {
+      position_ += count;
+    } else {
+      position_ = size_;
+      eos_ = true;
+      return;
+    }
+  }
+
+  Status status() const { return eos_ ? kEndOfStream : kOk; }
+
+  PtrType ptr() const { return ptr_ + position_; }
+
+  uint64_t size() const { return size_; }
+
+  uint64_t position() const { return position_; }
+
+  void rewind() {
+    position_ = 0;
+    eos_ = false;
+  }
 
   void seek(uint64_t position) {
-    SafeGenericMemoryIterator<PtrType>::ptr_ =
-        (position > size()) ? nullptr : begin_ + position;
+    position_ = position;
+    eos_ = false;
   }
 
  private:
-  PtrType begin_;
+  PtrType ptr_;
+  size_t position_;
+  size_t size_;
+  bool eos_;
 };
 
 using MultipassMemoryIterator = MultipassGenericMemoryIterator<const byte*>;

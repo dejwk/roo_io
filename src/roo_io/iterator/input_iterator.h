@@ -54,6 +54,9 @@
 //   //
 //   // In case of error, updates the status accordingly.
 //   //
+//   // The behavior of skip should be equivalent to:
+//   // while (count-- > 0) read();
+//   //
 //   void skip(unsigned int count);
 //
 //   // Returns `kOk` if the last `read` or `skip` operation succeeded. Returns
@@ -73,10 +76,14 @@
 //
 //   // Same as in the 'input iterator' above.
 //   //
+//   // Successful read advances the position pointer. Read that encounters end
+//   // of stream leaves the position pointer unchanged.
 //   byte read();
 //
 //   // Same as in the 'input iterator' above.
 //   //
+//   // In case of success or end-of-stream, position pointer is advanced by the
+//   // number of elements read.
 //   unsigned int read(byte* result, unsigned int count);
 //
 //   // Same as in the 'input iterator' above.
@@ -99,25 +106,30 @@
 //   uint64_t size();
 //
 //   // Returns the current byte offset relative to the beginning of the stream.
-//   // Returns zero if the status is not `kOk`. Not expected to fail.
+//   // If the status is neither `kOk` nor `kEndOfStream`, can return an
+//   // arbitrary value.
 //   //
 //   uint64_t position() const;
 //
 //   // Resets the stream to its starting position.
 //   //
-//   // If the status was not `kOk` prior to the call, leaves it as is. In case
-//   // of error, updates the status accordingly.
+//   // If the status was neither 'kOk' nor 'kEndOfStream' prior to the call,
+//   // leaves it as is. In case of success, resets status to 'kOk'
+//   // (potentially clearing the end-of-stream status). On error, updates the
+//   // status accordingly.
 //   //
 //   void rewind();
 //
 //   // Resets the stream to the specified byte offset relative to the starting
-//   // position.
+//   // position. The offset may be past the current `size()`.
 //   //
-//   // If the status was not `kOk` prior to the call, leaves it as is. In case
-//   // of error, updates the status accordingly.
+//   // If the status was neither 'kOk' nor 'kEndOfStream' prior to the call,
+//   // leaves it as is. In case of error, updates the status accordingly.
 //   //
-//   // If the status is `kOk` after the method returns, a call to `position()`
-//   // should return value equal to `position`.
+//   // On success, clears the end-of-stream status (updating status to 'kOk').
+//   //
+//   // After a successful seek, a call to `position()` should return value
+//   // equal to `position`.
 //   //
 //   void seek(uint64_t position);
 // };
