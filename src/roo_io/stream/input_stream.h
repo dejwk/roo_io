@@ -17,12 +17,15 @@ class InputStream {
 
   virtual void close() {};
 
-  // Tries to read at least one byte, blocking if necessary. Returns zero on
-  // EOF, negative value on error, and the number of bytes read otherwise.
-  virtual int read(byte* buf, size_t count) = 0;
+  // Reads up to `count` bytes into `result`, and updates `status()`. Returns
+  // the number of bytes read, which must be greater than zero on success
+  // (i.e. when `status()` returns 'kOk'), zero on end-of-stream (i.e. when
+  // `status()` returns 'kEndOfStream'), and possibly zero on error (i.e.
+  // when `status()` returns another value).
+  virtual size_t read(byte* result, size_t count) = 0;
 
   // Reads the prescribed number of bytes, blocking if necessary.
-  virtual int readFully(byte* buf, size_t count) {
+  virtual size_t readFully(byte* buf, size_t count) {
     size_t read_total = 0;
     while (count > 0) {
       int read_now = read(buf, count);

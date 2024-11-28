@@ -16,11 +16,11 @@ class PosixFileInputStream : public MultipassInputStream {
   PosixFileInputStream(FILE* file)
       : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
 
-  int read(byte* buf, size_t count) override {
-    if (status_ != kOk && status_ != kEndOfStream) return -1;
+  size_t read(byte* buf, size_t count) override {
+    if (status_ != kOk) return 0;
     int result = fread(buf, 1, count, file_);
-    if (result == count) return result;
-    if (ferror(file_)) {
+    if (result > 0) return result;
+    if (ferror(file_) != 0) {
       switch (errno) {
         case ENOMEM: {
           status_ = kOutOfMemory;
@@ -30,12 +30,14 @@ class PosixFileInputStream : public MultipassInputStream {
           status_ = kUnknownIOError;
           break;
       }
-    }
-    if (result == 0 && count > 0 && feof(file_) != 0) {
-      status_ = kEndOfStream;
       return 0;
     }
-    return result;
+    if (feof(file_) != 0) {
+      status_ = kEndOfStream;
+    } else {
+      status_ = kUnknownIOError;
+    }
+    return 0;
   }
 
   bool seek(uint64_t offset) override {

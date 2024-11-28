@@ -12,7 +12,7 @@ class NullInputStream : public MultipassInputStream {
 
   void close() override {}
 
-  int read(byte* buf, size_t count) override { return -1; }
+  size_t read(byte* buf, size_t count) override { return 0; }
 
   bool skip(uint64_t count) override { return 0; }
 

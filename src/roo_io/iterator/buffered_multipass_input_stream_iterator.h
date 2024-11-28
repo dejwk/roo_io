@@ -19,7 +19,7 @@ class BufferedMultipassInputStreamIterator {
 
   byte read() { return rep_->read(); }
 
-  int read(byte* buf, size_t count) { return rep_->read(buf, count); }
+  size_t read(byte* buf, size_t count) { return rep_->read(buf, count); }
 
   void skip(size_t count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
@@ -43,7 +43,7 @@ class BufferedMultipassInputStreamIterator {
     Rep(roo_io::MultipassInputStream& input);
     // ~Rep();
     byte read();
-    int read(byte* buf, size_t count);
+    size_t read(byte* buf, size_t count);
     void skip(size_t count);
 
     Status status() const { return status_; }
@@ -131,11 +131,11 @@ inline byte BufferedMultipassInputStreamIterator::Rep::read() {
     return buffer_[offset_++];
   }
   if (status_ != kOk) return 0;
-  int len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
-  if (len <= 0) {
+  size_t len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
+  if (len == 0) {
     offset_ = 0;
     length_ = 0;
-    status_ = kEndOfStream;
+    status_ = input_->status();
     return 0;
   }
   offset_ = 1;
@@ -143,8 +143,8 @@ inline byte BufferedMultipassInputStreamIterator::Rep::read() {
   return buffer_[0];
 }
 
-inline int BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
-                                                           size_t count) {
+inline size_t BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
+                                                              size_t count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.
     if (count > (length_ - offset_)) count = length_ - offset_;
@@ -154,24 +154,24 @@ inline int BufferedMultipassInputStreamIterator::Rep::read(byte* buf,
   }
   if (status_ != kOk) {
     // Already done; return the last status.
-    status_ == kEndOfStream ? 0 : status_;
+    return 0;
   }
   if (count >= kMultipassInputStreamIteratorBufferSize) {
     // Skip buffering; read directly into the client's buffer.
-    int len = input_->read(buf, count);
-    if (len <= 0) {
+    size_t len = input_->read(buf, count);
+    if (len == 0) {
       offset_ = 0;
       length_ = 0;
-      status_ = (len == 0 ? kEndOfStream : kReadError);
+      status_ = input_->status();
     }
     return len;
   }
-  int len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
-  if (len <= 0) {
+  size_t len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
+  if (len == 0) {
     offset_ = 0;
     length_ = 0;
     status_ = (len == 0 ? kEndOfStream : kReadError);
-    return len;
+    return 0;
   }
   length_ = len;
   if (count > length_) count = length_;
