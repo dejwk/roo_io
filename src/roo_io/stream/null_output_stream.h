@@ -14,7 +14,7 @@ class NullOutputStream : public OutputStream {
 
   Status status() const override { return status_; }
 
-  int write(const byte* buf, size_t count) override { return -1; }
+  size_t write(const byte* buf, size_t count) override { return 0; }
 
  private:
   Status status_;

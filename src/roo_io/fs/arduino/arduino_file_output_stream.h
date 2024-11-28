@@ -14,10 +14,11 @@ class ArduinoFileOutputStream : public OutputStream {
   ArduinoFileOutputStream(fs::File file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
 
-  int write(const byte* buf, size_t count) override {
-    int result = file_.write(buf, count);
-    if (result == 0 && status_ == roo_io::kOk) {
-      status_ = roo_io::kReadError;
+  size_t write(const byte* buf, size_t count) override {
+    if (status_ != kOk) return 0;
+    size_t result = file_.write(buf, count);
+    if (result < count) {
+      status_ = roo_io::kWriteError;
     }
     return result;
   }

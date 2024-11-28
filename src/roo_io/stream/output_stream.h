@@ -17,14 +17,14 @@ class OutputStream {
   virtual void close() { flush(); }
 
   // Tries to write up to count bytes. On success, returns the number of bytes
-  // written. On failure, returns < 0.
-  virtual int write(const byte* buf, size_t count) = 0;
+  // written. On failure, returns 0, and updates the `status()`.
+  virtual size_t write(const byte* buf, size_t count) = 0;
 
-  virtual int writeFully(const byte* buf, size_t count) {
+  virtual size_t writeFully(const byte* buf, size_t count) {
     size_t written_total = 0;
     while (count > 0) {
-      int written_now = write(buf, count);
-      if (written_now <= 0) break;
+      size_t written_now = write(buf, count);
+      if (written_now == 0) break;
       buf += written_now;
       written_total += written_now;
       count -= written_now;

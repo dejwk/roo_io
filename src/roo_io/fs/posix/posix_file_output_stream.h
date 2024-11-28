@@ -16,9 +16,9 @@ class PosixFileOutputStream : public OutputStream {
   PosixFileOutputStream(FILE* file)
       : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
 
-  int write(const byte* buf, size_t count) override {
-    if (status_ != kOk && status_ != kEndOfStream) return -1;
-    int result = ::fwrite(buf, 1, count, file_);
+  size_t write(const byte* buf, size_t count) override {
+    if (status_ != kOk) return 0;
+    size_t result = ::fwrite(buf, 1, count, file_);
     if (result == count) return result;
     if (ferror(file_)) {
       switch (errno) {
@@ -34,10 +34,8 @@ class PosixFileOutputStream : public OutputStream {
           status_ = kUnknownIOError;
           break;
       }
-    }
-    if (result == 0 && count > 0 && feof(file_) != 0) {
-      status_ = kEndOfStream;
-      return 0;
+    } else {
+      status_ = kUnknownIOError;
     }
     return result;
   }

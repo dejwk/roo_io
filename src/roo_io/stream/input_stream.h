@@ -29,7 +29,7 @@ class InputStream {
     size_t read_total = 0;
     while (count > 0) {
       int read_now = read(buf, count);
-      if (read_now <= 0) break;
+      if (read_now == 0) break;
       buf += read_now;
       read_total += read_now;
       count -= read_now;
