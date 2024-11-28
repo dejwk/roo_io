@@ -77,7 +77,7 @@
 #  define bswap16(x)     _byteswap_ushort((x))
 #  define bswap32(x)     _byteswap_ulong((x))
 #  define bswap64(x)     _byteswap_uint64((x))
-#elif defined(ESP32)  // endian.h already defines these.
+#elif defined(ESP32) && !defined(__linux__) // endian.h already defines these.
 #elif (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
 #  define bswap16(x)     __builtin_bswap16((x))
 #  define bswap32(x)     __builtin_bswap32((x))
