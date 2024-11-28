@@ -20,3 +20,14 @@ cc_test(
         "//lib/roo_io:testing",
     ],
 )
+
+cc_test(
+    name = "write_test",
+    srcs = [
+        "write_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+    ],
+)
