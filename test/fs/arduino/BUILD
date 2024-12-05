@@ -2,10 +2,12 @@
 cc_library(
     name = "fakefs",
     srcs = [
-        "fakefs_arduino.cpp",
-        "fakefs_arduino.h",
         "fakefs.h",
-        "fakefs.cpp"
+        "fakefs.cpp",
+        "fakefs_arduino.h",
+        "fakefs_arduino.cpp",
+        "fakefs_reference.h",
+        "fakefs_reference.cpp",
     ],
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
