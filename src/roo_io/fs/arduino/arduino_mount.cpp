@@ -21,7 +21,7 @@ Status CheckParentage(FS& fs, const char* path) {
     {
       fs::File f = fs.open(dup_path.get());
       if (!f) return kNotFound;
-      if (!f.isDirectory()) return kAncestorNotDirectory;
+      if (!f.isDirectory()) return kNotDirectory;
     }
     dup_path[pos] = '/';
     ++pos;

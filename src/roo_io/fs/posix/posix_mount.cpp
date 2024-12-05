@@ -91,7 +91,7 @@ Status PosixMountImpl::remove(const char* path) {
     case ENOENT:
       return kNotFound;
     case ENOTDIR:
-      return kAncestorNotDirectory;
+      return kNotDirectory;
     case EISDIR:
       return kNotFile;
     default:
@@ -272,7 +272,7 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
     case ENOENT:
       return OutputError(kNotFound);
     case ENOTDIR:
-      return OutputError(kAncestorNotDirectory);
+      return OutputError(kNotDirectory);
     case EISDIR:
       return OutputError(kNotFile);
     case ENFILE:

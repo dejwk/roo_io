@@ -30,16 +30,12 @@ enum Status {
   // exists and it is a directory.
   kDirectoryExists,
 
-  // An operation was requested that expects an existing directory, while the
-  // destination exists but it is not a directory.
+  // A component used as a directory in the path is not, in fact, a directory.
   kNotDirectory,
 
   // An operation was requested that expects an existing file, while the
   // destination exists but it is not a file.
   kNotFile,
-
-  // A component used as a directory in the path is not, in fact, a directory.
-  kAncestorNotDirectory,
 
   // The 'rmdir' operation was requested, while the target directory exists but
   // it is not empty.
