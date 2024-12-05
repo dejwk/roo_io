@@ -120,23 +120,42 @@ std::list<std::unique_ptr<Entry>>::iterator Dir::lookup(
 void DirIterator::open(Dir& dir) {
   // status_ = kOk;
   dir_ = &dir;
-  current_ = dir_->entries_.begin();
+  current_ = {};
+  bos_ = true;
+}
+
+void DirIterator::close() {
+  dir_ = nullptr;
+  current_ = {};
+  bos_ = true;
+}
+
+bool DirIterator::isOpen() const {
+  return dir_ != nullptr;
 }
 
 bool DirIterator::ok() const {
-  return dir_ != nullptr && current_ != dir_->entries_.end();
+  return isOpen() && current_ != dir_->entries_.end();
 }
 
 void DirIterator::rewind() {
   if (dir_ != nullptr) {
-    current_ = dir_->entries_.begin();
+    current_ = {};
+    bos_ = true;
   }
 }
 
 bool DirIterator::next() {
-  if (!ok()) return false;
-  ++current_;
-  return true;
+  if (!isOpen()) return false;
+  if (bos_) {
+    current_ = dir_->entries_.begin();
+    bos_ = false;
+    return (current_ != dir_->entries_.end());
+  } else {
+    if (current_ == dir_->entries_.end()) return false;
+    ++current_;
+    return true;
+  }
 }
 
 std::unique_ptr<Entry> Entry::DirEntry(const std::string& name) {

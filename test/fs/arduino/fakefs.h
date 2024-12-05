@@ -99,7 +99,12 @@ class DirIterator {
   DirIterator(DirIterator&& other) = default;
 
   void open(Dir& dir);
+  void close();
 
+  // Returns true if the iterator is open; possibly at end-of-stream.
+  bool isOpen() const;
+
+  // Returns true if the iterator points at a valid entry.
   bool ok() const;
 
   void rewind();
@@ -111,6 +116,7 @@ class DirIterator {
  private:
   //   Status status_;
   Dir* dir_;
+  bool bos_;
   std::list<std::unique_ptr<Entry>>::iterator current_;
 };
 
@@ -137,6 +143,8 @@ class FileStream {
   size_t write(const byte* source, size_t size);
 
   void seek(size_t pos);
+
+  void skip(size_t offset) { position_ += offset; }
 
   size_t size() const { return isOpen() ? file_->size() : 0; }
   size_t position() const { return position_; }
