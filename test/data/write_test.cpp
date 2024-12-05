@@ -1,7 +1,7 @@
-#include "roo_io/data/write.h"
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include "roo_io/data/write.h"
 #include "roo_io/iterator/memory_output_iterator.h"
 #include "roo_io/memory/load.h"  // ForHostNativeWriter.
 

@@ -21,8 +21,7 @@ class ArduinoFileIterator {
     Rep(::File file);
     ~Rep();
     byte read();
-    int read(byte* buf, int count);
-    // void advance(uint32_t count);
+    size_t read(byte* buf, int count);
     void skip(uint32_t count);
 
    private:
