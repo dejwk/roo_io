@@ -28,7 +28,7 @@ Status SdFatMountImpl::remove(const char* path) {
   {
     FsFile f = fs_.open(path);
     if (!f) return kNotFound;
-    if (f.isDirectory()) return kIsDirectory;
+    if (!f.isFile()) return kNotFile;
   }
   if (read_only_) return kReadOnlyFilesystem;
   return fs_.remove(path) ? kOk : kUnknownIOError;
@@ -36,10 +36,11 @@ Status SdFatMountImpl::remove(const char* path) {
 
 Status SdFatMountImpl::rename(const char* pathFrom, const char* pathTo) {
   Stat src = stat(pathFrom);
-  if (!src.ok()) return src.status();
-  if (!src.exists()) return kNotFound;
+  if (!src.exists()) {
+    return src.status();
+  }
   Stat dst = stat(pathTo);
-  if (!dst.ok()) return dst.status();
+  if (dst.status() != kOk) return dst.status();
   if (dst.exists()) return dst.isDirectory() ? kDirectoryExists : kFileExists;
   return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
 }
@@ -118,7 +119,7 @@ std::unique_ptr<OutputStream> SdFatMountImpl::fopenForWrite(
   if (update_policy == kFailIfExists) {
     f = fs_.open(path);
     if (f) {
-      return OutputError(f.isDirectory() ? kIsDirectory : kFileExists);
+      return OutputError(f.isDirectory() ? kDirectoryExists : kFileExists);
     }
     f = fs_.open(path, O_WRONLY | O_CREAT | O_TRUNC);
   } else {
@@ -134,8 +135,8 @@ std::unique_ptr<OutputStream> SdFatMountImpl::fopenForWrite(
     f = fs_.open(path, oflag);
     if (!f) {
       f = fs_.open(path);
-      if (f.isDirectory()) {
-        return OutputError(kIsDirectory);
+      if (!f.isFile()) {
+        return OutputError(kNotFile);
       }
       return OutputError(kOpenError);
     }

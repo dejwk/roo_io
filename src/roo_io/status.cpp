@@ -32,10 +32,12 @@ const char* StatusAsString(Status status) {
       return "file already exists";
     case kDirectoryExists:
       return "directory already exists";
-    case kIsDirectory:
-      return "is a directory";
+    case kAncestorNotDirectory:
+      return "a path component is not a directory";
+    case kNotFile:
+      return "destination is not a file";
     case kNotDirectory:
-      return "not a directory";
+      return "destination is not a directory";
     case kDirectoryNotEmpty:
       return "directory not empty";
     case kInvalidPath:

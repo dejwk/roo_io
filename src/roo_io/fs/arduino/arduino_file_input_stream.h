@@ -20,7 +20,8 @@ class ArduinoFileInputStream : public MultipassInputStream {
       status_ = kEndOfStream;
       return 0;
     } else if (result == ((size_t)(-1))) {
-      status_ = file_.operator bool() ? roo_io::kReadError : roo_io::kClosed;
+      // Indicates an error.
+      status_ = kReadError;
       return 0;
     }
     return result;

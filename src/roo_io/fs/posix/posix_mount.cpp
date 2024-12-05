@@ -26,6 +26,16 @@ std::unique_ptr<char[]> cat(const char* mount_point, const char* path) {
   return tmp;
 }
 
+Status ResolveExistsError(const char* full_path) {
+  struct stat st;
+  if (::stat(full_path, &st) == 0) {
+    // Found!
+    return (S_ISDIR(st.st_mode)) ? kDirectoryExists : kFileExists;
+  } else {
+    return kUnknownIOError;
+  }
+}
+
 }  // namespace
 
 PosixMountImpl::PosixMountImpl(const char* mount_point, bool read_only,
@@ -81,7 +91,9 @@ Status PosixMountImpl::remove(const char* path) {
     case ENOENT:
       return kNotFound;
     case ENOTDIR:
-      return kNotDirectory;
+      return kAncestorNotDirectory;
+    case EISDIR:
+      return kNotFile;
     default:
       return kUnknownIOError;
   }
@@ -107,9 +119,7 @@ Status PosixMountImpl::rename(const char* pathFrom, const char* pathTo) {
     case ENOENT:
       return kNotFound;
     case EEXIST: {
-      Stat s = stat(pathTo);
-      if (!s.ok()) return s.status();
-      return s.isDirectory() ? kDirectoryExists : kFileExists;
+      return ResolveExistsError(full_dst_path.get());
     }
     case EINVAL:
       return kInvalidPath;
@@ -128,8 +138,9 @@ Status PosixMountImpl::mkdir(const char* path) {
   if (full_path.get() == nullptr) return kOutOfMemory;
   if (::mkdir(full_path.get(), 0777) == 0) return kOk;
   switch (errno) {
-    case EEXIST:
-      return kDirectoryExists;
+    case EEXIST: {
+      return ResolveExistsError(full_path.get());
+    }
     case ENAMETOOLONG:
       return kInvalidPath;
     case ENOENT:
@@ -163,6 +174,7 @@ Status PosixMountImpl::rmdir(const char* path) {
     case ENOENT:
       return kNotFound;
     case ENOTDIR:
+      // TODO: differentiate between this and kAncestorNotDirectory.
       return kNotDirectory;
     case EROFS:
       return kReadOnlyFilesystem;
@@ -260,9 +272,9 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
     case ENOENT:
       return OutputError(kNotFound);
     case ENOTDIR:
-      return OutputError(kNotDirectory);
+      return OutputError(kAncestorNotDirectory);
     case EISDIR:
-      return OutputError(kIsDirectory);
+      return OutputError(kNotFile);
     case ENFILE:
       return OutputError(kTooManyFilesOpen);
     case ENOMEM:

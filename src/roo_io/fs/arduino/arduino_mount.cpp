@@ -2,6 +2,34 @@
 
 namespace roo_io {
 
+namespace {
+
+Status CheckParentage(FS& fs, const char* path) {
+  std::unique_ptr<char[]> dup_path(strdup(path));
+  size_t pos = 0;
+  while (true) {
+    while (dup_path[pos] == '/') ++pos;
+    while (dup_path[pos] != '/') {
+      if (dup_path[pos] == 0) {
+        // We ignore the type and existence of the last segment, since our job
+        // is only to check parentage.
+        return kOk;
+      }
+      ++pos;
+    }
+    dup_path[pos] = 0;
+    {
+      fs::File f = fs.open(dup_path.get());
+      if (!f) return kNotFound;
+      if (!f.isDirectory()) return kAncestorNotDirectory;
+    }
+    dup_path[pos] = '/';
+    ++pos;
+  }
+}
+
+}  // namespace
+
 ArduinoMountImpl::ArduinoMountImpl(FS& fs, bool read_only,
                                    std::function<void()> unmount_fn)
     : MountImpl(unmount_fn), fs_(fs), read_only_(read_only) {}
@@ -25,7 +53,7 @@ Status ArduinoMountImpl::remove(const char* path) {
   {
     fs::File f = fs_.open(path);
     if (!f) return kNotFound;
-    if (f.isDirectory()) return kIsDirectory;
+    if (f.isDirectory()) return kNotFile;
   }
   if (read_only_) return kReadOnlyFilesystem;
   return fs_.remove(path) ? kOk : kUnknownIOError;
@@ -33,10 +61,11 @@ Status ArduinoMountImpl::remove(const char* path) {
 
 Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
   Stat src = stat(pathFrom);
-  if (!src.ok()) return src.status();
-  if (!src.exists()) return kNotFound;
+  if (!src.exists()) {
+    return src.status();
+  }
   Stat dst = stat(pathTo);
-  if (!dst.ok()) return dst.status();
+  if (dst.status() != kOk) return dst.status();
   if (dst.exists()) return dst.isDirectory() ? kDirectoryExists : kFileExists;
   return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
 }
@@ -45,16 +74,19 @@ Status ArduinoMountImpl::mkdir(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
-  {
-    if (fs_.exists(path)) {
-      fs::File f = fs_.open(path);
-      if (f) {
-        return f.isDirectory() ? kDirectoryExists : kFileExists;
-      }
+  if (read_only_) return kReadOnlyFilesystem;
+  if (fs_.mkdir(path)) return kOk;
+  if (fs_.exists(path)) {
+    fs::File f = fs_.open(path);
+    if (f) {
+      return f.isDirectory() ? kDirectoryExists : kFileExists;
+    } else {
+      return kUnknownIOError;
     }
   }
-  if (read_only_) return kReadOnlyFilesystem;
-  return fs_.mkdir(path) ? kOk : kUnknownIOError;
+  Status status = CheckParentage(fs_, path);
+  if (status != kOk) return status;
+  return kUnknownIOError;
 }
 
 Status ArduinoMountImpl::rmdir(const char* path) {
@@ -119,7 +151,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     if (fs_.exists(path)) {
       f = fs_.open(path);
       return std::unique_ptr<OutputStream>(
-          new NullOutputStream(f.isDirectory() ? kIsDirectory : kFileExists));
+          new NullOutputStream(f.isDirectory() ? kDirectoryExists : kFileExists));
     }
     f = fs_.open(path, "w");
   } else {
@@ -130,7 +162,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
       f = fs_.open(path);
       if (f.isDirectory()) {
         return std::unique_ptr<OutputStream>(
-            new NullOutputStream(kIsDirectory));
+            new NullOutputStream(kNotFile));
       }
       return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
     }

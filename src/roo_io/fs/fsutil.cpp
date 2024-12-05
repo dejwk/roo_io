@@ -23,7 +23,7 @@ Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
 
 Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
   Stat stat = fs.stat(path);
-  if (!stat.ok()) return stat.status();
+  if (!stat.exists()) return stat.status();
   if (stat.isFile()) {
     return fs.remove(path);
   } else {
@@ -37,7 +37,6 @@ Status DeleteRecursively(roo_io::Mount& fs, const char* path) {
 
 Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
   Stat stat = fs.stat(path);
-  if (!stat.ok()) return stat.status();
   if (stat.exists()) {
     if (stat.isFile()) {
       return kNotDirectory;
@@ -45,6 +44,7 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
       return kDirectoryExists;
     }
   }
+  if (stat.status() != kNotFound) return stat.status();
 
   std::unique_ptr<char[]> path_copy(strdup(path));
   char* p = path_copy.get();
@@ -65,10 +65,10 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
 
 Status MkParentDirRecursively(roo_io::Mount& fs, const char* path) {
   Stat stat = fs.stat(path);
-  if (!stat.ok()) return stat.status();
   if (stat.exists()) {
     return kDirectoryExists;
   }
+  if (stat.status() != kNotFound) return stat.status();
 
   std::unique_ptr<char[]> path_copy(strdup(path));
   char* p = path_copy.get();
