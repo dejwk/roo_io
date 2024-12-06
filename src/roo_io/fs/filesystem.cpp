@@ -1,4 +1,6 @@
 #include "roo_io/fs/filesystem.h"
+#include "roo_io/stream/null_input_stream.h"
+#include "roo_io/stream/null_output_stream.h"
 
 namespace roo_io {
 

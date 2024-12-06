@@ -129,11 +129,9 @@ std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
   fs::File f = fs_.open(path, "r");
   if (!f) {
     if (!fs_.exists(path)) {
-      return std::unique_ptr<MultipassInputStream>(
-          new NullInputStream(kNotFound));
+      return InputError(kNotFound);
     } else {
-      return std::unique_ptr<MultipassInputStream>(
-          new NullInputStream(kOpenError));
+      return InputError(kOpenError);
     }
   }
   return std::unique_ptr<MultipassInputStream>(
@@ -143,15 +141,13 @@ std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
 std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     const char* path, FileUpdatePolicy update_policy) {
   if (read_only_) {
-    return std::unique_ptr<OutputStream>(
-        new NullOutputStream(kReadOnlyFilesystem));
+    return OutputError(kReadOnlyFilesystem);
   }
   fs::File f;
   if (update_policy == kFailIfExists) {
     if (fs_.exists(path)) {
       f = fs_.open(path);
-      return std::unique_ptr<OutputStream>(
-          new NullOutputStream(f.isDirectory() ? kDirectoryExists : kFileExists));
+      return OutputError(f.isDirectory() ? kDirectoryExists : kFileExists);
     }
     f = fs_.open(path, "w");
   } else {
@@ -161,14 +157,13 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     if (!f && fs_.exists(path)) {
       f = fs_.open(path);
       if (f.isDirectory()) {
-        return std::unique_ptr<OutputStream>(
-            new NullOutputStream(kNotFile));
+        return OutputError(kNotFile);
       }
-      return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
+      return OutputError(kOpenError);
     }
   }
   if (!f) {
-    return std::unique_ptr<OutputStream>(new NullOutputStream(kOpenError));
+    return OutputError(kOpenError);
   }
   return std::unique_ptr<OutputStream>(
       new ArduinoFileOutputStream(std::move(f)));
