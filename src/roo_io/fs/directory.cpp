@@ -20,13 +20,13 @@ const char* Directory::name() const {
 }
 
 void Directory::rewind() {
-  if (!ok()) return;
+  if (!isOpen()) return;
   dir_->rewind();
   status_ = dir_->status();
 }
 
 Directory::Entry Directory::read() {
-  if (!ok()) return Entry();
+  if (status() != kOk) return Entry();
   auto result = dir_->read();
   status_ = dir_->status();
   return result;

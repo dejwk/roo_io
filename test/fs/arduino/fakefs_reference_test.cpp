@@ -185,4 +185,53 @@ TEST_F(ReferenceFs, UnsuccessfulRename) {
   EXPECT_EQ(kDirectoryExists, mount().rename("/a/b", "/a/b"));
 }
 
+TEST_F(ReferenceFs, ListEmptyDir) {
+  Directory dir = mount().opendir("/");
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("/", dir.path());
+  EXPECT_STREQ("", dir.name());
+  Directory::Entry e = dir.read();
+  EXPECT_TRUE(e.done());
+  e = dir.read();
+  EXPECT_TRUE(e.done());
+  dir.rewind();
+  e = dir.read();
+  EXPECT_TRUE(e.done());
+}
+
+TEST_F(ReferenceFs, ListOneElemDir) {
+  CreateTextFile("/a/b/foo.txt", "foo");
+
+  Directory dir = mount().opendir("/a/b");
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("/a/b", dir.path());
+  EXPECT_STREQ("b", dir.name());
+  Directory::Entry e = dir.read();
+  EXPECT_FALSE(e.done());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("foo.txt", e.name());
+  EXPECT_STREQ("/a/b/foo.txt", e.path());
+  EXPECT_FALSE(e.isDirectory());
+  e = dir.read();
+  EXPECT_TRUE(e.done());
+  EXPECT_EQ(kEndOfStream, dir.status());
+  dir.rewind();
+  e = dir.read();
+  EXPECT_FALSE(e.done());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("foo.txt", e.name());
+  EXPECT_STREQ("/a/b/foo.txt", e.path());
+  EXPECT_FALSE(e.isDirectory());
+  e = dir.read();
+  EXPECT_TRUE(e.done());
+  EXPECT_EQ(kEndOfStream, dir.status());
+  dir.rewind();
+  EXPECT_EQ(kOk, dir.status());
+  dir.close();
+  EXPECT_EQ(kClosed, dir.status());
+  e = dir.read();
+  EXPECT_TRUE(e.done());
+
+}
+
 }  // namespace roo_io

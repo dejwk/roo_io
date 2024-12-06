@@ -23,8 +23,9 @@ class Directory {
   const char* path() const;
   const char* name() const;
 
-  // Returns true if the directory object represents an existing, open directory.
-  bool ok() const { return status() == kOk; }
+  // Returns true if the directory object represents an existing, open
+  // directory.
+  bool isOpen() const { return (status() == kOk || status() == kEndOfStream); }
 
   Status status() const { return status_; }
 

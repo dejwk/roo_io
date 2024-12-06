@@ -12,7 +12,9 @@ class FakeDirectory : public DirectoryImpl {
 
   const char* name() const override { return GetFileName(path_.c_str()); }
 
-  Status status() const override { return itr_.ok() ? kOk : kClosed; }
+  Status status() const override {
+    return itr_.isOpen() ? (itr_.ok() ? kOk : kEndOfStream) : kClosed;
+  }
 
   bool close() override {
     itr_.close();
