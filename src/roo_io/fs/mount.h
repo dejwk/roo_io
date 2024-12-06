@@ -19,6 +19,7 @@ class Mount {
   // Mount is copyable. All copies of a healthy mount reference the same
   // underlying filesystem.
   Mount(const Mount& other) = default;
+  Mount& operator=(const Mount& other) = default;
 
   // Move constructor moves the original to the 'kNotMounted' state.
   Mount(Mount&& other) {
