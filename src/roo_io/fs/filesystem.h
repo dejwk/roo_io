@@ -41,7 +41,7 @@ class Filesystem {
   bool isMounted() const { return !mount_.expired(); }
 
   // Checks whether media is present. Does not require the filesystem to be
-  // mounted, and does not cause it to be mounted. Some implementations may not
+  // mounted, and does not cause it to become mounted. Some implementations may not
   // be able to determine media presence; they can return kMediaPresenceUnknown
   // in such case.
   virtual MediaPresence checkMediaPresence() = 0;
