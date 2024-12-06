@@ -9,7 +9,7 @@ ArduinoSdFs::ArduinoSdFs(uint8_t ss_pin, SDFS& sd, decltype(SPI)& spi,
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
   if (!sd_.begin(ss_pin_, spi_, frequency_)) {
-    return MountImpl::MountError(kMountError);
+    return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(
       std::unique_ptr<MountImpl>(new ArduinoMountImpl(sd_, false, unmount_fn)));

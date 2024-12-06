@@ -13,7 +13,8 @@ enum Status {
   kReadError,
   kSeekError,
   kWriteError,
-  kMountError,
+
+  kGenericMountError,
 
   // A write operation was requested, but the filesystem is mounted as
   // read-only.
@@ -55,6 +56,12 @@ enum Status {
 
   // Unexpected general I/O error has ocurred.
   kUnknownIOError,
+
+  // Permissions are insufficient.
+  kAccessDenied,
+
+  // Mount failed because the media is absent.
+  kNoMedia,
 };
 
 const char* StatusAsString(Status status);

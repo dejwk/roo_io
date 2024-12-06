@@ -20,8 +20,8 @@ const char* StatusAsString(Status status) {
       return "seek error";
     case kWriteError:
       return "write error";
-    case kMountError:
-      return "mount error";
+    case kGenericMountError:
+      return "mount failed";
     case kReadOnlyFilesystem:
       return "read-only filesystem";
     case kNoSpaceLeftOnDevice:
@@ -46,6 +46,10 @@ const char* StatusAsString(Status status) {
       return "unknown I/O error";
     case kTooManyFilesOpen:
       return "too many files open";
+    case kAccessDenied:
+      return "access denied";
+    case kNoMedia:
+      return "no media";
     default:
       return "unknown error";
   }

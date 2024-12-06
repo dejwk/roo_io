@@ -93,7 +93,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   // ret = spi_bus_initialize(spi_host_, &spi_cfg, SDSPI_DEFAULT_DMA);
   // if (ret != ESP_OK) {
   //   LOG(ERROR) << "Failed to initialize bus.";
-  //   return MountImpl::MountError(kMountError);
+  //   return MountImpl::MountError(kGenericMountError);
   // }
   sdmmc_host_t host = SDSPI_HOST_DEFAULT();
 
@@ -119,7 +119,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
                     "Make sure SD card lines have pull-up resistors in place."
                  << esp_err_to_name(ret);
     }
-    return MountImpl::MountError(kMountError);
+    return MountImpl::MountError(kGenericMountError);
   }
 
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(

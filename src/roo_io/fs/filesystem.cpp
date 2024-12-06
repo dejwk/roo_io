@@ -18,11 +18,16 @@ Mount Filesystem::mount() {
   }
   MountImpl::MountResult mount_result = mountImpl([this]() { unmountImpl(); });
   if (mount_result.status != kOk) {
-    return Mount(mount_result.status);
+    Status status = mount_result.status;
+    if (status == kGenericMountError && checkMediaPresence() == kMediaAbsent) {
+      // Try to return a more specific status message.
+      status = kNoMedia;
+    }
+    return Mount(status);
   }
   auto impl = std::shared_ptr<MountImpl>(mount_result.mount.release());
   if (impl == nullptr) {
-    return Mount(kMountError);
+    return Mount(kGenericMountError);
   }
   mount_ = impl;
   return Mount(impl);

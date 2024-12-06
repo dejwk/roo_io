@@ -139,7 +139,7 @@ void FakeArduinoSdFsImpl::end() { _impl->mountpoint(nullptr); }
 MountImpl::MountResult FakeArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
   if (!sd_.begin()) {
-    return MountImpl::MountError(kMountError);
+    return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(
       std::unique_ptr<MountImpl>(new ArduinoMountImpl(sd_, false, unmount_fn)));

@@ -42,7 +42,7 @@ Filesystem::MediaPresence SdFatSpiFs::checkMediaPresence() {
 
 MountImpl::MountResult SdFatSpiFs::mountImpl(std::function<void()> unmount_fn) {
   if (!sd_.begin(SdSpiConfig(ss_pin_, SHARED_SPI, frequency_, &spi_))) {
-    return MountImpl::MountError(kMountError);
+    return MountImpl::MountError(kGenericMountError);
   }
 #ifdef ROO_TESTING
   std::string mount_point = FakeEsp32().fs_root();

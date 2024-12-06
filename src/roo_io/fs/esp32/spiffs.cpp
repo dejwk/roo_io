@@ -72,7 +72,7 @@ MountImpl::MountResult SpiffsFs::mountImpl(std::function<void()> unmount_fn) {
   }
   if (ret != ESP_OK) {
     LOG(ERROR) << "Mounting SPIFFS failed! Error: " << esp_err_to_name(ret);
-    return MountImpl::MountError(kMountError);
+    return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mount_base_path.c_str(), false, unmount_fn)));
