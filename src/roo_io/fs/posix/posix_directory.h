@@ -14,8 +14,6 @@ class PosixDirectoryImpl : public DirectoryImpl {
   PosixDirectoryImpl(const char* path, DIR* dir, Status status)
       : path_(path), dir_(dir), status_(status) {}
 
-  bool isOpen() const override { return status_ == kOk; }
-
   bool close() override {
     if (dir_ == nullptr) return true;
     int result = ::closedir(dir_);

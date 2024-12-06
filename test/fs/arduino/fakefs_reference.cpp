@@ -12,8 +12,6 @@ class FakeDirectory : public DirectoryImpl {
 
   const char* name() const override { return GetFileName(path_.c_str()); }
 
-  bool isOpen() const override { return itr_.isOpen(); }
-
   Status status() const override { return itr_.ok() ? kOk : kClosed; }
 
   bool close() override {

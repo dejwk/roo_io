@@ -13,8 +13,6 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
   ArduinoDirectoryImpl(fs::File file, Status status)
       : file_(std::move(file)), status_(status) {}
 
-  bool isOpen() const override { return file_.operator bool(); }
-
   bool close() override {
     entry_.close();
     file_.close();

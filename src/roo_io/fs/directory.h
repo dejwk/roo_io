@@ -7,10 +7,12 @@
 
 namespace roo_io {
 
+// Represent a browsable directory.
 class Directory {
  public:
   using Entry = DirectoryImpl::Entry;
 
+  // Creates a directory object with the specified status (default closed).
   Directory(Status status = kClosed) : status_(status) {}
 
   ~Directory() = default;
@@ -21,10 +23,11 @@ class Directory {
   const char* path() const;
   const char* name() const;
 
+  // Returns true if the directory object represents an existing, open directory.
   bool ok() const { return status() == kOk; }
 
-  bool isOpen() const;
-  Status status() const;
+  Status status() const { return status_; }
+
   bool close();
 
   void rewind();

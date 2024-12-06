@@ -28,8 +28,6 @@ class SdFatDirectoryImpl : public DirectoryImpl {
     }
   }
 
-  bool isOpen() const override { return file_.operator bool(); }
-
   bool close() override {
     entry_.close();
     file_.close();

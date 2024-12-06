@@ -22,7 +22,6 @@ class DirectoryErrorImpl : public DirectoryImpl {
   const char* path() const override { return nullptr; }
   const char* name() const override { return nullptr; }
 
-  bool isOpen() const override { return false; }
   Status status() const override { return status_; }
   bool close() override { return true; }
   void rewind() override {}

@@ -32,8 +32,8 @@ class DirectoryImpl {
   virtual const char* path() const = 0;
   virtual const char* name() const = 0;
 
-  virtual bool isOpen() const = 0;
   virtual Status status() const = 0;
+
   virtual bool close() = 0;
 
   virtual void rewind() = 0;
