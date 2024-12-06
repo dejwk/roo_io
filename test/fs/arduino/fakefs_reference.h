@@ -8,7 +8,7 @@ namespace fakefs {
 
 class FakeReferenceFs : public Filesystem {
  public:
-  FakeReferenceFs() = default;
+  FakeReferenceFs(FakeFs& fs) : fs_(fs) {}
 
   MediaPresence checkMediaPresence() override { return kMediaPresent; }
 
@@ -16,6 +16,9 @@ class FakeReferenceFs : public Filesystem {
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 
   void unmountImpl() override {}
+
+ private:
+  FakeFs& fs_;
 };
 
 }  // namespace fakefs

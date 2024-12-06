@@ -30,6 +30,19 @@ cc_test(
 )
 
 cc_test(
+    name = "reference_fs_test",
+    srcs = [
+        "fakefs_reference_test.cpp",
+    ],
+    # includes = glob(["**/*.h"]),
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+        ":fakefs"
+    ],
+)
+
+cc_test(
     name = "arduino_fs_test",
     srcs = [
         "arduino_fs_test.cpp",
@@ -41,3 +54,5 @@ cc_test(
         ":fakefs"
     ],
 )
+
+

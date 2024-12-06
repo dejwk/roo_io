@@ -154,7 +154,8 @@ class FakeMount : public MountImpl {
 
 MountImpl::MountResult FakeReferenceFs::mountImpl(
     std::function<void()> unmount_fn) {
-  return MountImpl::MountError(kNotMounted);
+  return MountImpl::Mounted(
+      std::unique_ptr<MountImpl>(new FakeMount(fs_, false, unmount_fn)));
 }
 
 }  // namespace fakefs
