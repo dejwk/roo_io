@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include "roo_io/fs/directory_impl.h"
 #include "roo_io/fs/file_update_policy.h"
