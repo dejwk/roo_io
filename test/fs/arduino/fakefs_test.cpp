@@ -13,7 +13,7 @@ TEST(FakeFs, EmptyOnCreate) {
   ASSERT_NE(nullptr, entry);
   EXPECT_TRUE(entry->isDir());
   EXPECT_EQ(0, entry->dir().entryCount());
-  EXPECT_EQ(0, fs.root().entryCount());
+  EXPECT_EQ(0, fs.root()->dir().entryCount());
 }
 
 TEST(FakeFs, NonexistentPaths) {
@@ -31,9 +31,9 @@ TEST(FakeFs, CreateAndRemoveDirectories) {
   Entry* a;
   Entry* b;
   Entry* c;
-  EXPECT_EQ(kOk, fs.root().mkdir("a", &a));
-  EXPECT_EQ(kOk, fs.root().mkdir("b", &b));
-  EXPECT_EQ(kOk, a->dir().mkdir("c", &c));
+  EXPECT_EQ(kOk, fs.root()->dir().mkdir(fs.root(), "a", &a));
+  EXPECT_EQ(kOk, fs.root()->dir().mkdir(fs.root(), "b", &b));
+  EXPECT_EQ(kOk, a->dir().mkdir(fs.root(), "c", &c));
 
   Entry* entry;
   ASSERT_EQ(kOk, fs.findEntryByPath("/a", &entry));
@@ -42,11 +42,11 @@ TEST(FakeFs, CreateAndRemoveDirectories) {
   ASSERT_EQ(kOk, fs.findEntryByPath("/a/c", &entry));
   EXPECT_TRUE(entry->isDir());
   EXPECT_EQ(entry, c);
-  EXPECT_EQ(2, fs.root().entryCount());
+  EXPECT_EQ(2, fs.root()->dir().entryCount());
   EXPECT_EQ(1, a->dir().entryCount());
-  EXPECT_EQ(kDirectoryNotEmpty, fs.root().rmdir("a"));
+  EXPECT_EQ(kDirectoryNotEmpty, fs.root()->dir().rmdir("a"));
   EXPECT_EQ(kOk, a->dir().rmdir("c"));
-  EXPECT_EQ(kOk, fs.root().rmdir("a"));
+  EXPECT_EQ(kOk, fs.root()->dir().rmdir("a"));
 }
 
 TEST(FakeFs, CreateAndReadTextFile) {

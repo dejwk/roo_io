@@ -88,6 +88,7 @@ TEST_F(ReferenceFs, SuccessfulRemove) {
 TEST_F(ReferenceFs, UnsuccessfulRemove) {
   CreateTextFile("/a/t.txt", "foo");
 
+  EXPECT_EQ(kInvalidPath, mount().remove("a"));
   EXPECT_EQ(kNotFile, mount().remove("/a"));
   EXPECT_EQ(kNotFound, mount().remove("/b"));
   EXPECT_EQ(kNotDirectory, mount().remove("/a/t.txt/foo"));
@@ -107,12 +108,81 @@ TEST_F(ReferenceFs, SuccessfulMkdir) {
 
 TEST_F(ReferenceFs, UnsuccessfulMkdir) {
   CreateTextFile("/a/b/c/t.txt", "foo");
+  EXPECT_EQ(kInvalidPath, mount().mkdir("a"));
   EXPECT_EQ(kDirectoryExists, mount().mkdir("/a"));
   EXPECT_EQ(kDirectoryExists, mount().mkdir("/a/b"));
   EXPECT_EQ(kDirectoryExists, mount().mkdir("/a/b/c"));
   EXPECT_EQ(kFileExists, mount().mkdir("/a/b/c/t.txt"));
   EXPECT_EQ(kNotDirectory, mount().mkdir("/a/b/c/t.txt/bar"));
   EXPECT_EQ(kNotDirectory, mount().mkdir("/a/b/c/t.txt/bar/"));
+}
+
+TEST_F(ReferenceFs, SuccessfulRmdir) {
+  ASSERT_EQ(kOk, mount().mkdir("/a"));
+  EXPECT_EQ(1, fake().root()->dir().entryCount());
+  ASSERT_EQ(kOk, mount().mkdir("/a/b"));
+  EXPECT_EQ(1, fake().root()->dir().entryCount());
+  EXPECT_EQ(kOk, mount().rmdir("/a/b"));
+  EXPECT_EQ(1, fake().root()->dir().entryCount());
+  EXPECT_EQ(kOk, mount().rmdir("/a/"));
+
+  EXPECT_EQ(0, fake().root()->dir().entryCount());
+}
+
+TEST_F(ReferenceFs, UnsuccessfulRmdir) {
+  CreateTextFile("/a/b/c/t.txt", "foo");
+  EXPECT_EQ(kInvalidPath, mount().rmdir("a"));
+  EXPECT_EQ(kDirectoryNotEmpty, mount().rmdir("/a"));
+  EXPECT_EQ(kDirectoryNotEmpty, mount().rmdir("/a/b/c"));
+  EXPECT_EQ(kNotDirectory, mount().rmdir("/a/b/c/t.txt"));
+  EXPECT_EQ(kNotDirectory, mount().rmdir("/a/b/c/t.txt/foo"));
+}
+
+TEST_F(ReferenceFs, SuccessfulRename) {
+  CreateTextFile("/a/b/c/foo.txt", "foo");
+
+  EXPECT_EQ(kOk, mount().rename("/a/b/c/foo.txt", "/a/b/c/foo_moved.txt"));
+  EXPECT_EQ("foo", fakefs::ReadTextFile(fake(), "/a/b/c/foo_moved.txt"));
+  EXPECT_EQ(kNotFound, fake().stat("/a/b/c/foo.txt").status);
+}
+
+TEST_F(ReferenceFs, SuccessfulMove) {
+  CreateTextFile("/a/b/c/foo.txt", "foo");
+
+  EXPECT_EQ(kOk, mount().rename("/a/b/c/foo.txt", "/a/b/foo.txt"));
+  EXPECT_EQ("foo", fakefs::ReadTextFile(fake(), "/a/b/foo.txt"));
+  EXPECT_EQ(kNotFound, fake().stat("/a/b/c/foo.txt").status);
+}
+
+TEST_F(ReferenceFs, SuccessfulMoveDir) {
+  CreateTextFile("/a/b/c/foo.txt", "foo");
+
+  EXPECT_EQ(kOk, mount().rename("/a/b/c", "/a/moved"));
+  EXPECT_EQ("foo", fakefs::ReadTextFile(fake(), "/a/moved/foo.txt"));
+  EXPECT_EQ(kNotFound, fake().stat("/a/b/c/foo.txt").status);
+}
+
+TEST_F(ReferenceFs, UnsuccessfulRename) {
+  CreateTextFile("/a/b/c/foo.txt", "foo");
+  CreateTextFile("/a/b/d/bar.txt", "bar");
+
+  EXPECT_EQ(kInvalidPath, mount().rename("a", "/b"));
+  EXPECT_EQ(kInvalidPath, mount().rename("/a", "b"));
+  EXPECT_EQ(kInvalidPath, mount().rename("/a/b", ""));
+
+  EXPECT_EQ(kInvalidPath, mount().rename("/a", "/a/b/a"));
+
+  EXPECT_EQ(kNotFound, mount().rename("/a/d", "/x"));
+  EXPECT_EQ(kNotFound, mount().rename("/a/b/c", "/a/b/e/d"));
+
+  EXPECT_EQ(kNotDirectory, mount().rename("/a/b/c/foo.txt/e", "/x"));
+  EXPECT_EQ(kNotDirectory, mount().rename("/a/b/c", "/a/b/d/bar.txt/x"));
+
+  EXPECT_EQ(kFileExists, mount().rename("/a/b/c", "/a/b/d/bar.txt"));
+  EXPECT_EQ(kDirectoryExists, mount().rename("/a/b/c", "/a/b/d"));
+
+  EXPECT_EQ(kFileExists, mount().rename("/a/b/d/bar.txt", "/a/b/d/bar.txt"));
+  EXPECT_EQ(kDirectoryExists, mount().rename("/a/b", "/a/b"));
 }
 
 }  // namespace roo_io

@@ -32,7 +32,8 @@ void Dir::rename(const std::string& oldname, const std::string& newname) {
   oldentry->rename(newname);
 }
 
-roo_io::Status Dir::mkdir(const std::string& name, Entry** dir) {
+roo_io::Status Dir::mkdir(const Entry* parent, const std::string& name,
+                          Entry** dir) {
   if (dir != nullptr) *dir = nullptr;
   std::list<std::unique_ptr<Entry>>::iterator itr = lookup(name);
   if (itr != entries_.end()) {
@@ -43,11 +44,12 @@ roo_io::Status Dir::mkdir(const std::string& name, Entry** dir) {
     }
   }
   entries_.emplace_back(Entry::DirEntry(name));
+  entries_.back()->setParent(parent);
   if (dir != nullptr) *dir = entries_.back().get();
   return kOk;
 }
 
-Status Dir::create(const std::string& name, Entry** file) {
+Status Dir::create(const Entry* parent, const std::string& name, Entry** file) {
   if (file != nullptr) *file = nullptr;
   std::list<std::unique_ptr<Entry>>::iterator itr = lookup(name);
   if (itr != entries_.end()) {
@@ -58,6 +60,7 @@ Status Dir::create(const std::string& name, Entry** file) {
     }
   }
   entries_.emplace_back(Entry::FileEntry(name));
+  entries_.back()->setParent(parent);
   if (file != nullptr) *file = entries_.back().get();
   return kOk;
 }
@@ -97,14 +100,18 @@ std::unique_ptr<Entry> Dir::detach(const std::string& name) {
     if ((*i)->name() == name) {
       std::unique_ptr<Entry> result = std::move(*i);
       entries_.erase(i);
+      result->setParent(nullptr);
       return result;
     }
   }
   return nullptr;
 }
 
-void Dir::attach(const std::string& name, std::unique_ptr<Entry> entry) {
+void Dir::attach(const Entry* parent, const std::string& name,
+                 std::unique_ptr<Entry> entry) {
   CHECK(lookup(name) == entries_.end());
+  entry->rename(name);
+  entry->setParent(parent);
   entries_.push_back(std::move(entry));
 }
 
@@ -130,9 +137,7 @@ void DirIterator::close() {
   bos_ = true;
 }
 
-bool DirIterator::isOpen() const {
-  return dir_ != nullptr;
-}
+bool DirIterator::isOpen() const { return dir_ != nullptr; }
 
 bool DirIterator::ok() const {
   return isOpen() && current_ != dir_->entries_.end();
@@ -166,6 +171,15 @@ std::unique_ptr<Entry> Entry::DirEntry(const std::string& name) {
 std::unique_ptr<Entry> Entry::FileEntry(const std::string& name) {
   return std::unique_ptr<Entry>(
       new Entry(name, std::unique_ptr<File>(new File())));
+}
+
+bool Entry::isDescendantOf(const Entry& e) const {
+  if (parent() == nullptr) {
+    // I descent from nobody.
+    return false;
+  }
+  if (parent() == &e) return true;
+  return parent()->isDescendantOf(e);
 }
 
 FileStream::FileStream(Status status)
@@ -261,9 +275,12 @@ Status FakeFs::rename(const char* pathFrom, const char* pathTo) {
                                       resolvedTo.basename);
     return kOk;
   }
+  if (resolvedTo.parent->isDescendantOf(*src)) {
+    return kInvalidPath;
+  }
 
   resolvedTo.parent->dir().attach(
-      resolvedFrom.basename,
+      resolvedTo.parent, resolvedTo.basename,
       resolvedFrom.parent->dir().detach(resolvedFrom.basename));
   return kOk;
 }
@@ -273,7 +290,8 @@ Status FakeFs::mkdir(const char* path) {
   if (resolved.status != kOk) return resolved.status;
   if (resolved.parent == nullptr) return kInvalidPath;
 
-  return resolved.parent->dir().mkdir(resolved.basename, nullptr);
+  return resolved.parent->dir().mkdir(resolved.parent, resolved.basename,
+                                      nullptr);
 }
 
 Status FakeFs::rmdir(const char* path) {
@@ -310,7 +328,8 @@ FileStream FakeFs::open(const char* path, int flags) {
     if (read_only || (flags & kTruncate) == 0) {
       return FileStream(kNotFound);
     }
-    Status status = resolved.parent->dir().create(resolved.basename, &file);
+    Status status = resolved.parent->dir().create(resolved.parent,
+                                                  resolved.basename, &file);
     if (status != kOk) return FileStream(status);
   } else {
     if (!file->isFile()) {
@@ -344,7 +363,7 @@ Status FakeFs::findEntryByPath(const char* name, Entry** out,
     Entry* entry = dir->dir().find(name);
     if (entry == nullptr) {
       if (create_subdirs) {
-        Status s = dir->dir().mkdir(name, &entry);
+        Status s = dir->dir().mkdir(dir, name, &entry);
         if (s != kOk) return s;
       } else {
         return kNotFound;
@@ -395,7 +414,7 @@ Status CreateTextFile(FakeFs& fs, const char* path, const char* contents) {
   if (resolved.status != kOk) return resolved.status;
   Entry* file;
   Status creation_status =
-      resolved.parent->dir().create(resolved.basename, &file);
+      resolved.parent->dir().create(resolved.parent, resolved.basename, &file);
   if (creation_status != kOk) return creation_status;
   file->file().write(0, (const byte*)contents, strlen(contents));
   return kOk;

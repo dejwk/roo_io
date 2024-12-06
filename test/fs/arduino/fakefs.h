@@ -47,18 +47,26 @@ class Entry {
 
   static std::unique_ptr<Entry> FileEntry(const std::string& name);
 
+  bool isDescendantOf(const Entry& e) const;
+
  private:
   friend class Dir;
 
   void rename(const std::string& name) { name_ = name; }
 
   Entry(std::string name, std::unique_ptr<File> file)
-      : name_(std::move(name)), file_(std::move(file)) {}
+      : name_(std::move(name)), parent_(nullptr), file_(std::move(file)) {}
 
   Entry(std::string name, std::unique_ptr<Dir> dir)
-      : name_(std::move(name)), dir_(std::move(dir)) {}
+      : name_(std::move(name)), parent_(nullptr), dir_(std::move(dir)) {}
+
+  void setParent(const Entry* parent) { parent_ = parent; }
+
+  const Entry* parent() const { return parent_; }
 
   std::string name_;
+  const Entry* parent_;
+
   std::unique_ptr<File> file_;
   std::unique_ptr<Dir> dir_;
 };
@@ -72,9 +80,10 @@ class Dir {
 
   void rename(const std::string& oldname, const std::string& newname);
 
-  roo_io::Status mkdir(const std::string& name, Entry** dir);
+  roo_io::Status mkdir(const Entry* parent, const std::string& name,
+                       Entry** dir);
 
-  Status create(const std::string& name, Entry** file);
+  Status create(const Entry* parent, const std::string& name, Entry** file);
 
   roo_io::Status rmdir(const std::string& name);
 
@@ -82,7 +91,8 @@ class Dir {
 
   std::unique_ptr<Entry> detach(const std::string& name);
 
-  void attach(const std::string& name, std::unique_ptr<Entry> entry);
+  void attach(const Entry* parent, const std::string& name,
+              std::unique_ptr<Entry> entry);
 
  private:
   friend class DirIterator;
@@ -178,7 +188,7 @@ class FakeFs {
 
   FakeFs() : root_(Entry::DirEntry("")) {}
 
-  Dir& root() { return root_->dir(); }
+  Entry* root() { return root_.get(); }
 
   StatResult stat(const char* path) const;
 

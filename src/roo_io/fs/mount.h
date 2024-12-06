@@ -52,7 +52,7 @@ class Mount {
   //
   // The returned Stat object may have the following status:
   //
-  // * kOk, if the operation completed successfully,
+  // * kOk, if the operation completed successfully and the object exists,
   // * kInvalidPath, if the path is syntactically invalid,
   // * kNotFound, if the destination path, or any of its components, does
   //   not exist,
@@ -93,7 +93,7 @@ class Mount {
   // Returns:
   // * kOk, if the source was successfully moved;
   // * kInvalidPath, if either `pathFrom` or `pathTo` is not syntactically
-  //   valid;
+  //   valid, or if `pathTo` is a descentant of `pathFrom`,
   // * kNotFound, if `pathFrom`, or any of its components, does not exist, or if
   //   any of the intermediate components of `pathTo` does not exist,
   // * possibly kNotDirectory, but permissibly kNotFound, if any of the
