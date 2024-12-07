@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <dirent.h>
+
+#include <memory>
 #include <string>
 
 #include "roo_io/fs/directory.h"
@@ -36,19 +37,18 @@ class PosixDirectoryImpl : public DirectoryImpl {
     next_ = nullptr;
   }
 
-  Entry read() override {
-    if (status_ != kOk) return Entry();
+  bool read(Directory::Entry& entry) override {
+    if (status_ != kOk) return false;
     next_ = ::readdir(dir_);
     if (next_ == nullptr) {
       status_ = kEndOfStream;
-      return Entry();
+      return false;
     }
     file_ = path_;
     file_ += '/';
     file_.append(next_->d_name);
-    return DirectoryImpl::CreateEntry(
-        file_.c_str(), path_.size() + 1,
-        next_->d_type == DT_DIR);
+    setEntry(entry, file_.c_str(), path_.size() + 1, next_->d_type == DT_DIR);
+    return true;
   }
 
  private:

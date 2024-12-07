@@ -48,18 +48,19 @@ class SdFatDirectoryImpl : public DirectoryImpl {
     next_path_[next_path_file_offset_] = 0;
   }
 
-  Entry read() override {
-    if (status_ != kOk) return Entry();
+  bool read(Directory::Entry& entry) override {
+    if (status_ != kOk) return false;
     if (!file_) {
       status_ = kClosed;
-      return Entry();
+      return false;
     }
     entry_ = file_.openNextFile();
-    if (!entry_) return Entry();
+    if (!entry_) return false;
     entry_.getName(&next_path_[next_path_file_offset_],
                    256 - next_path_file_offset_);
-    return DirectoryImpl::CreateEntry(next_path_.get(), next_path_file_offset_,
-                                      entry_.isDirectory());
+    setEntry(entry, next_path_.get(), next_path_file_offset_,
+             entry_.isDirectory());
+    return true;
   }
 
  private:

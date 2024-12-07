@@ -190,13 +190,10 @@ TEST_F(ReferenceFs, ListEmptyDir) {
   EXPECT_EQ(kOk, dir.status());
   EXPECT_STREQ("/", dir.path());
   EXPECT_STREQ("", dir.name());
-  Directory::Entry e = dir.read();
-  EXPECT_TRUE(e.done());
-  e = dir.read();
-  EXPECT_TRUE(e.done());
+  EXPECT_FALSE(dir.read());
+  EXPECT_FALSE(dir.read());
   dir.rewind();
-  e = dir.read();
-  EXPECT_TRUE(e.done());
+  EXPECT_FALSE(dir.read());
 }
 
 TEST_F(ReferenceFs, ListOneElemDir) {
@@ -206,32 +203,64 @@ TEST_F(ReferenceFs, ListOneElemDir) {
   EXPECT_EQ(kOk, dir.status());
   EXPECT_STREQ("/a/b", dir.path());
   EXPECT_STREQ("b", dir.name());
-  Directory::Entry e = dir.read();
-  EXPECT_FALSE(e.done());
+  ASSERT_TRUE(dir.read());
   EXPECT_EQ(kOk, dir.status());
-  EXPECT_STREQ("foo.txt", e.name());
-  EXPECT_STREQ("/a/b/foo.txt", e.path());
-  EXPECT_FALSE(e.isDirectory());
-  e = dir.read();
-  EXPECT_TRUE(e.done());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  EXPECT_STREQ("/a/b/foo.txt", dir.entry().path());
+  EXPECT_FALSE(dir.entry().isDirectory());
+  EXPECT_FALSE(dir.read());
   EXPECT_EQ(kEndOfStream, dir.status());
   dir.rewind();
-  e = dir.read();
-  EXPECT_FALSE(e.done());
+  EXPECT_TRUE(dir.read());
   EXPECT_EQ(kOk, dir.status());
-  EXPECT_STREQ("foo.txt", e.name());
-  EXPECT_STREQ("/a/b/foo.txt", e.path());
-  EXPECT_FALSE(e.isDirectory());
-  e = dir.read();
-  EXPECT_TRUE(e.done());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  EXPECT_STREQ("/a/b/foo.txt", dir.entry().path());
+  EXPECT_FALSE(dir.entry().isDirectory());
+  EXPECT_FALSE(dir.read());
   EXPECT_EQ(kEndOfStream, dir.status());
   dir.rewind();
   EXPECT_EQ(kOk, dir.status());
   dir.close();
   EXPECT_EQ(kClosed, dir.status());
-  e = dir.read();
-  EXPECT_TRUE(e.done());
+  EXPECT_FALSE(dir.read());
+}
 
+TEST_F(ReferenceFs, ListDir) {
+  CreateTextFile("/a/b/foo.txt", "foo");
+  CreateTextFile("/a/b/c/foo.txt", "foo");
+  CreateTextFile("/a/b/bar.txt", "bar");
+  CreateTextFile("/a/b/c/bar.txt", "bar");
+
+  Directory dir = mount().opendir("/a/b");
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("/a/b", dir.path());
+  EXPECT_STREQ("b", dir.name());
+
+  EXPECT_TRUE(dir.read());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  EXPECT_STREQ("/a/b/foo.txt", dir.entry().path());
+  EXPECT_FALSE(dir.entry().isDirectory());
+  EXPECT_TRUE(dir.read());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("c", dir.entry().name());
+  EXPECT_STREQ("/a/b/c", dir.entry().path());
+  EXPECT_TRUE(dir.entry().isDirectory());
+  EXPECT_TRUE(dir.read());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("bar.txt", dir.entry().name());
+  EXPECT_STREQ("/a/b/bar.txt", dir.entry().path());
+  EXPECT_FALSE(dir.entry().isDirectory());
+  EXPECT_FALSE(dir.read());
+  EXPECT_EQ(kEndOfStream, dir.status());
+
+  dir.rewind();
+  EXPECT_TRUE(dir.read());
+  EXPECT_EQ(kOk, dir.status());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  EXPECT_STREQ("/a/b/foo.txt", dir.entry().path());
+  dir.close();
+  EXPECT_EQ(kClosed, dir.status());
 }
 
 }  // namespace roo_io

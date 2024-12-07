@@ -5,18 +5,11 @@ namespace roo_io {
 namespace {
 
 Status DeleteDirContentsRecursively(Mount& fs, Directory& dir) {
-  if (!dir.isOpen()) return dir.status();
-  dir.rewind();
-  // LOG(INFO) << "Recursively deleting directory " << file.path();
-  // file.rewindDirectory();
-  while (true) {
-    Directory::Entry entry = dir.read();
-    if (!dir.isOpen()) return dir.status();
-    if (entry.done()) break;
-    Status s = DeleteRecursively(fs, entry.path());
+  while (dir.read()) {
+    Status s = DeleteRecursively(fs, dir.entry().path());
     if (s != kOk) return s;
   }
-  return kOk;
+  return dir.isOpen() ? kOk : dir.status();
 }
 
 }  // namespace

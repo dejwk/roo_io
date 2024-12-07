@@ -4,7 +4,7 @@
 
 #include "Arduino.h"
 #include "FS.h"
-#include "roo_io/fs/directory.h"
+#include "roo_io/fs/directory_impl.h"
 
 namespace roo_io {
 
@@ -33,17 +33,18 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
     next_ = "";
   }
 
-  Entry read() override {
-    if (status_ != kOk) return Entry();
+  bool read(Directory::Entry& entry) override {
+    if (status_ != kOk) return false;
     if (!file_) {
       status_ = kClosed;
-      return Entry();
+      return false;
     }
     entry_ = file_.openNextFile();
-    if (!entry_) return Entry();
-    return DirectoryImpl::CreateEntry(
-        entry_.path(), strlen(entry_.path()) - strlen(entry_.name()),
-        entry_.isDirectory());
+    if (!entry_) return false;
+    setEntry(entry, entry_.path(),
+             strlen(entry_.path()) - strlen(entry_.name()),
+             entry_.isDirectory());
+    return true;
   }
 
  private:

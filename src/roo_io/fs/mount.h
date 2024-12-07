@@ -157,7 +157,7 @@ class Mount {
 
   // Opens the specified directory for browsing.
   //
-  // Returns:
+  // Returns a directory object in the one of the following states:
   // * kOk, if the directory was successfully opened;
   // * kInvalidPath, if the path is not syntactically valid;
   // * kNotFound, if the target, or any of its intermediate path components,

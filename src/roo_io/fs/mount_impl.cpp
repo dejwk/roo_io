@@ -1,4 +1,5 @@
 #include "roo_io/fs/mount_impl.h"
+
 #include "roo_io/stream/null_input_stream.h"
 #include "roo_io/stream/null_output_stream.h"
 
@@ -25,7 +26,7 @@ class DirectoryErrorImpl : public DirectoryImpl {
   Status status() const override { return status_; }
   bool close() override { return true; }
   void rewind() override {}
-  Entry read() override { return Entry(); }
+  bool read(Directory::Entry&) override { return false; }
 
  private:
   Status status_;

@@ -23,14 +23,15 @@ class FakeDirectory : public DirectoryImpl {
 
   void rewind() override { itr_.rewind(); }
 
-  Entry read() override {
+  bool read(Directory::Entry& entry) override {
     itr_.next();
     if (!itr_.ok()) {
-      return Entry();
+      return false;
     }
     entry_path_ = path_ + "/" + itr_.entry().name();
-    return CreateEntry(entry_path_.c_str(), path_.size() + 1,
-                       itr_.entry().isDir());
+    setEntry(entry, entry_path_.c_str(), path_.size() + 1,
+             itr_.entry().isDir());
+    return true;
   }
 
  private:
