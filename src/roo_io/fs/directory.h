@@ -10,6 +10,15 @@ class DirectoryImpl;
 
 // Represent a browsable directory. A directory is like a multipass iterator
 // over entries.
+//
+// Basic usage idiom:
+//
+// Directory dir = mount.opendir(path);
+// while (dir.read()) {
+//   // Use dir.entry()
+// }
+// if (dir.failed()) { handleFailure(dir.status()); }
+//
 class Directory {
  public:
   // Represents a single directory entry. Entries are transient during directory
@@ -25,7 +34,7 @@ class Directory {
     const char* path() const { return path_; }
 
     // Returns a name of the file or directory represented by this entry,
-    // relative to its parent directory.
+    // relative to the directory path.
     const char* name() const { return name_; }
 
     // Returns true if this entry represents a directory.
@@ -76,6 +85,9 @@ class Directory {
 
   // Closes this directory. If the state was an error, leaves it as is;
   // otherwise, changes the state to kClosed.
+  //
+  // Directory gets auto-closed when destroyed. Therefore, calling close()
+  // explicitly is usually unnecessary.
   void close();
 
   // If the directory is open, resets the entry index to the beginning, and
