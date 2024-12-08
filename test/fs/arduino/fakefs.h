@@ -213,6 +213,8 @@ class FakeFs {
   std::unique_ptr<Entry> root_;
 };
 
+Status RecursiveMkDir(FakeFs& fs, const char* path);
+
 Status CreateTextFile(FakeFs& fs, const char* path, const char* contents);
 
 std::string ReadTextFile(FakeFs& fs, const char* path);

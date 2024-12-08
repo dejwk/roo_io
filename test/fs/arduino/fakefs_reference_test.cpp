@@ -1,7 +1,7 @@
+#include "fakefs_reference.h"
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
-#include "fakefs_reference.h"
 
 namespace roo_io {
 
@@ -13,6 +13,10 @@ class ReferenceFs : public testing::Test {
 
   void CreateTextFile(const char* path, const char* contents) {
     ASSERT_EQ(kOk, fakefs::CreateTextFile(fakefs_, path, contents));
+  }
+
+  void RecursiveMkDir(const char* path) {
+    ASSERT_EQ(kOk, fakefs::RecursiveMkDir(fakefs_, path));
   }
 
   fakefs::FakeFs& fake() { return fakefs_; }
@@ -261,6 +265,52 @@ TEST_F(ReferenceFs, ListDir) {
   EXPECT_STREQ("/a/b/foo.txt", dir.entry().path());
   dir.close();
   EXPECT_EQ(kClosed, dir.status());
+}
+
+TEST_F(ReferenceFs, SuccessfullyReadFile) {
+  CreateTextFile("/a/b/foo.txt", "This is my text file");
+
+  auto stream = mount().fopen("/a/b/foo.txt");
+  ASSERT_EQ(kOk, stream->status());
+  std::string contents;
+  while (stream->status() == kOk) {
+    byte buf[5];
+    size_t read = stream->read(buf, 5);
+    contents.append((const char*)buf, read);
+  }
+  ASSERT_EQ(kEndOfStream, stream->status());
+  EXPECT_EQ(contents, "This is my text file");
+}
+
+TEST_F(ReferenceFs, UnsuccessfulFopen) {
+  CreateTextFile("/a/b/foo.txt", "foo");
+
+  EXPECT_EQ(kInvalidPath, mount().fopen("a")->status());
+  EXPECT_EQ(kNotFound, mount().fopen("/a/bar.txt")->status());
+  EXPECT_EQ(kNotFile, mount().fopen("/a/b")->status());
+  EXPECT_EQ(kNotDirectory, mount().fopen("/a/b/foo.txt/c")->status());
+}
+
+void CreateAndWrite(const char* file, FileUpdatePolicy policy,
+                    const char* contents) {
+  auto stream =
+      mount().fopenForWrite("/foo/bar/foo.txt", roo_io::kFailIfExists);
+  ASSERT_EQ(kOk, stream->status());
+  stream->writeFully((const byte*)contents, strlen(contents));
+  stream->close();
+}
+
+TEST_F(ReferenceFs, SuccessfulCreateFile) {
+  RecursiveMkDir("/foo/bar");
+  const char* contents = "This is my text file";
+  {
+    auto stream =
+        mount().fopenForWrite("/foo/bar/foo.txt", roo_io::kFailIfExists);
+    ASSERT_EQ(kOk, stream->status());
+    stream->writeFully((const byte*)contents, strlen(contents));
+    stream->close();
+  }
+  EXPECT_EQ(contents, fakefs::ReadTextFile(fake(), "/foo/bar/foo.txt"));
 }
 
 }  // namespace roo_io

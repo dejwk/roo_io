@@ -17,15 +17,15 @@ class InputStream {
 
   virtual void close() {};
 
-  // Reads up to `count` bytes into `result`, and updates `status()`. Returns
-  // the number of bytes read, which must be greater than zero on success
-  // (i.e. when `status()` returns 'kOk'), zero on end-of-stream (i.e. when
-  // `status()` returns 'kEndOfStream'), and possibly zero on error (i.e.
-  // when `status()` returns another value).
+  // Attempts to read up to `count` bytes, but at least one byte, into `result`,
+  // and updates `status()`. Returns the number of bytes read, which must be
+  // greater than zero on success (i.e. when `status()` returns 'kOk'), zero on
+  // end-of-stream (i.e. when `status()` returns 'kEndOfStream'), and possibly
+  // zero on error (i.e. when `status()` returns another value).
   //
   // If the status was not 'kOk' prior to the call, leaves it as is and returns
-  // zero. Otherwise, if there are less then `count` but more than zero bytes
-  // available before the end of stream, reads and returns the available bytes,
+  // zero. Otherwise, if there are more than zero bytes available before the end
+  // of stream, reads and returns up to `count` bytes, but at least one byte,
   // and leaves status as `kOk`. Otherwise if there are no more bytes available
   // before end of stream, returns zero and updates status to `kEndOfStream`.
   //
@@ -33,9 +33,15 @@ class InputStream {
   // have been read before the error was encountered (possibly zero, but might
   // be greater than zero).
   //
+  // This method may read fewer than count bytes, even if more are available in
+  // the stream. If that's not what you want, see `readFully()`.
   virtual size_t read(byte* result, size_t count) = 0;
 
-  // Reads the prescribed number of bytes, blocking if necessary.
+  // Attempts to read `count` bytes into `result`, and updates `status()`.
+  // Blocks if necessary.
+  //
+  // This method is similar to `read()`, except it never returns fewer bytes
+  // than `count`, unless it reaches end of stream or encounters an error.
   virtual size_t readFully(byte* buf, size_t count) {
     size_t read_total = 0;
     while (count > 0) {
@@ -49,6 +55,8 @@ class InputStream {
   }
 
   // Skips over the specified count of bytes. Updates the `status()`.
+  //
+  // Conceptually equivalent to `readFully(buf, count)` and ignoring the result.
   //
   // If the status was not `kOk` prior to the call, leaves it as is. Otherwise,
   // if the skip was succesful and the stream is before or exactly at the end,

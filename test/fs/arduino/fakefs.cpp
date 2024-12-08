@@ -208,6 +208,7 @@ size_t FileStream::read(byte* target, size_t size) {
   if (!isOpen()) return 0;
   if (status_ != kOk) return 0;
   size_t result = file_->read(position_, target, size);
+  position_ += result;
   if (result < size) {
     status_ = kEndOfStream;
   }
@@ -325,7 +326,7 @@ FileStream FakeFs::open(const char* path, int flags) {
   bool read_only = (flags & (kWrite | kAppend)) == 0;
   Entry* file = resolved.parent->dir().find(resolved.basename);
   if (file == nullptr) {
-    if (read_only || (flags & kTruncate) == 0) {
+    if (read_only) {
       return FileStream(kNotFound);
     }
     Status status = resolved.parent->dir().create(resolved.parent,
@@ -407,6 +408,13 @@ ResolvedPath FakeFs::resolvePath(const char* path, bool create_subdirs) {
     result.parent = root_.get();
   }
   return result;
+}
+
+Status RecursiveMkDir(FakeFs& fs, const char* path) {
+  ResolvedPath resolved = fs.resolvePath(path, true);
+  if (resolved.status != kOk) return resolved.status;
+  return resolved.parent->dir().mkdir(resolved.parent, resolved.basename,
+                                      nullptr);
 }
 
 Status CreateTextFile(FakeFs& fs, const char* path, const char* contents) {

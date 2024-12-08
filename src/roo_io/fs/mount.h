@@ -178,7 +178,7 @@ class Mount {
 
   // Opens the specified file for reading.
   //
-  // Returns:
+  // Returns s tream in one of the following states:
   // * kOk, if the file was successfully opened;
   // * kInvalidPath, if the path is not syntactically valid;
   // * kNotFound, if the source, or any of its intermediate path components,
@@ -201,7 +201,7 @@ class Mount {
   // Always creates the file if it doesn't already exist. If the file does
   // already exist, the behavior is dictated by the `update_policy`.
   //
-  // Returns:
+  // Returns a stream in one of the following states:
   // * kOk, if the file was successfully opened;
   // * kInvalidPath, if the path is not syntactically valid;
   // * kNotFound, if the file, or any of its intermediate path components,
