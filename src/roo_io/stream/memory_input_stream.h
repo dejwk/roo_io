@@ -7,49 +7,64 @@ namespace roo_io {
 template <typename PtrType>
 class MemoryInputStream : public MultipassInputStream {
  public:
+  MemoryInputStream()
+      : ptr_(nullptr), size_(0), position_(0), status_(kClosed) {}
+
   MemoryInputStream(PtrType begin, PtrType end)
-      : begin_(begin), end_(end), current_(begin) {}
+      : ptr_(begin), size_(end - begin), position_(0), status_(kOk) {}
 
-  bool isOpen() const override { return current_ != nullptr; }
+  bool isOpen() const override {
+    return status_ == kOk || status_ == kEndOfStream;
+  }
 
-  int read(byte* buf, size_t count) override {
-    if (current_ == nullptr) return -1;
-    if (count > end_ - current_) {
-      count = end_ - current_;
+  size_t read(byte* buf, size_t count) override {
+    if (status_ != kOk) return 0;
+    if (position_ >= size_) return 0;
+    if (position_ + count > size_) {
+      count = size_ - position_;
+      status_ = kEndOfStream;
     }
-    memcpy(buf, current_, count);
-    current_ += count;
+    memcpy(buf, ptr_ + position_, count);
+    ++position_;
     return count;
   }
 
-  bool skip(uint64_t count) override {
-    if (count > end_ - current_) {
-      current_ = end_;
-    } else {
-      current_ += count;
+  void skip(uint64_t count) override {
+    if (status_ != kOk) return;
+    if (position_ >= size_) return;
+    position_ += count;
+    if (position_ > size_) {
+      position_ = size_;
+      status_ = kEndOfStream;
+      return;
     }
-    return true;
   }
 
-  // Returns true on success.
-  bool seek(uint64_t offset) override {
-    if (begin_ + offset > end_) {
-      current_ = end_;
-    } else {
-      current_ = offset;
-    }
-    return true;
+  uint64_t position() const override { return position_; }
+
+  void seek(uint64_t position) override {
+    if (!isOpen()) return;
+    position_ = position;
+    status_ = kOk;
   }
 
-  uint64_t size() const override { return end_ - begin_; }
+  uint64_t size() override { return size_; }
 
-  bool close() override {
-    current_ = nullptr;
-    return true;
+  void close() override {
+    if (!isOpen()) return;
+    position_ = 0;
+    status_ = kClosed;
+  }
+
+  Status status() const override {
+    return status_;
   }
 
  private:
-  PtrType begin_, end_, current_;
+  PtrType ptr_;
+  size_t position_;
+  size_t size_;
+  Status status_;
 };
 
 }  // namespace roo_io
