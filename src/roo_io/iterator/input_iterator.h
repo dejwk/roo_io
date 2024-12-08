@@ -118,6 +118,8 @@
 //   // (potentially clearing the end-of-stream status). On error, updates the
 //   // status accordingly.
 //   //
+//   // After a successful rewind, a call to `position()` should return zero.
+//   //
 //   void rewind();
 //
 //   // Resets the stream to the specified byte offset relative to the starting
