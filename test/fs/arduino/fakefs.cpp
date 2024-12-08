@@ -161,6 +161,7 @@ bool DirIterator::next() {
   } else {
     if (current_ == dir_->entries_.end()) return false;
     ++current_;
+    if (current_ == dir_->entries_.end()) return false;
     return true;
   }
 }

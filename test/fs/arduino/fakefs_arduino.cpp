@@ -75,7 +75,7 @@ void FakeArduinoFile::close() {
 }
 
 FakeArduinoFile::operator bool() {
-  return (f_ != nullptr && f_->isOpen()) || (dir_ != nullptr && dir_->ok());
+  return (f_ != nullptr && f_->isOpen()) || (dir_ != nullptr && dir_->isOpen());
 }
 
 bool FakeArduinoFs::exists(const char* path) {
@@ -100,14 +100,19 @@ bool FakeArduinoFs::rmdir(const char* path) { return fs_.rmdir(path) == kOk; }
   if (strcmp(mode, FILE_WRITE) == 0)
     flags |= (FakeFs::kWrite | FakeFs::kTruncate);
   if (strcmp(mode, FILE_APPEND) == 0)
-    flags |= (FakeFs::kAppend | FakeFs::kTruncate);
+    flags |= FakeFs::kAppend;
   std::shared_ptr<FakeArduinoFile> f(new FakeArduinoFile());
   std::string p(path);
   ResolvedPath resolved = fs_.resolvePath(path, (create && mode[0] != 'r'));
   if (resolved.status != kOk) {
     return f;
   }
-  Entry* existing = resolved.parent->dir().find(resolved.basename);
+  Entry* existing;
+  if (resolved.basename.empty() && resolved.parent == nullptr) {
+    existing = fs_.root();
+  } else {
+    existing = resolved.parent->dir().find(resolved.basename);
+  }
   if (existing != nullptr) {
     if (existing->isFile()) {
       f->openFile(p, p.find_last_of("/") + 1, fs_.open(path, flags));

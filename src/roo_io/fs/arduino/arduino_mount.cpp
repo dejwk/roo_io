@@ -60,14 +60,27 @@ Status ArduinoMountImpl::remove(const char* path) {
 }
 
 Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
+  if (fs_.rename(pathFrom, pathTo)) return kOk;
   Stat src = stat(pathFrom);
   if (!src.exists()) {
     return src.status();
   }
   Stat dst = stat(pathTo);
-  if (dst.status() != kOk) return dst.status();
   if (dst.exists()) return dst.isDirectory() ? kDirectoryExists : kFileExists;
-  return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
+  if (dst.status() != kNotFound) return dst.status();
+  if (strncmp(pathFrom, pathTo, strlen(pathFrom)) == 0) {
+    return kInvalidPath;
+  }
+  // Check if the destination directory exists.
+  std::unique_ptr<char[]> dup(strdup(pathTo));
+  char* last_slash = strrchr(dup.get(), '/');
+  if (last_slash != nullptr) {
+    *last_slash = 0;
+    Stat dst_dir = stat(dup.get());
+    if (dst_dir.status() == kNotFound) return kNotFound;
+    if (!dst_dir.isDirectory()) return kNotDirectory;
+  }
+  return kUnknownIOError;
 }
 
 Status ArduinoMountImpl::mkdir(const char* path) {
@@ -126,6 +139,9 @@ std::unique_ptr<DirectoryImpl> ArduinoMountImpl::opendir(const char* path) {
 
 std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
     const char* path) {
+  if (path == nullptr || path[0] != '/') {
+    return InputError(kInvalidPath);
+  }
   fs::File f = fs_.open(path, "r");
   if (!f) {
     if (!fs_.exists(path)) {
@@ -134,12 +150,18 @@ std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
       return InputError(kOpenError);
     }
   }
+  if (f.isDirectory()) {
+    return InputError(kNotFile);
+  }
   return std::unique_ptr<MultipassInputStream>(
       new ArduinoFileInputStream(std::move(f)));
 }
 
 std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     const char* path, FileUpdatePolicy update_policy) {
+  if (path == nullptr || path[0] != '/') {
+    return OutputError(kInvalidPath);
+  }
   if (read_only_) {
     return OutputError(kReadOnlyFilesystem);
   }

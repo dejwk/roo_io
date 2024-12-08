@@ -16,7 +16,7 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
   bool close() override {
     entry_.close();
     file_.close();
-    if (status_ = kOk) status_ = kClosed;
+    if (status_ == kOk) status_ = kClosed;
     return true;
   }
 
@@ -27,9 +27,9 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
   Status status() const override { return status_; }
 
   void rewind() override {
-    if (status_ != kOk) return;
+    if (status_ != kOk && status_ != kEndOfStream) return;
     file_.rewindDirectory();
-    if (!file_) status_ = kClosed;
+    status_ = file_ ? kOk : kUnknownIOError;
     next_ = "";
   }
 
@@ -40,7 +40,10 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
       return false;
     }
     entry_ = file_.openNextFile();
-    if (!entry_) return false;
+    if (!entry_) {
+      status_ = kEndOfStream;
+      return false;
+    }
     setEntry(entry, entry_.path(),
              strlen(entry_.path()) - strlen(entry_.name()),
              entry_.isDirectory());
