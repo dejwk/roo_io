@@ -358,7 +358,7 @@ TEST_F(ReferenceFs, ReadSeekAndSkip) {
 TEST_F(ReferenceFs, ReadStressTest) {
   size_t size = 1024 * 1024 + 17;
   std::unique_ptr<byte[]> contents(new byte[size]);
-  for (int i = 0; i < size; ++i) contents[i] = rand() % 256;
+  for (size_t i = 0; i < size; ++i) contents[i] = rand() % 256;
   RecursiveMkDir("/foo/bar");
   {
     std::unique_ptr<OutputStream> out = mount().fopenForWrite("/foo/bar/foo.test", kFailIfExists);
