@@ -156,7 +156,7 @@ class FileStream {
 
   void seek(size_t pos);
 
-  void skip(size_t offset) { position_ += offset; }
+  void skip(size_t offset);
 
   size_t size() const { return isOpen() ? file_->size() : 0; }
   size_t position() const { return position_; }

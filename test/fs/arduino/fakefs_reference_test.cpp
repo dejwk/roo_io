@@ -326,4 +326,77 @@ TEST_F(ReferenceFs, SuccessfulAppendToFile) {
             fakefs::ReadTextFile(fake(), "/a/b/foo.txt"));
 }
 
+TEST_F(ReferenceFs, ReadSeekAndSkip) {
+  CreateTextFile("/a/b/foo.txt", "This is my text file");
+
+  auto stream = mount().fopen("/a/b/foo.txt");
+  ASSERT_EQ(kOk, stream->status());
+  EXPECT_EQ(0, stream->position());
+  byte buf[5];
+  EXPECT_EQ(5, stream->readFully(buf, 5));
+  ASSERT_EQ(kOk, stream->status());
+  EXPECT_EQ(5, stream->position());
+  stream->skip(10);
+  ASSERT_EQ(kOk, stream->status());
+  EXPECT_EQ(15, stream->position());
+  stream->skip(10);
+  ASSERT_EQ(kEndOfStream, stream->status());
+  EXPECT_EQ(20, stream->position());
+  stream->seek(30);
+  ASSERT_EQ(kOk, stream->status());
+  EXPECT_EQ(30, stream->position());
+  EXPECT_EQ(0, stream->readFully(buf, 5));
+  ASSERT_EQ(kEndOfStream, stream->status());
+  stream->seek(17);
+  ASSERT_EQ(kOk, stream->status());
+  EXPECT_EQ(17, stream->position());
+  EXPECT_EQ(3, stream->readFully(buf, 5));
+  ASSERT_EQ(kEndOfStream, stream->status());
+  EXPECT_EQ("ile", std::string((const char*)buf, 3));
+}
+
+TEST_F(ReferenceFs, ReadStressTest) {
+  size_t size = 1024 * 1024 + 17;
+  std::unique_ptr<byte[]> contents(new byte[size]);
+  for (int i = 0; i < size; ++i) contents[i] = rand() % 256;
+  RecursiveMkDir("/foo/bar");
+  {
+    std::unique_ptr<OutputStream> out = mount().fopenForWrite("/foo/bar/foo.test", kFailIfExists);
+    ASSERT_EQ(size, out->writeFully(contents.get(), size));
+    out->close();
+    ASSERT_EQ(kClosed, out->status());
+  }
+
+  std::unique_ptr<MultipassInputStream> in = mount().fopen("/foo/bar/foo.test");
+  byte buf[20000];
+  ASSERT_EQ(kOk, in->status());
+  size_t pos = 0;
+  for (int i = 0; i < 10000; i++) {
+    int cnt = rand() % 20000;
+    size_t read = in->read(buf, cnt);
+    ASSERT_TRUE(read <= cnt);
+    for (int i = 0; i < read; ++i) {
+      ASSERT_EQ(buf[i], contents[pos + i]);
+    }
+    pos += read;
+    if (rand() % 100 > 10) {
+      uint64_t newpos = rand() % (3 * size);
+      in->seek(newpos);
+      ASSERT_EQ(kOk, in->status());
+      pos = newpos;
+    }
+    if (rand() % 100 > 10) {
+      uint64_t offset = rand() % 50000;
+      in->skip(offset);
+      if (pos + offset > size) {
+        ASSERT_EQ(kEndOfStream, in->status());
+        pos = size;
+      } else {
+        ASSERT_EQ(kOk, in->status());
+        pos += offset;
+      }
+    }
+  }
+}
+
 }  // namespace roo_io

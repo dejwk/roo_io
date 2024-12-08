@@ -234,6 +234,15 @@ void FileStream::seek(size_t pos) {
   status_ = kOk;
 }
 
+void FileStream::skip(size_t offset) {
+  if (status_ != kOk && status_ != kEndOfStream) return;
+  position_ += offset;
+  if (position_ > size()) {
+    position_ = size();
+    status_ = kEndOfStream;
+  }
+}
+
 StatResult FakeFs::stat(const char* path) const {
   Entry* entry;
   Status status = findEntryByPath(path, &entry, false);
