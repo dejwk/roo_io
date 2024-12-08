@@ -1,7 +1,7 @@
-#include "fakefs_reference.h"
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include "fakefs_reference.h"
 
 namespace roo_io {
 
@@ -21,6 +21,15 @@ class ReferenceFs : public testing::Test {
 
   fakefs::FakeFs& fake() { return fakefs_; }
   Mount& mount() { return mount_; }
+
+  void CreateAndWrite(const char* file, FileUpdatePolicy policy,
+                      const char* contents) {
+    auto stream = mount().fopenForWrite(file, policy);
+    ASSERT_EQ(kOk, stream->status());
+    stream->writeFully((const byte*)contents, strlen(contents));
+    stream->close();
+    ASSERT_EQ(kClosed, stream->status());
+  }
 
   fakefs::FakeFs fakefs_;
   fakefs::FakeReferenceFs fs_;
@@ -291,26 +300,30 @@ TEST_F(ReferenceFs, UnsuccessfulFopen) {
   EXPECT_EQ(kNotDirectory, mount().fopen("/a/b/foo.txt/c")->status());
 }
 
-void CreateAndWrite(const char* file, FileUpdatePolicy policy,
-                    const char* contents) {
-  auto stream =
-      mount().fopenForWrite("/foo/bar/foo.txt", roo_io::kFailIfExists);
-  ASSERT_EQ(kOk, stream->status());
-  stream->writeFully((const byte*)contents, strlen(contents));
-  stream->close();
-}
-
 TEST_F(ReferenceFs, SuccessfulCreateFile) {
   RecursiveMkDir("/foo/bar");
   const char* contents = "This is my text file";
-  {
-    auto stream =
-        mount().fopenForWrite("/foo/bar/foo.txt", roo_io::kFailIfExists);
-    ASSERT_EQ(kOk, stream->status());
-    stream->writeFully((const byte*)contents, strlen(contents));
-    stream->close();
-  }
-  EXPECT_EQ(contents, fakefs::ReadTextFile(fake(), "/foo/bar/foo.txt"));
+  CreateAndWrite("/foo/bar/foo1.txt", roo_io::kFailIfExists, contents);
+  EXPECT_EQ(contents, fakefs::ReadTextFile(fake(), "/foo/bar/foo1.txt"));
+  CreateAndWrite("/foo/bar/foo2.txt", roo_io::kTruncateIfExists, contents);
+  EXPECT_EQ(contents, fakefs::ReadTextFile(fake(), "/foo/bar/foo2.txt"));
+  CreateAndWrite("/foo/bar/foo3.txt", roo_io::kAppendIfExists, contents);
+  EXPECT_EQ(contents, fakefs::ReadTextFile(fake(), "/foo/bar/foo3.txt"));
+}
+
+TEST_F(ReferenceFs, SuccessfulOverwriteFile) {
+  CreateTextFile("/a/b/foo.txt", "Previous contents");
+  const char* contents = "New contents";
+  CreateAndWrite("/a/b/foo.txt", roo_io::kTruncateIfExists, contents);
+  EXPECT_EQ("New contents", fakefs::ReadTextFile(fake(), "/a/b/foo.txt"));
+}
+
+TEST_F(ReferenceFs, SuccessfulAppendToFile) {
+  CreateTextFile("/a/b/foo.txt", "Previous contents");
+  const char* contents = "New contents";
+  CreateAndWrite("/a/b/foo.txt", roo_io::kAppendIfExists, contents);
+  EXPECT_EQ("Previous contentsNew contents",
+            fakefs::ReadTextFile(fake(), "/a/b/foo.txt"));
 }
 
 }  // namespace roo_io

@@ -76,6 +76,8 @@ class FakeOutputStream : public OutputStream {
     return f_.write(buf, count);
   }
 
+  void close() override { f_.close(); }
+
   Status status() const override { return f_.status(); }
 
  private:

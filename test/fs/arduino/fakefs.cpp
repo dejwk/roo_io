@@ -18,6 +18,8 @@ size_t File::write(size_t pos, const byte* buf, size_t size) {
   return size;
 }
 
+void File::truncate() { data_.clear(); }
+
 Entry* Dir::find(const std::string& name) {
   std::list<std::unique_ptr<Entry>>::iterator itr = lookup(name);
   if (itr == entries_.end()) return nullptr;
@@ -192,10 +194,11 @@ void FileStream::setError(Status status) {
   status_ = status;
 }
 
-void FileStream::open(File* file, bool readonly) {
+void FileStream::open(File* file, bool readonly, bool truncate) {
   file_ = file;
   position_ = 0;
   read_only_ = readonly;
+  if (truncate) file_->truncate();
   status_ = kOk;
 }
 
@@ -338,7 +341,8 @@ FileStream FakeFs::open(const char* path, int flags) {
     }
   }
   FileStream result;
-  result.open(&file->file(), read_only);
+  bool truncate = ((flags & kTruncate) != 0);
+  result.open(&file->file(), read_only, truncate);
   if ((flags & kAppend) != 0) {
     result.seek(result.size());
   }

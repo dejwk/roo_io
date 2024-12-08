@@ -24,6 +24,8 @@ class File {
 
   size_t write(size_t pos, const byte* buf, size_t size);
 
+  void truncate();
+
  private:
   friend class FileStream;
 
@@ -138,7 +140,7 @@ class FileStream {
 
   void setError(Status status);
 
-  void open(File* file, bool readonly);
+  void open(File* file, bool readonly, bool truncate);
 
   Status status() const { return status_; }
 

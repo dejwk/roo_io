@@ -68,7 +68,7 @@ void FakeArduinoFile::close() {
     f->openDir(next, basename_pos, std::move(itr));
   } else {
     FileStream fs;
-    fs.open(&dir_->entry().file(), false);
+    fs.open(&dir_->entry().file(), false, false);
     f->openFile(next, basename_pos, std::move(fs));
   }
   return f;
