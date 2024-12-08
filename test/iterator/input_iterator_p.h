@@ -114,14 +114,24 @@ TYPED_TEST_P(InputIteratorTest, StressTest) {
   ASSERT_EQ(kOk, itr.status());
   size_t pos = 0;
   for (size_t i = 0; i < 10000; i++) {
-    size_t cnt = rand() % 3000;
-    size_t read = itr.read(buf, cnt);
-    ASSERT_TRUE(read <= cnt);
-    for (size_t i = 0; i < read; ++i) {
-      ASSERT_EQ(buf[i], contents[pos + i]);
+    byte b = itr.read();
+    if (pos >= size) {
+      ASSERT_EQ(kEndOfStream, itr.status());
+    } else {
+      ASSERT_EQ(kOk, itr.status());
+      ASSERT_EQ(b, contents[pos]);
+      ++pos;
     }
-    pos += read;
-    if (rand() % 100 > 5) {
+    if (rand() % 100 < 10) {
+      size_t cnt = rand() % 3000;
+      size_t read = itr.read(buf, cnt);
+      ASSERT_TRUE(read <= cnt);
+      for (size_t i = 0; i < read; ++i) {
+        ASSERT_EQ(buf[i], contents[pos + i]);
+      }
+      pos += read;
+    }
+    if (rand() % 100 < 2) {
       uint64_t offset = rand() % 2000;
       itr.skip(offset);
       if (offset == 0) {
