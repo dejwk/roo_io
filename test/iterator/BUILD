@@ -3,7 +3,7 @@ cc_test(
     name = "unsafe_memory_input_iterator_test",
     srcs = [
         "input_iterator_p.h",
-        "memory_input_iterator_test.cpp",
+        "unsafe_memory_input_iterator_test.cpp",
     ],
     linkstatic = 1,
     deps = [

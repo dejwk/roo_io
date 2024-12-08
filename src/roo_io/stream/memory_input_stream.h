@@ -19,24 +19,28 @@ class MemoryInputStream : public MultipassInputStream {
 
   size_t read(byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
-    if (position_ >= size_) return 0;
+    if (position_ >= size_) {
+      status_ = kEndOfStream;
+      return 0;
+    }
     if (position_ + count > size_) {
       count = size_ - position_;
-      status_ = kEndOfStream;
     }
     memcpy(buf, ptr_ + position_, count);
-    ++position_;
+    position_ += count;
     return count;
   }
 
   void skip(uint64_t count) override {
     if (status_ != kOk) return;
-    if (position_ >= size_) return;
+    if (position_ > size_) {
+      status_ = kEndOfStream;
+      return;
+    }
     position_ += count;
     if (position_ > size_) {
       position_ = size_;
       status_ = kEndOfStream;
-      return;
     }
   }
 

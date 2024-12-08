@@ -105,7 +105,39 @@ TYPED_TEST_P(InputIteratorTest, Movable) {
   EXPECT_EQ(kOk, itr2.status());
 }
 
+TYPED_TEST_P(InputIteratorTest, StressTest) {
+  size_t size = 1024 * 1024 + 17;
+  std::unique_ptr<byte[]> contents(new byte[size]);
+  for (size_t i = 0; i < size; ++i) contents[i] = rand() % 256;
+  auto itr = this->createIterator(contents.get(), size);
+  byte buf[20000];
+  ASSERT_EQ(kOk, itr.status());
+  size_t pos = 0;
+  for (size_t i = 0; i < 10000; i++) {
+    size_t cnt = rand() % 3000;
+    size_t read = itr.read(buf, cnt);
+    ASSERT_TRUE(read <= cnt);
+    for (size_t i = 0; i < read; ++i) {
+      ASSERT_EQ(buf[i], contents[pos + i]);
+    }
+    pos += read;
+    if (rand() % 100 > 5) {
+      uint64_t offset = rand() % 2000;
+      itr.skip(offset);
+      if (offset == 0) {
+      } else if (pos + offset > size) {
+        ASSERT_EQ(kEndOfStream, itr.status());
+        pos = size;
+      } else {
+        ASSERT_EQ(kOk, itr.status());
+        pos += offset;
+      }
+    }
+  }
+}
+
 REGISTER_TYPED_TEST_SUITE_P(InputIteratorTest, Empty, ReadByByte, ReadArray,
-                            ReadArrayPastEos, Skip, SkipPastEos, Movable);
+                            ReadArrayPastEos, Skip, SkipPastEos, Movable,
+                            StressTest);
 
 }  // namespace roo_io
