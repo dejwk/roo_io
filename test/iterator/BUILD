@@ -36,6 +36,19 @@ cc_test(
 )
 
 cc_test(
+    name = "buffered_multipass_input_stream_iterator_test",
+    srcs = [
+        "input_iterator_p.h",
+        "multipass_input_iterator_p.h",
+        "buffered_multipass_input_stream_iterator_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+    ],
+)
+
+cc_test(
     name = "multipass_memory_input_iterator_test",
     srcs = [
         "input_iterator_p.h",

@@ -104,7 +104,7 @@ inline void BufferedMultipassInputStreamIterator::Rep::rewind() {
     offset_ = 0;
   } else {
     // Reset the buffer.
-    input_->seek(0);
+    input_->rewind();
     offset_ = 0;
     length_ = 0;
     status_ = input_->status();
@@ -112,6 +112,7 @@ inline void BufferedMultipassInputStreamIterator::Rep::rewind() {
 }
 
 inline void BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
+  if (status_ != kOk && status_ != kEndOfStream) return;
   uint64_t file_pos = input_->position();
   if (file_pos <= position + length_ && file_pos >= position) {
     // Seek within the area we have in the buffer.
@@ -123,6 +124,7 @@ inline void BufferedMultipassInputStreamIterator::Rep::seek(uint64_t position) {
     length_ = 0;
     status_ = input_->status();
   }
+  status_ = kOk;
 }
 
 inline byte BufferedMultipassInputStreamIterator::Rep::read() {
