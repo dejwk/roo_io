@@ -98,6 +98,7 @@ inline uint64_t BufferedMultipassInputStreamIterator::Rep::position() const {
 }
 
 inline void BufferedMultipassInputStreamIterator::Rep::rewind() {
+  if (status_ != kOk && status_ != kEndOfStream) return;
   uint64_t file_pos = input_->position();
   if (file_pos <= length_) {
     // Keep the buffer data and length.

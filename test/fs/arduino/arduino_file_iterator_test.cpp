@@ -5,7 +5,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "input_iterator_p.h"
-// #include "multipass_input_iterator_p.h"
+#include "multipass_input_iterator_p.h"
 #include "roo_io/fs/arduino/arduino_sdfs.h"
 
 namespace roo_io {
@@ -32,8 +32,8 @@ class ArduinoFileIteratorFixture {
 INSTANTIATE_TYPED_TEST_SUITE_P(ArduinoFileIteratorTest, InputIteratorTest,
                                ArduinoFileIteratorFixture);
 
-// INSTANTIATE_TYPED_TEST_SUITE_P(ArduinoFileIteratorTest,
-//                                MultipassInputIteratorTest,
-//                                ArduinoFileIteratorFixture);
+INSTANTIATE_TYPED_TEST_SUITE_P(ArduinoFileIteratorTest,
+                               MultipassInputIteratorTest,
+                               ArduinoFileIteratorFixture);
 
 }  // namespace roo_io

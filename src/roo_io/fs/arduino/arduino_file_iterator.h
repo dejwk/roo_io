@@ -22,6 +22,12 @@ class ArduinoFileIterator {
   void skip(size_t count) { rep_->skip(count); }
   Status status() const { return rep_->status(); }
 
+  uint64_t size() const { return rep_->size(); }
+  uint64_t position() const { return rep_->position(); }
+
+  void rewind() { rep_->rewind(); }
+  void seek(uint64_t position) { rep_->seek(position); }
+
   // void reset(::File file) { rep_->reset(&input); }
   // void reset() { rep_->reset(nullptr); }
 
@@ -34,6 +40,12 @@ class ArduinoFileIterator {
     size_t read(byte* buf, size_t count);
     void skip(size_t count);
     Status status() const { return status_; }
+
+    uint64_t size() const;
+    uint64_t position() const;
+
+    void rewind();
+    void seek(uint64_t position);
 
    private:
     Rep(const Rep&) = delete;
@@ -61,6 +73,42 @@ inline ArduinoFileIterator::Rep::Rep(::fs::File file)
       status_(file_ ? kOk : kClosed) {}
 
 inline ArduinoFileIterator::Rep::~Rep() { file_.close(); }
+
+inline uint64_t ArduinoFileIterator::Rep::size() const { return file_.size(); }
+
+inline uint64_t ArduinoFileIterator::Rep::position() const {
+  return file_.position() + offset_ - length_;
+}
+
+inline void ArduinoFileIterator::Rep::rewind() {
+  if (status_ != kOk && status_ != kEndOfStream) return;
+  uint64_t file_pos = file_.position();
+  if (file_pos <= length_) {
+    // Keep the buffer data and length.
+    offset_ = 0;
+    status_ = kOk;
+  } else {
+    // Reset the buffer.
+    offset_ = 0;
+    length_ = 0;
+    status_ = file_.seek(0, SeekSet) ? kOk : kSeekError;
+  }
+}
+
+inline void ArduinoFileIterator::Rep::seek(uint64_t position) {
+  if (status_ != kOk && status_ != kEndOfStream) return;
+  uint64_t file_pos = file_.position();
+  if (file_pos <= position + length_ && file_pos >= position) {
+    // Seek within the area we have in the buffer.
+    offset_ = position + length_ - file_pos;
+    status_ = kOk;
+  } else {
+    // Seek outside the buffer. Just seek in the file and reset the buffer.
+    offset_ = 0;
+    length_ = 0;
+    status_ = file_.seek(position, SeekSet) ? kOk : kSeekError;
+  }
+}
 
 inline byte ArduinoFileIterator::Rep::read() {
   if (offset_ < length_) {
