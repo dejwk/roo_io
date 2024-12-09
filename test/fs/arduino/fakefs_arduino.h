@@ -99,6 +99,8 @@ class FakeArduinoSdFs : public Filesystem {
 
   MediaPresence checkMediaPresence() override { return kMediaPresent; }
 
+  ::fs::FS& fs() { return sd_; }
+
  protected:
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 

@@ -11,6 +11,19 @@ cc_test(
     ],
 )
 
+cc_test(
+    name = "arduino_file_iterator_test",
+    srcs = [
+        "arduino_file_iterator_test.cpp",
+    ],
+    # includes = glob(["**/*.h"]),
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io/test/iterator:testing",
+        ":fakefs_arduino"
+    ],
+)
+
 cc_library(
     name = "fakefs_arduino",
     srcs = [
