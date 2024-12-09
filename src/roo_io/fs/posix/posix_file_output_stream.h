@@ -40,10 +40,6 @@ class PosixFileOutputStream : public OutputStream {
     return result;
   }
 
-  bool isOpen() const override {
-    return status_ == kOk || status_ == kEndOfStream;
-  }
-
   void close() override {
     if (status_ != kOk && status_ != kEndOfStream) return;
     if (::fclose(file_) == 0) {

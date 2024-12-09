@@ -70,8 +70,6 @@ class FakeOutputStream : public OutputStream {
  public:
   FakeOutputStream(FileStream f) : f_(std::move(f)) {}
 
-  bool isOpen() const override { return f_.isOpen(); }
-
   size_t write(const byte* buf, size_t count) override {
     return f_.write(buf, count);
   }

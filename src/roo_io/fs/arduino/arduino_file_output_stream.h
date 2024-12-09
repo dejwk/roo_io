@@ -8,8 +8,7 @@ namespace roo_io {
 
 class ArduinoFileOutputStream : public OutputStream {
  public:
-  ArduinoFileOutputStream(Status error)
-      : file_(), status_(error) {}
+  ArduinoFileOutputStream(Status error) : file_(), status_(error) {}
 
   ArduinoFileOutputStream(fs::File file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
@@ -23,15 +22,20 @@ class ArduinoFileOutputStream : public OutputStream {
     return result;
   }
 
-  bool isOpen() const override { return file_.operator bool(); }
-
-  void close() override {
-    file_.close();
-    status_ = kClosed;
+  void flush() override {
+    if (status_ == kClosed) return;
+    file_.flush();
+    if (!file_) {
+      status_ = kWriteError;
+    }
   }
 
-  void flush() override {
-    file_.flush();
+  void close() override {
+    if (status_ == kClosed) return;
+    file_.close();
+    if (status_ == kOk) {
+      status_ = kClosed;
+    }
   }
 
   Status status() const override { return status_; }

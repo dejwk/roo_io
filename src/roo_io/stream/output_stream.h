@@ -6,20 +6,38 @@
 
 namespace roo_io {
 
-// Virtualizes access to files, memory, or other sources. Represents an 'open'
-// resource with a 'file pointer'.
+// Virtualizes access to files, memory, or other sources that can be written to.
 class OutputStream {
  public:
   virtual ~OutputStream() { close(); }
 
-  virtual bool isOpen() const = 0;
+  // Equivalent to 'status() == kOk`.
+  bool isOpen() const { return status() == kOk; }
 
+  // Flushes and closes the stream. If successful, and if the state was 'kOk',
+  // it is changed to 'kClosed'. Otherwise, the state is set to reflect the
+  // failure encountered.
   virtual void close() { flush(); }
 
-  // Tries to write up to count bytes. On success, returns the number of bytes
-  // written. On failure, returns 0, and updates the `status()`.
+  // Attempts to write up to `count` bytes from the `buffer`. Updates
+  // `status()`. Returns the number of bytes written, which must be greater than
+  // zero on success (i.e. when `status()` returns `kOk`), and possibly zero on
+  // error.
+  //
+  // If the status is not `kOk` before the call, the call has no effect and
+  // returns zero.
+  //
+  // In case of error, updates the status, and returns the number of bytes that
+  // have been written before the error was encountered (possibly zero, but
+  // might be greater than zero).
   virtual size_t write(const byte* buf, size_t count) = 0;
 
+  // Attempts to write `count` bytes from the `buffer`. Updates `status()`.
+  // Returns the number of bytes written, which must be `count` on success (i.e.
+  // when `status()` returns `kOk`), and possibly zero on error.
+  //
+  // This method is similar to `write()`, except it never returns fewer bytes
+  // than `count`, unless it encounters an error.
   virtual size_t writeFully(const byte* buf, size_t count) {
     size_t written_total = 0;
     while (count > 0) {
@@ -32,9 +50,13 @@ class OutputStream {
     return written_total;
   }
 
+  // Ensures that any data that might be buffered by this stream are written out
+  // to the underlying sink. May update the `status()`.
   virtual void flush() {}
 
-  // Returns the status of the most recent I/O operation.
+  // Returns the status of the underlying stream. Updated by write operations.
+  // Always 'kOk' or failure (never 'kEndOfStream').
+  //
   virtual Status status() const = 0;
 };
 

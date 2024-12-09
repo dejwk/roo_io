@@ -34,8 +34,7 @@ class UnsafeMemoryOutputIterator {
 // attempted). must ensure that the iterator does not overflow the output.
 class MemoryOutputIterator {
  public:
-  MemoryOutputIterator(byte* ptr, const byte* end)
-      : ptr_(ptr), end_(end) {}
+  MemoryOutputIterator(byte* ptr, const byte* end) : ptr_(ptr), end_(end) {}
 
   // Writes `v`, or sets status to 'kNoSpaceLeftOnDevice' if there is no more
   // space.

@@ -8,8 +8,6 @@ class NullOutputStream : public OutputStream {
  public:
   NullOutputStream(Status error = kClosed) : status_(error) {}
 
-  bool isOpen() const override { return false; }
-
   void close() override {}
 
   Status status() const override { return status_; }

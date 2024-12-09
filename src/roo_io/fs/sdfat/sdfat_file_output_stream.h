@@ -23,11 +23,20 @@ class SdFatFileOutputStream : public OutputStream {
     return result;
   }
 
-  bool isOpen() const override { return file_.operator bool(); }
+  void flush() override {
+    if (status_ == kClosed) return;
+    file_.flush();
+    if (!file_) {
+      status_ = kWriteError;
+    }
+  }
 
   void close() override {
+    if (status_ == kClosed) return;
     file_.close();
-    status_ = kClosed;
+    if (status_ == kOk) {
+      status_ = kClosed;
+    }
   }
 
   Status status() const override { return status_; }
