@@ -60,9 +60,9 @@ class FakeArduinoFile : public ::fs::FileImpl {
   std::unique_ptr<DirIterator> dir_;
 };
 
-class FakeArduinoFs : public ::fs::FSImpl {
+class FakeArduinoFsImpl : public ::fs::FSImpl {
  public:
-  FakeArduinoFs(FakeFs& fs) : fs_(fs) {}
+  FakeArduinoFsImpl(FakeFs& fs) : fs_(fs) {}
 
   bool exists(const char* path) override;
 
@@ -93,7 +93,9 @@ class FakeArduinoSdFsImpl : public ::fs::FS {
 
 class FakeArduinoSdFs : public Filesystem {
  public:
-  FakeArduinoSdFs(FakeArduinoSdFsImpl& sd) : sd_(sd) {}
+  static constexpr bool strict = false;
+
+  FakeArduinoSdFs(FakeFs& fs) : sd_(fs) {}
 
   MediaPresence checkMediaPresence() override { return kMediaPresent; }
 
@@ -102,7 +104,7 @@ class FakeArduinoSdFs : public Filesystem {
 
   void unmountImpl() override { sd_.end(); }
 
-  FakeArduinoSdFsImpl& sd_;
+  FakeArduinoSdFsImpl sd_;
 };
 
 }  // namespace fakefs

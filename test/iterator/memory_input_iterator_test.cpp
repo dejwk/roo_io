@@ -4,6 +4,7 @@
 #include "input_iterator_p.h"
 
 namespace roo_io {
+
 class SafeMemoryInputIteratorFixture {
  public:
   MemoryIterator createIterator(const byte* beg, size_t size) {

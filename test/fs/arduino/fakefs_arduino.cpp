@@ -78,29 +78,34 @@ FakeArduinoFile::operator bool() {
   return (f_ != nullptr && f_->isOpen()) || (dir_ != nullptr && dir_->isOpen());
 }
 
-bool FakeArduinoFs::exists(const char* path) {
+bool FakeArduinoFsImpl::exists(const char* path) {
   auto stat = fs_.stat(path);
   return stat.status == kOk && stat.type != StatResult::kUnknown;
 }
 
-bool FakeArduinoFs::rename(const char* pathFrom, const char* pathTo) {
+bool FakeArduinoFsImpl::rename(const char* pathFrom, const char* pathTo) {
   return fs_.rename(pathFrom, pathTo) == kOk;
 }
 
-bool FakeArduinoFs::remove(const char* path) { return fs_.remove(path) == kOk; }
+bool FakeArduinoFsImpl::remove(const char* path) {
+  return fs_.remove(path) == kOk;
+}
 
-bool FakeArduinoFs::mkdir(const char* path) { return fs_.mkdir(path) == kOk; }
+bool FakeArduinoFsImpl::mkdir(const char* path) {
+  return fs_.mkdir(path) == kOk;
+}
 
-bool FakeArduinoFs::rmdir(const char* path) { return fs_.rmdir(path) == kOk; }
+bool FakeArduinoFsImpl::rmdir(const char* path) {
+  return fs_.rmdir(path) == kOk;
+}
 
-::fs::FileImplPtr FakeArduinoFs::open(const char* path, const char* mode,
-                                      const bool create) {
+::fs::FileImplPtr FakeArduinoFsImpl::open(const char* path, const char* mode,
+                                          const bool create) {
   int flags = 0;
   if (strcmp(mode, FILE_READ) == 0) flags |= FakeFs::kRead;
   if (strcmp(mode, FILE_WRITE) == 0)
     flags |= (FakeFs::kWrite | FakeFs::kTruncate);
-  if (strcmp(mode, FILE_APPEND) == 0)
-    flags |= FakeFs::kAppend;
+  if (strcmp(mode, FILE_APPEND) == 0) flags |= FakeFs::kAppend;
   std::shared_ptr<FakeArduinoFile> f(new FakeArduinoFile());
   std::string p(path);
   ResolvedPath resolved = fs_.resolvePath(path, (create && mode[0] != 'r'));
@@ -132,7 +137,8 @@ bool FakeArduinoFs::rmdir(const char* path) { return fs_.rmdir(path) == kOk; }
 }
 
 FakeArduinoSdFsImpl::FakeArduinoSdFsImpl(FakeFs& fake)
-    : ::fs::FS(std::shared_ptr<FakeArduinoFs>(new FakeArduinoFs(fake))) {}
+    : ::fs::FS(
+          std::shared_ptr<FakeArduinoFsImpl>(new FakeArduinoFsImpl(fake))) {}
 
 bool FakeArduinoSdFsImpl::begin(const char* mountpoint) {
   _impl->mountpoint(mountpoint);
