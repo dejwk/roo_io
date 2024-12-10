@@ -17,9 +17,7 @@ class MemoryOutputStream : public OutputStream {
     if (status_ != kOk) return 0;
     if (count > end_ - ptr_) {
       count = end_ - ptr_;
-      memcpy(ptr_, buf, count);
       status_ = kNoSpaceLeftOnDevice;
-      return count;
     }
     memcpy(ptr_, buf, count);
     ptr_ += count;
@@ -33,6 +31,8 @@ class MemoryOutputStream : public OutputStream {
   }
 
   Status status() const override { return status_; }
+
+  byte* ptr() const { return ptr_; }
 
  private:
   byte* ptr_;
