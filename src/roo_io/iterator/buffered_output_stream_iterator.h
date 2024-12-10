@@ -75,20 +75,23 @@ class BufferedOutputStreamIterator {
 };
 
 inline BufferedOutputStreamIterator::Rep::Rep()
-    : output_(nullptr), offset_(0), status_(kClosed) {}
+    : output_(nullptr),
+      offset_(kOutputStreamIteratorBufferSize),
+      status_(kClosed) {}
 
 inline BufferedOutputStreamIterator::Rep::Rep(roo_io::OutputStream& output)
-    : output_(&output), offset_(0), status_(output.status()) {}
+    : output_(&output), offset_(0), status_(output.status()) {
+  if (status_ != kOk) offset_ = kOutputStreamIteratorBufferSize;
+}
 
 inline void BufferedOutputStreamIterator::Rep::reset(
     roo_io::OutputStream* output) {
   output_ = output;
-  offset_ = 0;
+  offset_ = (output != nullptr) ? 0 : kOutputStreamIteratorBufferSize;
   status_ = (output != nullptr) ? output->status() : kClosed;
 }
 
 inline void BufferedOutputStreamIterator::Rep::writeBuffer() {
-  if (status_ != roo_io::kOk) return;
   if (output_->writeFully(buffer_, offset_) < offset_) {
     status_ = output_->status();
   }
@@ -96,10 +99,11 @@ inline void BufferedOutputStreamIterator::Rep::writeBuffer() {
 }
 
 inline void BufferedOutputStreamIterator::Rep::write(byte v) {
-  buffer_[offset_++] = v;
   if (offset_ >= kOutputStreamIteratorBufferSize) {
+    if (status_ != kOk) return;
     writeBuffer();
   }
+  buffer_[offset_++] = v;
 }
 
 inline size_t BufferedOutputStreamIterator::Rep::write(const byte* buf,
@@ -110,6 +114,7 @@ inline size_t BufferedOutputStreamIterator::Rep::write(const byte* buf,
     memcpy(&buffer_[offset_], buf, len);
     offset_ += len;
     if (offset_ >= kOutputStreamIteratorBufferSize) {
+      if (status_ != kOk) return 0;
       writeBuffer();
     }
     return len;
