@@ -3,9 +3,7 @@ cc_library(
     srcs = glob(
         [
             "src/**/*.cpp",
-            "src/**/*.c",
             "src/**/*.h",
-            "src/**/*.inl",
         ],
         exclude = ["test/**"],
     ),
@@ -29,9 +27,7 @@ cc_library(
     srcs = glob(
         [
             "src/**/*.cpp",
-            "src/**/*.c",
             "src/**/*.h",
-            "src/**/*.inl",
         ],
         exclude = ["test/**"],
     ),
