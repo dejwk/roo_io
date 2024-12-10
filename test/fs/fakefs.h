@@ -252,6 +252,7 @@ Status RecursiveMkDir(FakeFs& fs, const char* path);
 
 Status CreateTextFile(FakeFs& fs, const char* path, const char* contents);
 
+std::vector<byte> ReadFile(FakeFs& fs, const char* path);
 std::string ReadTextFile(FakeFs& fs, const char* path);
 
 }  // namespace fakefs

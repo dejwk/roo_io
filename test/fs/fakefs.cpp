@@ -241,6 +241,7 @@ size_t FileStream::write(const byte* source, size_t size) {
       status_ = kNoSpaceLeftOnDevice;
     }
   }
+  position_ += result;
   return result;
 }
 
@@ -455,6 +456,18 @@ Status CreateTextFile(FakeFs& fs, const char* path, const char* contents) {
   if (creation_status != kOk) return creation_status;
   file->file().write(0, (const byte*)contents, strlen(contents));
   return kOk;
+}
+
+std::vector<byte> ReadFile(FakeFs& fs, const char* path) {
+  ResolvedPath resolved = fs.resolvePath(path, true);
+  if (resolved.status != kOk) return {};
+  Entry* existing = resolved.parent->dir().find(resolved.basename);
+  if (existing == nullptr) return {};
+  if (!existing->isFile()) return {};
+  size_t size = existing->file().size();
+  std::unique_ptr<byte[]> result(new byte[size]);
+  existing->file().read(0, result.get(), size);
+  return std::vector<byte>(&result[0], &result[size]);
 }
 
 std::string ReadTextFile(FakeFs& fs, const char* path) {
