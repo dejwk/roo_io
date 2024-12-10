@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include "roo_io/byte.h"
+#include "roo_io/base/byte.h"
 #include "roo_io/status.h"
 #include "roo_logging.h"
 

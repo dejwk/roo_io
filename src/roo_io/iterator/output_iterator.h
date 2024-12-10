@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "roo_io/byte.h"
+#include "roo_io/base/byte.h"
 #include "roo_io/status.h"
 
 // Output iterators define a template contract for writing streams of bytes, to

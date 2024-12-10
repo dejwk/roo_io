@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "roo_io/byte.h"
+#include "roo_io/base/byte.h"
 #include "roo_io/status.h"
 
 // Input iterators define a template contract for streams of bytes, to be used

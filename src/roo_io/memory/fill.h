@@ -8,7 +8,7 @@
 
 #include <cstring>
 
-#include "roo_io/byte.h"
+#include "roo_io/base/byte.h"
 
 namespace roo_io {
 

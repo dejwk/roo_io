@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "roo_io/byte.h"
+#include "roo_io/base/byte.h"
 #include "roo_io/data/byte_order.h"
 
 namespace roo_io {
