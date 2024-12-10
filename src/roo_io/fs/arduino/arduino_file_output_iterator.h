@@ -28,7 +28,9 @@ class ArduinoFileOutputIterator {
   }
 
   // rep_ can be nullptr after std::move().
-  void flush() { if (rep_ != nullptr) rep_->flush(); }
+  void flush() {
+    if (rep_ != nullptr) rep_->flush();
+  }
 
   Status status() const { return rep_->status(); }
   bool ok() const { return status() == roo_io::kOk; }
@@ -71,10 +73,14 @@ class ArduinoFileOutputIterator {
 };
 
 inline ArduinoFileOutputIterator::Rep::Rep()
-    : file_(), offset_(0), status_(kClosed) {}
+    : file_(),
+      offset_(kArduinoFileOutputIteratorBufferSize),
+      status_(kClosed) {}
 
 inline ArduinoFileOutputIterator::Rep::Rep(::fs::File file)
-    : file_(std::move(file)), offset_(0), status_(file_ ? kOk : kClosed) {}
+    : file_(std::move(file)), offset_(0), status_(file_ ? kOk : kClosed) {
+  if (status_ != kOk) offset_ = kArduinoFileOutputIteratorBufferSize;
+}
 
 // inline void ArduinoFileOutputIterator::Rep::reset(
 //     roo_io::OutputStream* output) {
@@ -84,7 +90,6 @@ inline ArduinoFileOutputIterator::Rep::Rep(::fs::File file)
 // }
 
 inline void ArduinoFileOutputIterator::Rep::writeBuffer() {
-  if (status_ != roo_io::kOk) return;
   if (file_.write((const uint8_t*)buffer_, offset_) < offset_) {
     status_ = kWriteError;
   }
@@ -92,10 +97,11 @@ inline void ArduinoFileOutputIterator::Rep::writeBuffer() {
 }
 
 inline void ArduinoFileOutputIterator::Rep::write(byte v) {
-  buffer_[offset_++] = v;
   if (offset_ >= kArduinoFileOutputIteratorBufferSize) {
+    if (status_ != roo_io::kOk) return;
     writeBuffer();
   }
+  buffer_[offset_++] = v;
 }
 
 inline size_t ArduinoFileOutputIterator::Rep::write(const byte* buf,
@@ -106,6 +112,7 @@ inline size_t ArduinoFileOutputIterator::Rep::write(const byte* buf,
     memcpy(&buffer_[offset_], buf, len);
     offset_ += len;
     if (offset_ >= kArduinoFileOutputIteratorBufferSize) {
+      if (status_ != roo_io::kOk) return 0;
       writeBuffer();
     }
     return len;
