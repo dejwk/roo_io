@@ -14,11 +14,17 @@ class OutputIteratorTest : public testing::Test {
     return factory.createIterator(max_size);
   }
 
-  std::string getResult() const { return factory.getResult(); }
+  std::vector<byte> getResult() const { return factory.getResult(); }
+
+  std::string getResultAsString() const { return factory.getResultAsString(); }
 
  private:
   ItrFactory factory;
 };
+
+// void PrintTo(byte b, std::ostream* os) {
+//   *os << (uint8_t)b;
+// }
 
 MATCHER_P(IsNoSpaceLeftOnDevice, strict, "") {
   return strict ? arg == kNoSpaceLeftOnDevice
@@ -42,7 +48,7 @@ TYPED_TEST_P(OutputIteratorTest, Empty) {
   itr.write(byte{'B'});
   itr.flush();
   EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
-  EXPECT_EQ("", this->getResult());
+  EXPECT_EQ("", this->getResultAsString());
 }
 
 TYPED_TEST_P(OutputIteratorTest, WriteByByte) {
@@ -57,7 +63,7 @@ TYPED_TEST_P(OutputIteratorTest, WriteByByte) {
     itr.write(byte{'C'});
     EXPECT_EQ(kOk, itr.status());
   }
-  EXPECT_EQ("ABC", this->getResult());
+  EXPECT_EQ("ABC", this->getResultAsString());
 }
 
 TYPED_TEST_P(OutputIteratorTest, WriteByBytePastCapacity) {
@@ -78,7 +84,7 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBytePastCapacity) {
     itr.flush();
     EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
-  EXPECT_EQ("ABC", this->getResult());
+  EXPECT_EQ("ABC", this->getResultAsString());
 }
 
 TYPED_TEST_P(OutputIteratorTest, WriteByBlockTillCapacity) {
@@ -97,7 +103,7 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBlockTillCapacity) {
     itr.flush();
     EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
-  EXPECT_EQ("ABCDE", this->getResult());
+  EXPECT_EQ("ABCDE", this->getResultAsString());
 }
 
 TYPED_TEST_P(OutputIteratorTest, WriteByBlockPastCapacity) {
@@ -114,7 +120,7 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBlockPastCapacity) {
     itr.flush();
     EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
-  EXPECT_EQ("ABCDE", this->getResult());
+  EXPECT_EQ("ABCDE", this->getResultAsString());
 }
 
 TYPED_TEST_P(OutputIteratorTest, Movable) {
@@ -131,12 +137,47 @@ TYPED_TEST_P(OutputIteratorTest, Movable) {
     itr2.write(byte{'C'});
     EXPECT_EQ(kOk, itr2.status());
   }
-  EXPECT_EQ("ABC", this->getResult());
+  EXPECT_EQ("ABC", this->getResultAsString());
+}
+
+TYPED_TEST_P(OutputIteratorTest, StressTest) {
+  size_t size = 1024 * 1024 + 17;
+  std::unique_ptr<byte[]> contents(new byte[size]);
+  uint64_t pos = 0;
+  {
+    auto itr = this->createIterator(size);
+    ASSERT_EQ(kOk, itr.status());
+    byte buf[20000];
+    for (size_t i = 0; i < 10000; i++) {
+      if (pos >= size) break;
+      byte b = (byte)rand();
+      contents[pos++] = b;
+      itr.write(b);
+      EXPECT_EQ(kOk, itr.status());
+      if (rand() % 100 < 10) {
+        size_t cnt = rand() % 3000;
+        if (cnt > size - pos) cnt = size - pos;
+        for (size_t j = 0; j < cnt; ++j) {
+          buf[j] = (byte)rand();
+        }
+        memcpy(&contents[pos], buf, cnt);
+        pos += cnt;
+        byte* pos = buf;
+        while (cnt > 0) {
+          size_t written = itr.write(pos, cnt);
+          ASSERT_TRUE(written <= cnt);
+          pos += written;
+          cnt -= written;
+        }
+      }
+    }
+  }
+  EXPECT_EQ(std::vector<byte>(&contents[0], &contents[pos]), this->getResult());
 }
 
 REGISTER_TYPED_TEST_SUITE_P(OutputIteratorTest, Initialization, Empty,
                             WriteByByte, WriteByBytePastCapacity,
                             WriteByBlockTillCapacity, WriteByBlockPastCapacity,
-                            Movable);
+                            Movable, StressTest);
 
 }  // namespace roo_io

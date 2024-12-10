@@ -18,7 +18,13 @@ class ArduinoFileOutputIteratorFixture {
     return ArduinoFileOutputIterator(sdfs_->open("/foo", "w"));
   }
 
-  std::string getResult() const { return fakefs::ReadTextFile(*fake_, "/foo"); }
+  std::vector<byte> getResult() const {
+    return fakefs::ReadFile(*fake_, "/foo");
+  }
+
+  std::string getResultAsString() const {
+    return fakefs::ReadTextFile(*fake_, "/foo");
+  }
 
   static constexpr bool strict = false;
 

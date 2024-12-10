@@ -11,21 +11,26 @@ namespace roo_io {
 class BufferedOutputStreamIteratorFixture {
  public:
   BufferedOutputStreamIterator createIterator(size_t max_size) {
-    contents_ = std::unique_ptr<char[]>(new char[max_size]);
+    contents_ = std::unique_ptr<byte[]>(new byte[max_size]);
     os_ = std::unique_ptr<MemoryOutputStream<byte*>>(
-        new MemoryOutputStream<byte*>((byte*)contents_.get(),
-                                      (byte*)contents_.get() + max_size));
+        new MemoryOutputStream<byte*>(contents_.get(),
+                                      contents_.get() + max_size));
     return BufferedOutputStreamIterator(*os_);
   }
 
-  std::string getResult() const {
-    return std::string(contents_.get(), (char*)os_->ptr() - contents_.get());
+  std::vector<byte> getResult() const {
+    return std::vector<byte>(contents_.get(), os_->ptr());
+  }
+
+  std::string getResultAsString() const {
+    return std::string((const char*)contents_.get(),
+                       (const char*)os_->ptr());
   }
 
   static constexpr bool strict = true;
 
  private:
-  std::unique_ptr<char[]> contents_;
+  std::unique_ptr<byte[]> contents_;
   std::unique_ptr<MemoryOutputStream<byte*>> os_;
 };
 
