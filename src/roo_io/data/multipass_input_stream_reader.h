@@ -52,7 +52,7 @@ class MultipassInputStreamReader {
     if (is_ != nullptr) in_.seek(position);
   }
 
-  byte read() { return is_ == nullptr ? 0 : in_.read(); }
+  byte read() { return is_ == nullptr ? byte{0} : in_.read(); }
 
   void skip(size_t count) {
     if (is_ != nullptr) in_.skip(count);
