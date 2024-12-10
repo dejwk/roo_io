@@ -12,13 +12,19 @@ size_t File::read(size_t pos, byte* buf, size_t size) const {
 
 size_t File::write(size_t pos, const byte* buf, size_t size) {
   if (data_.size() < pos + size) {
-    data_.resize(pos + size);
+    uint64_t requested = pos + size - data_.size();
+    uint64_t obtained = totals_.reserve(requested);
+    data_.resize(data_.size() + obtained);
+    size -= (requested - obtained);
   }
   memcpy(&data_[pos], buf, size);
   return size;
 }
 
-void File::truncate() { data_.clear(); }
+void File::truncate() {
+  totals_.release(data_.size());
+  data_.clear();
+}
 
 Entry* Dir::find(const std::string& name) {
   std::list<std::unique_ptr<Entry>>::iterator itr = lookup(name);
@@ -45,7 +51,7 @@ roo_io::Status Dir::mkdir(const Entry* parent, const std::string& name,
       return kFileExists;
     }
   }
-  entries_.emplace_back(Entry::DirEntry(name));
+  entries_.emplace_back(Entry::DirEntry(name, totals_));
   entries_.back()->setParent(parent);
   if (dir != nullptr) *dir = entries_.back().get();
   return kOk;
@@ -61,7 +67,7 @@ Status Dir::create(const Entry* parent, const std::string& name, Entry** file) {
       return kFileExists;
     }
   }
-  entries_.emplace_back(Entry::FileEntry(name));
+  entries_.emplace_back(Entry::FileEntry(name, totals_));
   entries_.back()->setParent(parent);
   if (file != nullptr) *file = entries_.back().get();
   return kOk;
@@ -92,6 +98,7 @@ roo_io::Status Dir::rm(const std::string& name) {
   if (!e.isFile()) {
     return kNotFile;
   }
+  totals_.release(e.file().size());
   entries_.erase(itr);
   return kOk;
 }
@@ -166,14 +173,16 @@ bool DirIterator::next() {
   }
 }
 
-std::unique_ptr<Entry> Entry::DirEntry(const std::string& name) {
+std::unique_ptr<Entry> Entry::DirEntry(const std::string& name,
+                                       FsTotals& totals) {
   return std::unique_ptr<Entry>(
-      new Entry(name, std::unique_ptr<Dir>(new Dir())));
+      new Entry(name, std::unique_ptr<Dir>(new Dir(totals))));
 }
 
-std::unique_ptr<Entry> Entry::FileEntry(const std::string& name) {
+std::unique_ptr<Entry> Entry::FileEntry(const std::string& name,
+                                        FsTotals& totals) {
   return std::unique_ptr<Entry>(
-      new Entry(name, std::unique_ptr<File>(new File())));
+      new Entry(name, std::unique_ptr<File>(new File(totals))));
 }
 
 bool Entry::isDescendantOf(const Entry& e) const {
@@ -226,7 +235,13 @@ size_t FileStream::write(const byte* source, size_t size) {
     status_ = kReadOnlyFilesystem;
     return 0;
   }
-  return file_->write(position_, source, size);
+  uint64_t result = file_->write(position_, source, size);
+  if (result < size) {
+    if (file_->totals_.free() == 0) {
+      status_ = kNoSpaceLeftOnDevice;
+    }
+  }
+  return result;
 }
 
 void FileStream::seek(size_t pos) {

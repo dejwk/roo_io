@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <limits>
 #include <list>
 #include <memory>
 #include <string>
@@ -13,10 +14,31 @@
 namespace roo_io {
 namespace fakefs {
 
+class FsTotals {
+ public:
+  FsTotals(uint64_t capacity) : usage_(0), capacity_(capacity) {}
+
+  uint64_t reserve(uint64_t requested) {
+    if (requested > free()) requested = free();
+    usage_ += requested;
+    return requested;
+  }
+
+  void release(uint64_t released) { usage_ -= released; }
+
+  uint64_t free() const { return usage_ > capacity_ ? 0 : capacity_ - usage_; }
+
+  void setCapacity(uint64_t capacity) { capacity_ = capacity; }
+
+ private:
+  uint64_t usage_;
+  uint64_t capacity_;
+};
+
 // A fake (in-memory) file.
 class File {
  public:
-  File() = default;
+  File(FsTotals& totals) : totals_(totals) {}
 
   size_t size() const { return data_.size(); }
 
@@ -29,6 +51,7 @@ class File {
  private:
   friend class FileStream;
 
+  FsTotals& totals_;
   std::vector<byte> data_;
 };
 
@@ -45,9 +68,11 @@ class Entry {
   File& file() { return *file_; }
   Dir& dir() { return *dir_; }
 
-  static std::unique_ptr<Entry> DirEntry(const std::string& name);
+  static std::unique_ptr<Entry> DirEntry(const std::string& name,
+                                         FsTotals& totals);
 
-  static std::unique_ptr<Entry> FileEntry(const std::string& name);
+  static std::unique_ptr<Entry> FileEntry(const std::string& name,
+                                          FsTotals& totals);
 
   bool isDescendantOf(const Entry& e) const;
 
@@ -76,6 +101,8 @@ class Entry {
 // A fake (in-memory) directory.
 class Dir {
  public:
+  Dir(FsTotals& totals) : entries_(), totals_(totals) {}
+
   int entryCount() { return entries_.size(); }
 
   Entry* find(const std::string& name);
@@ -102,6 +129,8 @@ class Dir {
   std::list<std::unique_ptr<Entry>>::iterator lookup(const std::string& name);
 
   std::list<std::unique_ptr<Entry>> entries_;
+
+  FsTotals& totals_;
 };
 
 // Supports going over the fake directory's entries.
@@ -188,7 +217,8 @@ class FakeFs {
  public:
   enum OpenFlags { kRead = 1, kWrite = 2, kTruncate = 4, kAppend = 8 };
 
-  FakeFs() : root_(Entry::DirEntry("")) {}
+  FakeFs(uint64_t capacity = std::numeric_limits<uint64_t>::max())
+      : totals_(capacity), root_(Entry::DirEntry("", totals_)) {}
 
   Entry* root() { return root_.get(); }
 
@@ -211,7 +241,10 @@ class FakeFs {
 
   ResolvedPath resolvePath(const char* path, bool create_subdirs = false);
 
+  void setCapacity(uint64_t capacity) { totals_.setCapacity(capacity); }
+
  private:
+  FsTotals totals_;
   std::unique_ptr<Entry> root_;
 };
 
