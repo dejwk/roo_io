@@ -17,6 +17,8 @@ class BufferedInputStreamIterator {
   BufferedInputStreamIterator(roo_io::InputStream& input)
       : rep_(new Rep(input)) {}
 
+  BufferedInputStreamIterator(BufferedInputStreamIterator&& other) = default;
+
   byte read() { return rep_->read(); }
 
   size_t read(byte* buf, size_t count) { return rep_->read(buf, count); }

@@ -11,6 +11,8 @@ namespace roo_io {
 
 class BufferedMultipassInputStreamIteratorFixture {
  public:
+  using Iterator = BufferedMultipassInputStreamIterator;
+
   BufferedMultipassInputStreamIterator createIterator(const byte* beg,
                                                       size_t size) {
     is_ = std::unique_ptr<MultipassInputStream>(

@@ -14,15 +14,17 @@ class BufferedOutputStreamIterator {
  public:
   BufferedOutputStreamIterator() : rep_(new Rep()) {}
 
-  BufferedOutputStreamIterator(BufferedOutputStreamIterator&& other) {
-    rep_ = std::move(other.rep_);
-    other.rep_.reset(new Rep());
-  }
+  BufferedOutputStreamIterator(BufferedOutputStreamIterator&& other) = default;
 
   BufferedOutputStreamIterator(roo_io::OutputStream& output)
       : rep_(new Rep(output)) {}
 
-  ~BufferedOutputStreamIterator() { flush(); }
+  ~BufferedOutputStreamIterator() {
+    // rep_ gets cleared by std::move(). Generally this is OK, since the object
+    // is not supposed to be used after move - but we need to make sure that the
+    // destructor works.
+    if (rep_ != nullptr) flush();
+  }
 
   void write(byte v) { rep_->write(v); }
 

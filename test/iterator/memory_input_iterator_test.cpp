@@ -7,6 +7,8 @@ namespace roo_io {
 
 class SafeMemoryInputIteratorFixture {
  public:
+  using Iterator = MemoryIterator;
+
   MemoryIterator createIterator(const byte* beg, size_t size) {
     return MemoryIterator(beg, beg + size);
   }

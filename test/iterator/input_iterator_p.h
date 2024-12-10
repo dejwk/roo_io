@@ -9,8 +9,18 @@ namespace roo_io {
 template <typename ItrFactory>
 class InputIteratorTest : public testing::Test {
  public:
-  auto createIterator(const byte* beg, size_t size) {
+  typename ItrFactory::Iterator createIterator(const byte* beg, size_t size) {
     return factory.createIterator(beg, size);
+  }
+
+  typename ItrFactory::Iterator createIteratorAdvanceAndReturn(const byte* beg,
+                                                               size_t size) {
+    auto itr = createIterator(beg, size);
+    EXPECT_EQ(kOk, itr.status());
+    EXPECT_EQ(*beg, itr.read());
+    EXPECT_EQ(kOk, itr.status());
+    auto itr2 = std::move(itr);
+    return itr2;
   }
 
  private:
@@ -98,13 +108,13 @@ TYPED_TEST_P(InputIteratorTest, SkipPastEos) {
 
 TYPED_TEST_P(InputIteratorTest, Movable) {
   const byte* data = (const byte*)"ABCDEFGH";
-  auto itr = this->createIterator(data, 8);
+  auto itr = this->createIteratorAdvanceAndReturn(data, 8);
+  // EXPECT_EQ(kOk, itr.status());
+  // EXPECT_EQ(byte{'A'}, itr.read());
+  // EXPECT_EQ(kOk, itr.status());
+  // auto itr2 = std::move(itr);
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ(byte{'A'}, itr.read());
-  EXPECT_EQ(kOk, itr.status());
-  auto itr2 = std::move(itr);
-  EXPECT_EQ(byte{'B'}, itr2.read());
-  EXPECT_EQ(kOk, itr2.status());
 }
 
 TYPED_TEST_P(InputIteratorTest, StressTest) {

@@ -10,6 +10,8 @@ namespace roo_io {
 
 class BufferedInputStreamIteratorFixture {
  public:
+  using Iterator = BufferedInputStreamIterator;
+
   BufferedInputStreamIterator createIterator(const byte* beg, size_t size) {
     is_ = std::unique_ptr<InputStream>(
         new MemoryInputStream<const byte*>(beg, beg + size));

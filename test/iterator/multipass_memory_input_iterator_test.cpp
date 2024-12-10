@@ -7,6 +7,8 @@ namespace roo_io {
 
 class MultipassMemoryInputIteratorFixture {
  public:
+  using Iterator = MultipassMemoryIterator;
+
   MultipassMemoryIterator createIterator(const byte* beg, size_t size) {
     return MultipassMemoryIterator(beg, beg + size);
   }

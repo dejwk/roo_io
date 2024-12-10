@@ -12,6 +12,8 @@ namespace roo_io {
 
 class ArduinoFileIteratorFixture {
  public:
+  using Iterator = ArduinoFileIterator;
+
   ArduinoFileIterator createIterator(const byte* beg, size_t size) {
     fake_ = std::unique_ptr<fakefs::FakeFs>(new fakefs::FakeFs());
     sdfs_ = std::unique_ptr<fakefs::FakeArduinoSdFsImpl>(
