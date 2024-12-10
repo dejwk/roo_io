@@ -30,6 +30,10 @@ class OutputStream {
   // In case of error, updates the status, and returns the number of bytes that
   // have been written before the error was encountered (possibly zero, but
   // might be greater than zero).
+  //
+  // Since the data may be buffered, successful write does not guarantee that
+  // the data made it all the way through to the sink, until `flush()` is
+  // called.
   virtual size_t write(const byte* buf, size_t count) = 0;
 
   // Attempts to write `count` bytes from the `buffer`. Updates `status()`.
@@ -38,6 +42,10 @@ class OutputStream {
   //
   // This method is similar to `write()`, except it never returns fewer bytes
   // than `count`, unless it encounters an error.
+  //
+  // Since the data may be buffered, successful write does not guarantee that
+  // the data made it all the way through to the sink, until `flush()` is
+  // called.
   virtual size_t writeFully(const byte* buf, size_t count) {
     size_t written_total = 0;
     while (count > 0) {
@@ -52,6 +60,8 @@ class OutputStream {
 
   // Ensures that any data that might be buffered by this stream are written out
   // to the underlying sink. May update the `status()`.
+  //
+  // The stream gets automatically flushed when destroyed.
   virtual void flush() {}
 
   // Returns the status of the underlying stream. Updated by write operations.

@@ -20,6 +20,10 @@
 //   //
 //   // If the status is not `kOk` before the call, the call has no effect.
 //   //
+//   // Since the data may be buffered, successful write does not guarantee that
+//   // the data made it all the way through to the sink, until `flush()` is
+//   // called.
+//   //
 //   void write(byte v);
 //
 //   // Writes up to `count` bytes from the `buffer`. Updates `status()`.
@@ -34,7 +38,18 @@
 //   // that have been written before the error was encountered (possibly zero,
 //   // but might be greater than zero).
 //   //
+//   // Since the data may be buffered, successful write does not guarantee that
+//   // the data made it all the way through to the sink, until `flush()` is
+//   // called.
+//   //
 //   size_t write(const byte* buf, size_t count);
+//
+//   // Ensures that any data that might be buffered by this iterator are
+//   // written out to the underlying sink. May update the `status()`.
+//   //
+//   // The data gets automatically flushed when the iterator is destroyed.
+//   //
+//   void flush();
 //
 //   // Returns the status of the underlying stream. Updated by write
 //   // operations. Always 'kOk' or failure (never 'kEndOfStream').
