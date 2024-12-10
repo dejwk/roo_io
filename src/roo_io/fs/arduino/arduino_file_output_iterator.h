@@ -98,7 +98,7 @@ inline void ArduinoFileOutputIterator::Rep::writeBuffer() {
 
 inline void ArduinoFileOutputIterator::Rep::write(byte v) {
   if (offset_ >= kArduinoFileOutputIteratorBufferSize) {
-    if (status_ != roo_io::kOk) return;
+    if (status_ != kOk) return;
     writeBuffer();
   }
   buffer_[offset_++] = v;
@@ -112,12 +112,12 @@ inline size_t ArduinoFileOutputIterator::Rep::write(const byte* buf,
     memcpy(&buffer_[offset_], buf, len);
     offset_ += len;
     if (offset_ >= kArduinoFileOutputIteratorBufferSize) {
-      if (status_ != roo_io::kOk) return 0;
+      if (status_ != kOk) return 0;
       writeBuffer();
     }
     return len;
   }
-  if (status_ != roo_io::kOk) return 0;
+  if (status_ != kOk) return 0;
   int result = file_.write((const uint8_t*)buf, len);
   if (result < len) {
     status_ = kWriteError;
