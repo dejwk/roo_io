@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+
+#include "roo_io/base/string_view.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/iterator/output_iterator.h"
 
@@ -169,6 +172,19 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   out.write(buffer, size);
 }
 
+template <typename OutputIterator>
+void WriteString(OutputIterator& itr, string_view data) {
+  WriteVarU64(itr, data.size());
+  if (!data.empty()) {
+    WriteByteArray(itr, (const byte*)data.data(), data.size());
+  }
+}
+
+template <typename OutputIterator>
+void WriteString(OutputIterator& itr, const char* data) {
+  WriteString(itr, string_view(data));
+}
+
 // Helper to write numbers to output iterators, templated on a byte order.
 template <int ByteOrder>
 class NumberWriter;
@@ -252,3 +268,18 @@ struct HostNativeWriter {
 };
 
 }  // namespace roo_io
+
+#if defined(ARDUINO)
+
+#include "Arduino.h"
+
+namespace roo_io {
+template <typename OutputIterator>
+void WriteString(OutputIterator& itr, const ::String& data) {
+  WriteVarU64(itr, data.length());
+  if (!data.isEmpty()) {
+    WriteByteArray(itr, (const byte*)data.c_str(), data.length());
+  }
+}
+}  // namespace roo_io
+#endif

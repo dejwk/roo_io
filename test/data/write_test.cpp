@@ -5,6 +5,8 @@
 #include "roo_io/iterator/memory_output_iterator.h"
 #include "roo_io/memory/load.h"  // ForHostNativeWriter.
 
+#include <WString.h>
+
 using namespace testing;
 
 namespace roo_io {
@@ -205,6 +207,38 @@ TEST(Write, NativeOverflow) {
   HostNativeWriter<float>().write(itr, f);
   EXPECT_EQ(0, result[3]);
   EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+}
+
+TEST(Write, EmptyString) {
+  uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
+  WriteString(itr, std::string());
+  ASSERT_EQ(kOk, itr.status());
+  EXPECT_THAT(result, ElementsAre(0, 9, 9, 9, 9, 9, 9, 9));
+}
+
+TEST(Write, SimpleString) {
+  uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
+  WriteString(itr, std::string("foo"));
+  ASSERT_EQ(kOk, itr.status());
+  EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
+}
+
+TEST(Write, CString) {
+  uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
+  WriteString(itr, "foo");
+  ASSERT_EQ(kOk, itr.status());
+  EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
+}
+
+TEST(Write, ArduinoString) {
+  uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
+  WriteString(itr, String("foo"));
+  ASSERT_EQ(kOk, itr.status());
+  EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
 }
 
 }  // namespace roo_io
