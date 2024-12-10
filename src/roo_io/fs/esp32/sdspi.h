@@ -1,6 +1,7 @@
 #pragma once
 
 #include "driver/sdmmc_types.h"
+#include "hal/gpio_types.h"
 #include "hal/spi_types.h"
 #include "roo_io/fs/filesystem.h"
 
