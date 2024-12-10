@@ -1,7 +1,10 @@
 #include "roo_io/data/read.h"
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 #include "roo_io/iterator/memory_input_iterator.h"
+
+using testing::ElementsAre;
 
 namespace roo_io {
 
@@ -189,6 +192,44 @@ TEST(Read, ByteArrayOverflow) {
   char result[] = "        ";
   EXPECT_EQ(4, ReadByteArray(itr, (byte*)result, 10));
   EXPECT_STREQ("ABCD    ", result);
+}
+
+TEST(Read, EmptyCString) {
+  const byte in[] = {byte{0}};
+  MemoryIterator itr{in, in + 1};
+  char buf[] = {9, 9, 9, 9, 9};
+  EXPECT_EQ(0, ReadCString(itr, buf, 5));
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_THAT(buf, ElementsAre(0, 9, 9, 9, 9));
+}
+
+TEST(Read, ShortCString) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
+  MemoryIterator itr{in, in + 4};
+  char buf[] = {9, 9, 9, 9, 9};
+  EXPECT_EQ(3, ReadCString(itr, buf, 5));
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_THAT(buf, ElementsAre('f', 'o', 'o', 0, 9));
+}
+
+TEST(Read, ShortCStringZeroBuf) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
+  MemoryIterator itr{in, in + 5};
+  char buf[] = {9, 9, 9, 9, 9};
+  EXPECT_EQ(0, ReadCString(itr, buf, 0));
+  EXPECT_EQ(7, ReadU8(itr));
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_THAT(buf, ElementsAre(9, 9, 9, 9, 9));
+}
+
+TEST(Read, ShortCStringUnderBuf) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
+  MemoryIterator itr{in, in + 5};
+  char buf[] = {9, 9, 9, 9, 9};
+  EXPECT_EQ(1, ReadCString(itr, buf, 2));
+  EXPECT_EQ(7, ReadU8(itr));
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_THAT(buf, ElementsAre('f', 0, 9, 9, 9));
 }
 
 }  // namespace roo_io

@@ -306,4 +306,24 @@ struct HostNativeReader {
   }
 };
 
+template <typename InputIterator>
+size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
+  uint64_t len = ReadVarU64(in);
+  if (in.status() != kOk) return 0;
+  if (len + 1 < capacity) {
+    // Common case.
+    size_t written = ReadByteArray(in, (byte*)buf, len);
+    buf[written] = 0;
+    return written;
+  }
+  if (capacity > 0) {
+    size_t written = ReadByteArray(in, (byte*)buf, capacity - 1);
+    buf[written] = 0;
+    in.skip(len - written);
+    return written;
+  }
+  in.skip(len);
+  return 0;
+}
+
 }  // namespace roo_io

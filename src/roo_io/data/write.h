@@ -172,6 +172,8 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   out.write(buffer, size);
 }
 
+// Write a string view, using a portable string representation (varint length
+// followed by the character array). Works for std::string.
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, string_view data) {
   WriteVarU64(itr, data.size());
@@ -180,6 +182,10 @@ void WriteString(OutputIterator& itr, string_view data) {
   }
 }
 
+// Write a C string, using a portable string representation (varint length
+// followed by the character array). Disambiguation of WriteString, since
+// both the string view and an Arduino String can be implicitly constructed from
+// a C string.
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, const char* data) {
   WriteString(itr, string_view(data));
@@ -273,6 +279,8 @@ struct HostNativeWriter {
 
 #include "Arduino.h"
 
+// Write an Arduino string, using a portable string representation (varint
+// length followed by the character array).
 namespace roo_io {
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, const ::String& data) {
