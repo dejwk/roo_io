@@ -232,4 +232,34 @@ TEST(Read, ShortCStringUnderBuf) {
   EXPECT_THAT(buf, ElementsAre('f', 0, 9, 9, 9));
 }
 
+TEST(Read, EmptyString) {
+  const byte in[] = {byte{0}};
+  MemoryIterator itr{in, in + 1};
+  EXPECT_EQ("", ReadString(itr, 5));
+  EXPECT_EQ(kOk, itr.status());
+}
+
+TEST(Read, ShortString) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
+  MemoryIterator itr{in, in + 4};
+  EXPECT_EQ("foo", ReadString(itr, 5));
+  EXPECT_EQ(kOk, itr.status());
+}
+
+TEST(Read, ShortStringZeroBuf) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
+  MemoryIterator itr{in, in + 5};
+  EXPECT_EQ("", ReadString(itr, 0));
+  EXPECT_EQ(7, ReadU8(itr));
+  EXPECT_EQ(kOk, itr.status());
+}
+
+TEST(Read, ShortStringUnderBuf) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
+  MemoryIterator itr{in, in + 5};
+  EXPECT_EQ("f", ReadString(itr, 1));
+  EXPECT_EQ(7, ReadU8(itr));
+  EXPECT_EQ(kOk, itr.status());
+}
+
 }  // namespace roo_io

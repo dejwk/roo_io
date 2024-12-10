@@ -310,7 +310,7 @@ template <typename InputIterator>
 size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
   if (in.status() != kOk) return 0;
-  if (len + 1 < capacity) {
+  if (len + 1 <= capacity) {
     // Common case.
     size_t written = ReadByteArray(in, (byte*)buf, len);
     buf[written] = 0;
@@ -324,6 +324,31 @@ size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   }
   in.skip(len);
   return 0;
+}
+
+template <typename InputIterator>
+std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
+  uint64_t len = ReadVarU64(in);
+  if (in.status() != kOk) return "";
+  std::string result;
+  if (len <= max_size) {
+    // Common case.
+    result.reserve(len);
+    for (size_t i = 0; i < len; ++i) {
+      char ch = (char)ReadU8(in);
+      if (in.status() != kOk) return result;
+      result.push_back(ch);
+    }
+    return result;
+  }
+  result.reserve(max_size);
+  for (size_t i = 0; i < max_size; ++i) {
+    char ch = (char)ReadU8(in);
+    if (in.status() != kOk) return result;
+    result.push_back(ch);
+  }
+  in.skip(len - max_size);
+  return result;
 }
 
 }  // namespace roo_io
