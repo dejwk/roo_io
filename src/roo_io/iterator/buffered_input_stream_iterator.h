@@ -19,6 +19,9 @@ class BufferedInputStreamIterator {
 
   BufferedInputStreamIterator(BufferedInputStreamIterator&& other) = default;
 
+  BufferedInputStreamIterator& operator=(BufferedInputStreamIterator&& other) =
+      default;
+
   byte read() { return rep_->read(); }
 
   size_t read(byte* buf, size_t count) { return rep_->read(buf, count); }

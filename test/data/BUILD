@@ -31,3 +31,14 @@ cc_test(
         "//lib/roo_io:testing",
     ],
 )
+
+cc_test(
+    name = "input_stream_reader_test",
+    srcs = [
+        "input_stream_reader_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+    ],
+)
