@@ -1,8 +1,9 @@
 
+#include "roo_io/memory/fill.h"
+
 #include <memory>
 
 #include "gtest/gtest.h"
-#include "roo_io/memory/fill.h"
 
 using namespace testing;
 
@@ -27,9 +28,9 @@ inline void fillBit(byte* buf, uint32_t offset, bool value) {
   buf += (offset / 8);
   offset %= 8;
   if (value) {
-    *buf |= (1 << offset);
+    *buf |= (byte)(1 << offset);
   } else {
-    *buf &= ~(1 << offset);
+    *buf &= (byte)(~(1 << offset));
   }
 }
 
@@ -39,10 +40,10 @@ inline void fillNibble(byte* buf, uint32_t offset, byte value) {
   buf += (offset / 2);
   offset %= 2;
   if (offset == 0) {
-    *buf &= 0x0F;
+    *buf &= byte{0x0F};
     *buf |= (value << 4);
   } else {
-    *buf &= 0xF0;
+    *buf &= byte{0xF0};
     *buf |= value;
   }
 }
@@ -55,8 +56,7 @@ void TrivialBitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
   }
 }
 
-void TrivialNibbleFill(byte* buf, uint32_t offset, int16_t count,
-                       byte value) {
+void TrivialNibbleFill(byte* buf, uint32_t offset, int16_t count, byte value) {
   while (count-- > 0) {
     fillNibble(buf, offset++, value);
   }
@@ -72,7 +72,9 @@ class ByteBuffer {
   const byte* data() const { return data_.get(); }
   byte* data() { return data_.get(); }
 
-  ~ByteBuffer() { EXPECT_EQ(0, data_.get()[size_]) << "Write-over detected"; }
+  ~ByteBuffer() {
+    EXPECT_EQ(byte{0}, data_.get()[size_]) << "Write-over detected";
+  }
 
  private:
   uint32_t size_;
@@ -123,7 +125,7 @@ class FillerTester {
   }
 
   void nibbleFill(uint32_t offset, int16_t count, byte value) {
-    EXPECT_LT(value, 16);
+    EXPECT_LT((int)value, 16);
     TrivialNibbleFill(expected_.data(), offset, count, value);
     NibbleFill(actual_.data(), offset, count, value);
     EXPECT_EQ(expected_, actual_);
@@ -135,7 +137,8 @@ class FillerTester {
   ByteBuffer expected_;
 };
 
-byte pattern[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+byte pattern[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
+                  byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};
 
 TEST(PatternFill2, Empty) {
   FillerTester tester(32);
@@ -177,7 +180,7 @@ TEST(PatternFill2, LongMisaligned) {
 
 TEST(PatternFill2, LongMisalignedEq) {
   FillerTester tester(32);
-  byte pattern[] = {0x12, 0x12};
+  byte pattern[] = {byte{0x12}, byte{0x12}};
   tester.patternFill2(3, 12, pattern);
 }
 
@@ -223,7 +226,7 @@ TEST(PatternFill3, LongMisaligned) {
 
 TEST(PatternFill3, LongMisalignedEq) {
   FillerTester tester(50);
-  byte pattern[] = {0x12, 0x12};
+  byte pattern[] = {byte{0x12}, byte{0x12}};
   tester.patternFill3(3, 12, pattern);
 }
 
@@ -239,7 +242,7 @@ TEST(PatternFill3, VeryLongMisaligned) {
 
 TEST(PatternFill3, VeryLongMisalignedEq) {
   FillerTester tester(80);
-  byte pattern[] = {0x12, 0x12};
+  byte pattern[] = {byte{0x12}, byte{0x12}};
   tester.patternFill3(3, 19, pattern);
 }
 
@@ -295,7 +298,7 @@ TEST(PatternFill4, LongMisaligned3) {
 
 TEST(PatternFill4, LongMisalignedEq) {
   FillerTester tester(60);
-  byte pattern[] = {0x12, 0x12};
+  byte pattern[] = {byte{0x12}, byte{0x12}};
   tester.patternFill4(3, 12, pattern);
 }
 
@@ -311,7 +314,7 @@ TEST(PatternFill4, VeryLongMisaligned) {
 
 TEST(PatternFill4, VeryLongMisalignedEq) {
   FillerTester tester(100);
-  byte pattern[] = {0x12, 0x12};
+  byte pattern[] = {byte{0x12}, byte{0x12}};
   tester.patternFill4(5, 19, pattern);
 }
 
@@ -327,13 +330,13 @@ TEST(BitFill, Simple) {
 
 TEST(NibbleFill, Simple) {
   FillerTester tester(100);
-  tester.nibbleFill(5, 19, 1);
-  tester.nibbleFill(25, 7, 5);
-  tester.nibbleFill(10, 40, 14);
-  tester.nibbleFill(12, 12, 8);
-  tester.nibbleFill(8, 21, 11);
-  tester.nibbleFill(43, 1, 15);
-  tester.nibbleFill(33, 3, 12);
+  tester.nibbleFill(5, 19, byte{1});
+  tester.nibbleFill(25, 7, byte{5});
+  tester.nibbleFill(10, 40, byte{14});
+  tester.nibbleFill(12, 12, byte{8});
+  tester.nibbleFill(8, 21, byte{11});
+  tester.nibbleFill(43, 1, byte{15});
+  tester.nibbleFill(33, 3, byte{12});
 }
 
 }  // namespace roo_io

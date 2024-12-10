@@ -16,7 +16,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(MemoryInputIterator, InputIteratorTest,
                                SafeMemoryInputIteratorFixture);
 
 TEST(InputIteratorTest, Initialization) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   MemoryIterator itr(data, data + 8);
   EXPECT_EQ(itr.ptr(), data);
 }

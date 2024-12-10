@@ -4,7 +4,8 @@
 
 namespace roo_io {
 
-const byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+const byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
+                     byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};
 
 TEST(Load, Unsigned) {
   EXPECT_EQ(LoadU8(data), 0x12);
@@ -60,7 +61,8 @@ TEST(Load, SignedSimple) {
 }
 
 TEST(Load, SignedNegative) {
-  const byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  const byte data[] = {byte{0xFF}, byte{0xFE}, byte{0xFD}, byte{0xFC},
+                       byte{0xFB}, byte{0xFA}, byte{0xF9}, byte{0xF8}};
 
   EXPECT_EQ(LoadS8(data), -1);
   EXPECT_EQ(LoadBeS16(data), -1 - 0x0001);
@@ -74,7 +76,8 @@ TEST(Load, SignedNegative) {
 }
 
 TEST(Load, SignedNegativeTemplated) {
-  const byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  const byte data[] = {byte{0xFF}, byte{0xFE}, byte{0xFD}, byte{0xFC},
+                       byte{0xFB}, byte{0xFA}, byte{0xF9}, byte{0xF8}};
 
   EXPECT_EQ(LoadS16<kBigEndian>(data), -1 - 0x0001);
   EXPECT_EQ(LoadS16<kLittleEndian>(data), -1 - 0x0100);
@@ -107,12 +110,12 @@ TEST(Load, SignedNegativeTemplated) {
 
 TEST(Load, Float) {
   float num = 34664315.451;
-  EXPECT_EQ(num, LoadHostNative<float>((const uint8_t*)(const char*)&num));
+  EXPECT_EQ(num, LoadHostNative<float>((const byte*)&num));
 }
 
 TEST(Load, Double) {
   double num = 34664315.451;
-  EXPECT_EQ(num, LoadHostNative<double>((const uint8_t*)(const char*)&num));
+  EXPECT_EQ(num, LoadHostNative<double>((const byte*)&num));
 }
 
 }  // namespace roo_io

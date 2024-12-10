@@ -1,13 +1,13 @@
-#include "gtest/gtest.h"
-
 #include "roo_io/data/read.h"
 
+#include "gtest/gtest.h"
 #include "roo_io/iterator/memory_input_iterator.h"
 
 namespace roo_io {
 
 TEST(Read, Unsigned) {
-  byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+  byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
+                 byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};
   MultipassMemoryIterator itr(data, data + 8);
   EXPECT_EQ(ReadBeU16(itr), 0x1234);
   itr.rewind();
@@ -28,7 +28,8 @@ TEST(Read, Unsigned) {
 }
 
 TEST(Read, UnsignedTemplated) {
-  byte data[] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+  byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
+                 byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};
   MultipassMemoryIterator itr(data, data + 8);
   EXPECT_EQ(IntegerReader<kBigEndian>().readU16(itr), 0x1234);
   itr.rewind();
@@ -49,7 +50,8 @@ TEST(Read, UnsignedTemplated) {
 }
 
 TEST(Read, SignedNegative) {
-  byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  byte data[] = {byte{0xFF}, byte{0xFE}, byte{0xFD}, byte{0xFC},
+                 byte{0xFB}, byte{0xFA}, byte{0xF9}, byte{0xF8}};
   MultipassMemoryIterator itr(data, data + 8);
 
   EXPECT_EQ(ReadBeS16(itr), -1 - 0x0001);
@@ -71,7 +73,8 @@ TEST(Read, SignedNegative) {
 }
 
 TEST(Read, SignedNegativeTemplated) {
-  byte data[] = {0xFF, 0xFE, 0xFD, 0xFC, 0xFB, 0xFA, 0xF9, 0xF8};
+  byte data[] = {byte{0xFF}, byte{0xFE}, byte{0xFD}, byte{0xFC},
+                 byte{0xFB}, byte{0xFA}, byte{0xF9}, byte{0xF8}};
   MultipassMemoryIterator itr(data, data + 8);
 
   EXPECT_EQ(IntegerReader<kBigEndian>().readS16(itr), -1 - 0x0001);
@@ -113,31 +116,31 @@ TEST(Read, HostNativeOverflow) {
 }
 
 TEST(Read, VarU64_0) {
-  byte d[] = {0};
+  byte d[] = {byte{0}};
   MemoryIterator i(d, d + 1);
   EXPECT_EQ(0, ReadVarU64(i));
 }
 
 TEST(Read, VarU64_1) {
-  byte d[] = {1};
+  byte d[] = {byte{1}};
   MemoryIterator i(d, d + 1);
   EXPECT_EQ(1, ReadVarU64(i));
 }
 
 TEST(Read, VarU64_127) {
-  byte d[] = {0x7F};
+  byte d[] = {byte{0x7F}};
   MemoryIterator i(d, d + 1);
   EXPECT_EQ(127, ReadVarU64(i));
 }
 
 TEST(Read, VarU64_128) {
-  byte d[] = {0x80, 0x01};
+  byte d[] = {byte{0x80}, byte{0x01}};
   MemoryIterator i(d, d + 2);
   EXPECT_EQ(128, ReadVarU64(i));
 }
 
 TEST(Read, VarU64_150) {
-  byte d[] = {0x96, 0x01};
+  byte d[] = {byte{0x96}, byte{0x01}};
   MemoryIterator i(d, d + 2);
   EXPECT_EQ(150, ReadVarU64(i));
 }
@@ -156,7 +159,7 @@ struct DrippingIterator {
 
 TEST(Read, ByteArray) {
   const char* in = "ABCDEFGH";
-  DrippingIterator itr{in, in + 8 };
+  DrippingIterator itr{in, in + 8};
   char result[] = "        ";
   EXPECT_EQ(5, ReadByteArray(itr, (byte*)result, 5));
   EXPECT_STREQ("ABCDE   ", result);
@@ -164,7 +167,7 @@ TEST(Read, ByteArray) {
 
 TEST(Read, ByteArrayOverflow) {
   const char* in = "ABCD";
-  DrippingIterator itr{in, in + 4 };
+  DrippingIterator itr{in, in + 4};
   char result[] = "        ";
   EXPECT_EQ(4, ReadByteArray(itr, (byte*)result, 10));
   EXPECT_STREQ("ABCD    ", result);

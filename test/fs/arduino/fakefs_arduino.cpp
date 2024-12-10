@@ -18,11 +18,11 @@ void FakeArduinoFile::openDir(std::string path, int basename_pos,
 }
 
 size_t FakeArduinoFile::write(const uint8_t* buf, size_t size) {
-  return f_->write(buf, size);
+  return f_->write((const byte*)buf, size);
 }
 
 size_t FakeArduinoFile::read(uint8_t* buf, size_t size) {
-  return f_->read(buf, size);
+  return f_->read((byte*)buf, size);
 }
 
 bool FakeArduinoFile::seek(uint32_t pos, SeekMode mode) {

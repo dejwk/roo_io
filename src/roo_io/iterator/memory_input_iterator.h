@@ -53,7 +53,7 @@ class SafeGenericMemoryIterator {
   byte read() {
     if (ptr_ == end_ || ptr_ == nullptr) {
       ptr_ = nullptr;
-      return 0;
+      return byte{0};
     }
     return *ptr_++;
   }
@@ -107,7 +107,7 @@ class MultipassGenericMemoryIterator {
   byte read() {
     if (position_ >= size_) {
       eos_ = true;
-      return 0;
+      return byte{0};
     }
     return ptr_[position_++];
   }

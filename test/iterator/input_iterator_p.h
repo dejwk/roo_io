@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gtest/gtest.h"
 #include "roo_io/byte.h"
 #include "roo_io/status.h"
@@ -18,7 +20,7 @@ class InputIteratorTest : public testing::Test {
 TYPED_TEST_SUITE_P(InputIteratorTest);
 
 TYPED_TEST_P(InputIteratorTest, Empty) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 0);
   EXPECT_EQ(kOk, itr.status());
   itr.read();
@@ -26,14 +28,14 @@ TYPED_TEST_P(InputIteratorTest, Empty) {
 }
 
 TYPED_TEST_P(InputIteratorTest, ReadByByte) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 3);
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('C', itr.read());
+  EXPECT_EQ(byte{'C'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   itr.read();
   EXPECT_EQ(kEndOfStream, itr.status());
@@ -42,28 +44,28 @@ TYPED_TEST_P(InputIteratorTest, ReadByByte) {
 }
 
 TYPED_TEST_P(InputIteratorTest, ReadArray) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
-  EXPECT_EQ('A', itr.read());
-  byte buf[] = "BCD";
+  EXPECT_EQ(byte{'A'}, itr.read());
+  byte buf[3];
   EXPECT_EQ(3, itr.read(buf, 3));
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('B', buf[0]);
-  EXPECT_EQ('C', buf[1]);
-  EXPECT_EQ('D', buf[2]);
-  EXPECT_EQ('E', itr.read());
+  EXPECT_EQ(byte{'B'}, buf[0]);
+  EXPECT_EQ(byte{'C'}, buf[1]);
+  EXPECT_EQ(byte{'D'}, buf[2]);
+  EXPECT_EQ(byte{'E'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
 }
 
 TYPED_TEST_P(InputIteratorTest, ReadArrayPastEos) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 3);
-  EXPECT_EQ('A', itr.read());
-  byte buf[] = "BCD";
+  EXPECT_EQ(byte{'A'}, itr.read());
+  byte buf[3];
   EXPECT_EQ(2, itr.read(buf, 3));
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('B', buf[0]);
-  EXPECT_EQ('C', buf[1]);
+  EXPECT_EQ(byte{'B'}, buf[0]);
+  EXPECT_EQ(byte{'C'}, buf[1]);
   EXPECT_EQ(0, itr.read(buf, 3));
   EXPECT_EQ(kEndOfStream, itr.status());
   EXPECT_EQ(0, itr.read(buf, 3));
@@ -73,19 +75,19 @@ TYPED_TEST_P(InputIteratorTest, ReadArrayPastEos) {
 }
 
 TYPED_TEST_P(InputIteratorTest, Skip) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   itr.skip(5);
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('G', itr.read());
+  EXPECT_EQ(byte{'G'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
 }
 
 TYPED_TEST_P(InputIteratorTest, SkipPastEos) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   itr.skip(5);
   EXPECT_EQ(kOk, itr.status());
   itr.skip(5);
@@ -95,20 +97,20 @@ TYPED_TEST_P(InputIteratorTest, SkipPastEos) {
 }
 
 TYPED_TEST_P(InputIteratorTest, Movable) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   auto itr2 = std::move(itr);
-  EXPECT_EQ('B', itr2.read());
+  EXPECT_EQ(byte{'B'}, itr2.read());
   EXPECT_EQ(kOk, itr2.status());
 }
 
 TYPED_TEST_P(InputIteratorTest, StressTest) {
   size_t size = 1024 * 1024 + 17;
   std::unique_ptr<byte[]> contents(new byte[size]);
-  for (size_t i = 0; i < size; ++i) contents[i] = rand() % 256;
+  for (size_t i = 0; i < size; ++i) contents[i] = (byte)rand();
   auto itr = this->createIterator(contents.get(), size);
   byte buf[20000];
   ASSERT_EQ(kOk, itr.status());

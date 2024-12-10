@@ -14,34 +14,36 @@ inline constexpr uint8_t LoadU8(const byte *source) {
 
 // Loads a big-endian unsigned 16-bit int from the specified memory address.
 inline constexpr uint16_t LoadBeU16(const byte *source) {
-  return (source[0] << 8) | (source[1] << 0);
+  return ((uint8_t)source[0] << 8) | ((uint8_t)source[1] << 0);
 }
 
 // Loads a little-endian unsigned 16-bit int from the specified memory address.
 inline constexpr uint16_t LoadLeU16(const byte *source) {
-  return (source[0] << 0) | (source[1] << 8);
+  return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8);
 }
 
 // Loads a big-endian unsigned 24-bit int from the specified memory address.
 inline constexpr uint32_t LoadBeU24(const byte *source) {
-  return (source[0] << 16) | (source[1] << 8) | (source[2] << 0);
+  return ((uint8_t)source[0] << 16) | ((uint8_t)source[1] << 8) |
+         ((uint8_t)source[2] << 0);
 }
 
 // Loads a little-endian unsigned 24-bit int from the specified memory address.
 inline constexpr uint32_t LoadLeU24(const byte *source) {
-  return (source[0] << 0) | (source[1] << 8) | (source[2] << 16);
+  return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8) |
+         ((uint8_t)source[2] << 16);
 }
 
 // Loads a big-endian unsigned 32-bit int from the specified memory address.
 inline constexpr uint32_t LoadBeU32(const byte *source) {
-  return (source[0] << 24) | (source[1] << 16) | (source[2] << 8) |
-         (source[3] << 0);
+  return ((uint8_t)source[0] << 24) | ((uint8_t)source[1] << 16) |
+         ((uint8_t)source[2] << 8) | ((uint8_t)source[3] << 0);
 }
 
 // Loads a little-endian unsigned 32-bit int from the specified memory address.
 inline constexpr uint32_t LoadLeU32(const byte *source) {
-  return (source[0] << 0) | (source[1] << 8) | (source[2] << 16) |
-         (source[3] << 24);
+  return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8) |
+         ((uint8_t)source[2] << 16) | ((uint8_t)source[3] << 24);
 }
 
 // Loads a big-endian unsigned 64-bit int from the specified memory address.
@@ -70,12 +72,14 @@ inline constexpr int16_t LoadLeS16(const byte *source) {
 
 // Loads a big-endian signed 24-bit int from the specified memory address.
 inline constexpr int32_t LoadBeS24(const byte *source) {
-  return (int32_t)LoadBeU24(source) | (((source[0] & 0x80) > 0) * 0xFF) << 24;
+  return (int32_t)LoadBeU24(source) | ((((uint8_t)source[0] & 0x80) > 0) * 0xFF)
+                                          << 24;
 }
 
 // Loads a little-endian signed 24-bit int from the specified memory address.
 inline constexpr int32_t LoadLeS24(const byte *source) {
-  return (int32_t)LoadLeU24(source) | (((source[3] & 0x80) > 0) * 0xFF) << 24;
+  return (int32_t)LoadLeU24(source) | ((((uint8_t)source[3] & 0x80) > 0) * 0xFF)
+                                          << 24;
 }
 
 // Loads a big-endian signed 32-bit int from the specified memory address.

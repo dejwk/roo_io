@@ -5,6 +5,7 @@
 // writing large data blocks when possible.
 
 #include <inttypes.h>
+
 #include <cstring>
 
 #include "roo_io/byte.h"
@@ -41,7 +42,7 @@ inline void PatternFill(byte* buf, uint32_t count, const byte* val);
 
 template <>
 inline void PatternFill<1>(byte* buf, uint32_t count, const byte* val) {
-  memset(buf, *val, count);
+  memset(buf, (int)*val, count);
 }
 
 namespace internal {
@@ -132,7 +133,7 @@ inline void PatternFill<2>(byte* buf, uint32_t count, const byte* val) {
     return;
   }
   if (val[0] == val[1]) {
-    memset(buf, val[0], count * 2);
+    memset(buf, (int)val[0], count * 2);
     return;
   }
   if ((((intptr_t)buf) & 1) != 0) {
@@ -211,7 +212,7 @@ inline void PatternFill<3>(byte* buf, uint32_t count, const byte* val) {
   }
 
   byte block[] = {val[0], val[1], val[2], val[0], val[1], val[2],
-                     val[0], val[1], val[2], val[0], val[1], val[2]};
+                  val[0], val[1], val[2], val[0], val[1], val[2]};
   const uint32_t* block32 = (const uint32_t*)block;
   uint32_t* buf32 = (uint32_t*)buf;
   while (count > 8) {
@@ -240,7 +241,7 @@ inline void PatternFill<3>(byte* buf, uint32_t count, const byte* val) {
 template <>
 inline void PatternFill<4>(byte* buf, uint32_t count, const byte* val) {
   if ((val[0] == val[1]) && (val[0] == val[2]) && (val[0] == val[3])) {
-    memset(buf, val[0], count * 4);
+    memset(buf, (int)val[0], count * 4);
     return;
   }
   if (count == 0) return;
@@ -270,10 +271,10 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
   if (value) {
     if (offset > 0) {
       if (offset + count < 8) {
-        *buf |= (((1 << count) - 1) << offset);
+        *buf |= byte{(((1 << count) - 1) << offset)};
         return;
       }
-      *buf++ |= (0xFF << offset);
+      *buf++ |= byte{0xFF << offset};
       count -= (8 - offset);
       offset = 0;
     }
@@ -281,14 +282,14 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
     buf += (count / 8);
     count %= 8;
     if (count == 0) return;
-    *buf |= ((1 << count) - 1);
+    *buf |= byte{(1 << count) - 1};
   } else {
     if (offset > 0) {
       if (offset + count < 8) {
-        *buf &= ~(((1 << count) - 1) << offset);
+        *buf &= byte{~(((1 << count) - 1) << offset)};
         return;
       }
-      *buf++ &= ~(0xFF << offset);
+      *buf++ &= byte{~(0xFF << offset)};
       count -= (8 - offset);
       offset = 0;
     }
@@ -296,28 +297,27 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
     buf += (count / 8);
     count %= 8;
     if (count == 0) return;
-    *buf &= ~((1 << count) - 1);
+    *buf &= byte{~((1 << count) - 1)};
   }
 }
 
-inline void NibbleFill(byte* buf, uint32_t offset, int16_t count,
-                       byte value) {
+inline void NibbleFill(byte* buf, uint32_t offset, int16_t count, byte value) {
   if ((offset % 2) == 1) {
     byte& first = buf[offset / 2];
-    first &= 0xF0;
+    first &= byte{0xF0};
     first |= value;
     offset++;
     --count;
     if (count == 0) return;
   }
   if (count >= 2) {
-    memset(buf + offset / 2, value | (value << 4), count / 2);
+    memset(buf + offset / 2, (int)(value | byte{value << 4}), count / 2);
     offset += count;
     count %= 2;
   }
   if (count > 0) {
     byte& last = buf[offset / 2];
-    last &= 0x0F;
+    last &= byte{0x0F};
     last |= (value << 4);
   }
 }

@@ -14,8 +14,15 @@ class BufferedOutputStreamIterator {
  public:
   BufferedOutputStreamIterator() : rep_(new Rep()) {}
 
+  BufferedOutputStreamIterator(BufferedOutputStreamIterator&& other) {
+    rep_ = std::move(other.rep_);
+    other.rep_.reset(new Rep());
+  }
+
   BufferedOutputStreamIterator(roo_io::OutputStream& output)
       : rep_(new Rep(output)) {}
+
+  ~BufferedOutputStreamIterator() { flush(); }
 
   void write(byte v) { rep_->write(v); }
 
@@ -36,6 +43,7 @@ class BufferedOutputStreamIterator {
    public:
     Rep();
     Rep(roo_io::OutputStream& output);
+    Rep(Rep&&) = delete;
     // ~Rep();
 
     void write(byte v);
@@ -48,13 +56,12 @@ class BufferedOutputStreamIterator {
 
    private:
     Rep(const Rep&) = delete;
-    Rep(Rep&&);
     Rep& operator=(const Rep&);
     void writeBuffer();
 
     roo_io::OutputStream* output_;
     byte buffer_[kOutputStreamIteratorBufferSize];
-    byte offset_;
+    uint8_t offset_;
     Status status_;
   };
 

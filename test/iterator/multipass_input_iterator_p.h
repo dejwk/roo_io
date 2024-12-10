@@ -16,7 +16,7 @@ class MultipassInputIteratorTest : public testing::Test {
 TYPED_TEST_SUITE_P(MultipassInputIteratorTest);
 
 TYPED_TEST_P(MultipassInputIteratorTest, Initialization) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
   //   EXPECT_EQ(data, itr.ptr());
   EXPECT_EQ(0, itr.position());
@@ -24,7 +24,7 @@ TYPED_TEST_P(MultipassInputIteratorTest, Initialization) {
 }
 
 TYPED_TEST_P(MultipassInputIteratorTest, Empty) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 0);
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
@@ -36,16 +36,16 @@ TYPED_TEST_P(MultipassInputIteratorTest, Empty) {
 }
 
 TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithRewind) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 3);
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(2, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -53,15 +53,15 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithRewind) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(2, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('C', itr.read());
+  EXPECT_EQ(byte{'C'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(3, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -77,19 +77,19 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithRewind) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
 }
 
 TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithSeek) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 3);
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -97,7 +97,7 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithSeek) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(2, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('C', itr.read());
+  EXPECT_EQ(byte{'C'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(3, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -105,7 +105,7 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithSeek) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(2, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -125,7 +125,7 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithSeek) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('B', itr.read());
+  EXPECT_EQ(byte{'B'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(2, itr.position());
   EXPECT_EQ(3, itr.size());
@@ -145,27 +145,27 @@ TYPED_TEST_P(MultipassInputIteratorTest, ReadByByteWithSeek) {
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(0, itr.position());
   EXPECT_EQ(3, itr.size());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   EXPECT_EQ(1, itr.position());
   EXPECT_EQ(3, itr.size());
 }
 
 TYPED_TEST_P(MultipassInputIteratorTest, Movable) {
-  const byte data[] = "ABCDEFGH";
+  const byte* data = (const byte*)"ABCDEFGH";
   auto itr = this->createIterator(data, 8);
   EXPECT_EQ(kOk, itr.status());
-  EXPECT_EQ('A', itr.read());
+  EXPECT_EQ(byte{'A'}, itr.read());
   EXPECT_EQ(kOk, itr.status());
   auto itr2 = std::move(itr);
-  EXPECT_EQ('B', itr2.read());
+  EXPECT_EQ(byte{'B'}, itr2.read());
   EXPECT_EQ(kOk, itr2.status());
 }
 
 TYPED_TEST_P(MultipassInputIteratorTest, StressTest) {
   size_t size = 1024 * 1024 + 17;
   std::unique_ptr<byte[]> contents(new byte[size]);
-  for (size_t i = 0; i < size; ++i) contents[i] = rand() % 256;
+  for (size_t i = 0; i < size; ++i) contents[i] = (byte)(rand() % 256);
   auto itr = this->createIterator(contents.get(), size);
   byte buf[20000];
   ASSERT_EQ(kOk, itr.status());

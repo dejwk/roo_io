@@ -15,7 +15,7 @@ class ArduinoFileOutputStream : public OutputStream {
 
   size_t write(const byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
-    size_t result = file_.write(buf, count);
+    size_t result = file_.write((const uint8_t*)buf, count);
     if (result < count) {
       status_ = roo_io::kWriteError;
     }

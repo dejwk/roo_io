@@ -62,8 +62,8 @@ class BufferedMultipassInputStreamIterator {
 
     roo_io::MultipassInputStream* input_;
     byte buffer_[kMultipassInputStreamIteratorBufferSize];
-    byte offset_;
-    byte length_;
+    uint8_t offset_;
+    uint8_t length_;
     Status status_;
   };
 
@@ -132,13 +132,13 @@ inline byte BufferedMultipassInputStreamIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
-  if (status_ != kOk) return 0;
+  if (status_ != kOk) return byte{0};
   size_t len = input_->read(buffer_, kMultipassInputStreamIteratorBufferSize);
   if (len == 0) {
     offset_ = 0;
     length_ = 0;
     status_ = input_->status();
-    return 0;
+    return byte{0};
   }
   offset_ = 1;
   length_ = len;

@@ -154,16 +154,16 @@ size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
 template <typename InputIterator>
 uint64_t ReadVarU64(InputIterator& in) {
   uint64_t result = 0;
-  int read;
+  byte read;
   int shift = 0;
   do {
     read = in.read();
     if (in.status() != kOk) {
       return 0;
     }
-    result |= ((uint64_t)(read & 0x7F) << shift);
+    result |= ((uint64_t)(read & byte{0x7F}) << shift);
     shift += 7;
-  } while ((read & 0x80) != 0);
+  } while ((read & byte{0x80}) != byte{0});
   return result;
 }
 

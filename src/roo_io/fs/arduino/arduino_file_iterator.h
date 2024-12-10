@@ -4,6 +4,8 @@
 
 #include <memory>
 
+#include "roo_io/iterator/input_iterator.h"
+
 #include "roo_io/byte.h"
 #include "roo_io/status.h"
 
@@ -54,8 +56,8 @@ class ArduinoFileIterator {
 
     ::fs::File file_;
     byte buffer_[kFileIteratorBufferSize];
-    byte offset_;
-    byte length_;
+    uint8_t offset_;
+    uint8_t length_;
     Status status_;
   };
 
@@ -114,18 +116,18 @@ inline byte ArduinoFileIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
-  if (status_ != kOk) return 0;
-  size_t len = file_.read(buffer_, kFileIteratorBufferSize);
+  if (status_ != kOk) return byte{0};
+  size_t len = file_.read((uint8_t*)buffer_, kFileIteratorBufferSize);
   if (len == 0) {
     offset_ = 0;
     length_ = 0;
     status_ = kEndOfStream;
-    return 0;
+    return byte{0};
   } else if (len == ((size_t)(-1))) {
     offset_ = 0;
     length_ = 0;
     status_ = kReadError;
-    return 0;
+    return byte{0};
   }
   offset_ = 1;
   length_ = len;
@@ -146,7 +148,7 @@ inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
   }
   if (count >= kFileIteratorBufferSize) {
     // Skip buffering; read directly into the client's buffer.
-    size_t len = file_.read(buf, count);
+    size_t len = file_.read((uint8_t*)buf, count);
     if (len == 0) {
       offset_ = 0;
       length_ = 0;
@@ -160,7 +162,7 @@ inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
     }
     return len;
   }
-  size_t len = file_.read(buffer_, kFileIteratorBufferSize);
+  size_t len = file_.read((uint8_t*)buffer_, kFileIteratorBufferSize);
   if (len == 0) {
     offset_ = 0;
     length_ = 0;

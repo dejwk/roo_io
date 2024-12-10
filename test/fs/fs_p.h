@@ -390,7 +390,7 @@ TYPED_TEST_P(FsTest, ReadSeekAndSkip) {
 TYPED_TEST_P(FsTest, ReadStressTest) {
   size_t size = 1024 * 1024 + 17;
   std::unique_ptr<byte[]> contents(new byte[size]);
-  for (size_t i = 0; i < size; ++i) contents[i] = rand() % 256;
+  for (size_t i = 0; i < size; ++i) contents[i] = (byte)(rand() % 256);
   this->RecursiveMkDir("/foo/bar");
   {
     std::unique_ptr<OutputStream> out =
