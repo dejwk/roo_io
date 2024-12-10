@@ -17,6 +17,12 @@ class BufferedMultipassInputStreamIterator {
   BufferedMultipassInputStreamIterator(roo_io::MultipassInputStream& input)
       : rep_(new Rep(input)) {}
 
+  BufferedMultipassInputStreamIterator(
+      BufferedMultipassInputStreamIterator&& other) = default;
+
+  BufferedMultipassInputStreamIterator& operator=(
+      BufferedMultipassInputStreamIterator&& other) = default;
+
   byte read() { return rep_->read(); }
 
   size_t read(byte* buf, size_t count) { return rep_->read(buf, count); }

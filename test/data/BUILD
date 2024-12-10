@@ -42,3 +42,14 @@ cc_test(
         "//lib/roo_io:testing",
     ],
 )
+
+cc_test(
+    name = "multipass_input_stream_reader_test",
+    srcs = [
+        "multipass_input_stream_reader_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//lib/roo_io:testing",
+    ],
+)
