@@ -25,6 +25,8 @@ class UnsafeMemoryOutputIterator {
 
   byte* ptr() const { return ptr_; }
 
+  void flush() {}
+
  private:
   byte* ptr_;
 };
@@ -67,7 +69,9 @@ class MemoryOutputIterator {
 
   Status status() const { return ptr_ == nullptr ? kNoSpaceLeftOnDevice : kOk; }
 
-  byte* ptr() const { return ptr_; }
+  const byte* ptr() const { return ptr_ != nullptr ? ptr_ : end_; }
+
+  void flush() {}
 
  private:
   byte* ptr_;

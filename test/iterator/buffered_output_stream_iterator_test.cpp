@@ -10,14 +10,21 @@ namespace roo_io {
 
 class BufferedOutputStreamIteratorFixture {
  public:
-  BufferedOutputStreamIterator createIterator(byte* beg, size_t size) {
-    is_ = std::unique_ptr<OutputStream>(
-        new MemoryOutputStream<byte*>(beg, beg + size));
-    return BufferedOutputStreamIterator(*is_);
+  BufferedOutputStreamIterator createIterator(size_t max_size) {
+    contents_ = std::unique_ptr<char[]>(new char[max_size]);
+    os_ = std::unique_ptr<MemoryOutputStream<byte*>>(
+        new MemoryOutputStream<byte*>((byte*)contents_.get(),
+                                      (byte*)contents_.get() + max_size));
+    return BufferedOutputStreamIterator(*os_);
+  }
+
+  std::string getResult() const {
+    return std::string(contents_.get(), (char*)os_->ptr() - contents_.get());
   }
 
  private:
-  std::unique_ptr<OutputStream> is_;
+  std::unique_ptr<char[]> contents_;
+  std::unique_ptr<MemoryOutputStream<byte*>> os_;
 };
 
 INSTANTIATE_TYPED_TEST_SUITE_P(BufferedOutputStreamIterator, OutputIteratorTest,
