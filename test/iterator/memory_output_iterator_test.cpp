@@ -19,6 +19,8 @@ class MemoryOutputIteratorFixture {
     return (const char*)contents_.get();
   }
 
+  static constexpr bool strict = true;
+
  private:
   std::unique_ptr<char[]> contents_;
   std::unique_ptr<MemoryOutputIterator> itr_;

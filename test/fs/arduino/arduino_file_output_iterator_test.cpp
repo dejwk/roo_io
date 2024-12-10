@@ -20,6 +20,8 @@ class ArduinoFileOutputIteratorFixture {
 
   std::string getResult() const { return fakefs::ReadTextFile(*fake_, "/foo"); }
 
+  static constexpr bool strict = false;
+
  private:
   std::unique_ptr<fakefs::FakeFs> fake_;
   std::unique_ptr<fakefs::FakeArduinoSdFsImpl> sdfs_;

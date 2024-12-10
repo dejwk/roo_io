@@ -17,13 +17,18 @@ class ArduinoFileOutputIterator {
 
   ArduinoFileOutputIterator(::fs::File file) : rep_(new Rep(std::move(file))) {}
 
+  ArduinoFileOutputIterator(ArduinoFileOutputIterator&&) = default;
+
+  ~ArduinoFileOutputIterator() { flush(); }
+
   void write(byte v) { rep_->write(v); }
 
   size_t write(const byte* buf, size_t count) {
     return rep_->write(buf, count);
   }
 
-  void flush() { rep_->flush(); }
+  // rep_ can be nullptr after std::move().
+  void flush() { if (rep_ != nullptr) rep_->flush(); }
 
   Status status() const { return rep_->status(); }
   bool ok() const { return status() == roo_io::kOk; }

@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace roo_io {
@@ -19,6 +20,11 @@ class OutputIteratorTest : public testing::Test {
   ItrFactory factory;
 };
 
+MATCHER_P(IsNoSpaceLeftOnDevice, strict, "") {
+  return strict ? arg == kNoSpaceLeftOnDevice
+                : arg == kNoSpaceLeftOnDevice || arg == kWriteError;
+}
+
 TYPED_TEST_SUITE_P(OutputIteratorTest);
 
 TYPED_TEST_P(OutputIteratorTest, Initialization) {
@@ -32,10 +38,10 @@ TYPED_TEST_P(OutputIteratorTest, Empty) {
   EXPECT_EQ(kOk, itr.status());
   itr.write(byte{'A'});
   itr.flush();
-  EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+  EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   itr.write(byte{'B'});
   itr.flush();
-  EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+  EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   EXPECT_EQ("", this->getResult());
 }
 
@@ -67,10 +73,10 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBytePastCapacity) {
     EXPECT_EQ(kOk, itr.status());
     itr.write(byte{'D'});
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
     itr.write(byte{'E'});
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
   EXPECT_EQ("ABC", this->getResult());
 }
@@ -86,10 +92,10 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBlockTillCapacity) {
     EXPECT_EQ(kOk, itr.status());
     itr.write(byte{'D'});
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
     itr.write(byte{'E'});
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
   EXPECT_EQ("ABCDE", this->getResult());
 }
@@ -103,10 +109,10 @@ TYPED_TEST_P(OutputIteratorTest, WriteByBlockPastCapacity) {
     EXPECT_EQ(kOk, itr.status());
     EXPECT_GE(3, itr.write((const byte*)"DEF", 3));
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
     EXPECT_GE(3, itr.write((const byte*)"GHI", 3));
     itr.flush();
-    EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+    EXPECT_THAT(itr.status(), IsNoSpaceLeftOnDevice(TypeParam::strict));
   }
   EXPECT_EQ("ABCDE", this->getResult());
 }

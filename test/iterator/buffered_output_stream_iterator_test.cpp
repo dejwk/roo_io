@@ -22,6 +22,8 @@ class BufferedOutputStreamIteratorFixture {
     return std::string(contents_.get(), (char*)os_->ptr() - contents_.get());
   }
 
+  static constexpr bool strict = true;
+
  private:
   std::unique_ptr<char[]> contents_;
   std::unique_ptr<MemoryOutputStream<byte*>> os_;
