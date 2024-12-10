@@ -12,9 +12,9 @@ cc_test(
 )
 
 cc_test(
-    name = "arduino_file_iterator_test",
+    name = "arduino_file_input_iterator_test",
     srcs = [
-        "arduino_file_iterator_test.cpp",
+        "arduino_file_input_iterator_test.cpp",
     ],
     # includes = glob(["**/*.h"]),
     linkstatic = 1,

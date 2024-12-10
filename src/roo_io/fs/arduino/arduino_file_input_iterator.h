@@ -4,18 +4,17 @@
 
 #include <memory>
 
-#include "roo_io/iterator/input_iterator.h"
-
 #include "roo_io/byte.h"
+#include "roo_io/iterator/input_iterator.h"
 #include "roo_io/status.h"
 
 namespace roo_io {
 
-static const int kFileIteratorBufferSize = 64;
+static const int kFileInputIteratorBufferSize = 64;
 
-class ArduinoFileIterator {
+class ArduinoFileInputIterator {
  public:
-  ArduinoFileIterator(::fs::File file) : rep_(new Rep(std::move(file))) {}
+  ArduinoFileInputIterator(::fs::File file) : rep_(new Rep(std::move(file))) {}
 
   byte read() { return rep_->read(); }
 
@@ -55,7 +54,7 @@ class ArduinoFileIterator {
     Rep& operator=(const Rep&) = delete;
 
     ::fs::File file_;
-    byte buffer_[kFileIteratorBufferSize];
+    byte buffer_[kFileInputIteratorBufferSize];
     uint8_t offset_;
     uint8_t length_;
     Status status_;
@@ -68,21 +67,23 @@ class ArduinoFileIterator {
   std::unique_ptr<Rep> rep_;
 };
 
-inline ArduinoFileIterator::Rep::Rep(::fs::File file)
+inline ArduinoFileInputIterator::Rep::Rep(::fs::File file)
     : file_(std::move(file)),
       offset_(0),
       length_(0),
       status_(file_ ? kOk : kClosed) {}
 
-inline ArduinoFileIterator::Rep::~Rep() { file_.close(); }
+inline ArduinoFileInputIterator::Rep::~Rep() { file_.close(); }
 
-inline uint64_t ArduinoFileIterator::Rep::size() const { return file_.size(); }
+inline uint64_t ArduinoFileInputIterator::Rep::size() const {
+  return file_.size();
+}
 
-inline uint64_t ArduinoFileIterator::Rep::position() const {
+inline uint64_t ArduinoFileInputIterator::Rep::position() const {
   return file_.position() + offset_ - length_;
 }
 
-inline void ArduinoFileIterator::Rep::rewind() {
+inline void ArduinoFileInputIterator::Rep::rewind() {
   if (status_ != kOk && status_ != kEndOfStream) return;
   uint64_t file_pos = file_.position();
   if (file_pos <= length_) {
@@ -97,7 +98,7 @@ inline void ArduinoFileIterator::Rep::rewind() {
   }
 }
 
-inline void ArduinoFileIterator::Rep::seek(uint64_t position) {
+inline void ArduinoFileInputIterator::Rep::seek(uint64_t position) {
   if (status_ != kOk && status_ != kEndOfStream) return;
   uint64_t file_pos = file_.position();
   if (file_pos <= position + length_ && file_pos >= position) {
@@ -112,12 +113,12 @@ inline void ArduinoFileIterator::Rep::seek(uint64_t position) {
   }
 }
 
-inline byte ArduinoFileIterator::Rep::read() {
+inline byte ArduinoFileInputIterator::Rep::read() {
   if (offset_ < length_) {
     return buffer_[offset_++];
   }
   if (status_ != kOk) return byte{0};
-  size_t len = file_.read((uint8_t*)buffer_, kFileIteratorBufferSize);
+  size_t len = file_.read((uint8_t*)buffer_, kFileInputIteratorBufferSize);
   if (len == 0) {
     offset_ = 0;
     length_ = 0;
@@ -134,7 +135,7 @@ inline byte ArduinoFileIterator::Rep::read() {
   return buffer_[0];
 }
 
-inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
+inline size_t ArduinoFileInputIterator::Rep::read(byte* buf, size_t count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.
     if (count > (length_ - offset_)) count = length_ - offset_;
@@ -146,7 +147,7 @@ inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
     // Already done.
     return 0;
   }
-  if (count >= kFileIteratorBufferSize) {
+  if (count >= kFileInputIteratorBufferSize) {
     // Skip buffering; read directly into the client's buffer.
     size_t len = file_.read((uint8_t*)buf, count);
     if (len == 0) {
@@ -162,7 +163,7 @@ inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
     }
     return len;
   }
-  size_t len = file_.read((uint8_t*)buffer_, kFileIteratorBufferSize);
+  size_t len = file_.read((uint8_t*)buffer_, kFileInputIteratorBufferSize);
   if (len == 0) {
     offset_ = 0;
     length_ = 0;
@@ -181,7 +182,7 @@ inline size_t ArduinoFileIterator::Rep::read(byte* buf, size_t count) {
   return count;
 }
 
-inline void ArduinoFileIterator::Rep::skip(size_t count) {
+inline void ArduinoFileInputIterator::Rep::skip(size_t count) {
   if (status_ != kOk) return;
   size_t remaining = (length_ - offset_);
   if (count < remaining) {

@@ -1,4 +1,4 @@
-#include "roo_io/fs/arduino/arduino_file_iterator.h"
+#include "roo_io/fs/arduino/arduino_file_input_iterator.h"
 
 #include "fakefs.h"
 #include "fakefs_arduino.h"
@@ -12,9 +12,9 @@ namespace roo_io {
 
 class ArduinoFileIteratorFixture {
  public:
-  using Iterator = ArduinoFileIterator;
+  using Iterator = ArduinoFileInputIterator;
 
-  ArduinoFileIterator createIterator(const byte* beg, size_t size) {
+  ArduinoFileInputIterator createIterator(const byte* beg, size_t size) {
     fake_ = std::unique_ptr<fakefs::FakeFs>(new fakefs::FakeFs());
     sdfs_ = std::unique_ptr<fakefs::FakeArduinoSdFsImpl>(
         new fakefs::FakeArduinoSdFsImpl(*fake_));
@@ -23,7 +23,7 @@ class ArduinoFileIteratorFixture {
           "/foo", fakefs::FakeFs::kWrite | fakefs::FakeFs::kTruncate);
       CHECK_EQ(size, fs.write(beg, size));
     }
-    return ArduinoFileIterator(sdfs_->open("/foo"));
+    return ArduinoFileInputIterator(sdfs_->open("/foo"));
   }
 
  private:
