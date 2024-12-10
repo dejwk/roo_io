@@ -96,6 +96,24 @@ TEST(Read, SignedNegativeTemplated) {
   itr.rewind();
 }
 
+TEST(Read, SimpleOverflow) {
+  // Spot-checking only, because the code under test is simple and repetitive.
+  byte data[] = {byte{0xFF}};
+  MultipassMemoryIterator itr(data, data + 1);
+  ASSERT_EQ(kOk, itr.status());
+  ReadBeU16(itr);
+  ASSERT_EQ(kEndOfStream, itr.status());
+  itr.rewind();
+  ASSERT_EQ(kOk, itr.status());
+  ReadBeS32(itr);
+  ASSERT_EQ(kEndOfStream, itr.status());
+  itr.rewind();
+  ASSERT_EQ(kOk, itr.status());
+  ReadBeU64(itr);
+  ASSERT_EQ(kEndOfStream, itr.status());
+  itr.rewind();
+}
+
 TEST(Read, Float) {
   float num = 34664315.451;
   UnsafeMemoryIterator itr((const byte*)&num);
