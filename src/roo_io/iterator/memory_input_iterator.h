@@ -13,9 +13,11 @@ namespace roo_io {
 // Memory footprint is a single pointer (4 bytes on 32-bit architectures).
 //
 // Implements the 'input iterator' template contract.
-template <typename PtrType>
+template <typename PtrTypeT>
 class UnsafeGenericMemoryIterator {
  public:
+  using PtrType = PtrTypeT;
+
   UnsafeGenericMemoryIterator(PtrType ptr) : ptr_(ptr) {}
 
   byte read() { return *ptr_++; }
@@ -33,7 +35,7 @@ class UnsafeGenericMemoryIterator {
   PtrType ptr() const { return ptr_; }
 
  protected:
-  PtrType ptr_;
+  PtrTypeT ptr_;
 };
 
 using UnsafeMemoryIterator = UnsafeGenericMemoryIterator<const byte*>;
@@ -44,9 +46,11 @@ using UnsafeMemoryIterator = UnsafeGenericMemoryIterator<const byte*>;
 // Memory footprint is two pointers (8 bytes on 32-bit architectures).
 //
 // Implements the 'input iterator' template contract.
-template <typename PtrType>
+template <typename PtrTypeT>
 class SafeGenericMemoryIterator {
  public:
+  using PtrType = PtrTypeT;
+
   SafeGenericMemoryIterator(PtrType begin, PtrType end)
       : ptr_(begin), end_(end) {}
 
@@ -83,7 +87,7 @@ class SafeGenericMemoryIterator {
 
   Status status() const { return ptr_ == nullptr ? kEndOfStream : kOk; }
 
-  PtrType ptr() const { return ptr_; }
+  PtrType ptr() const { return ptr_ != nullptr ? ptr_ : end_; }
 
  private:
   PtrType ptr_;
@@ -98,9 +102,11 @@ using MemoryIterator = SafeGenericMemoryIterator<const byte*>;
 // Memory footprint is three pointers and a boolean.
 //
 // Implements the 'multipass input iterator' template contract.
-template <typename PtrType>
+template <typename PtrTypeT>
 class MultipassGenericMemoryIterator {
  public:
+  using PtrType = PtrTypeT;
+
   MultipassGenericMemoryIterator(PtrType begin, PtrType end)
       : ptr_(begin), position_(0), size_(end - begin), eos_(false) {}
 
@@ -161,5 +167,29 @@ class MultipassGenericMemoryIterator {
 };
 
 using MultipassMemoryIterator = MultipassGenericMemoryIterator<const byte*>;
+
+namespace internal {
+
+template <typename Itr>
+struct MemoryIteratorTraits {
+  static constexpr bool is_memory = false;
+};
+
+template <typename PtrType>
+struct MemoryIteratorTraits<UnsafeGenericMemoryIterator<PtrType>> {
+  static constexpr bool is_memory = true;
+};
+
+template <typename PtrType>
+struct MemoryIteratorTraits<SafeGenericMemoryIterator<PtrType>> {
+  static constexpr bool is_memory = true;
+};
+
+template <typename PtrType>
+struct MemoryIteratorTraits<MultipassGenericMemoryIterator<PtrType>> {
+  static constexpr bool is_memory = true;
+};
+
+}  // namespace internal;
 
 }  // namespace roo_io

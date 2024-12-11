@@ -262,4 +262,18 @@ TEST(Read, ShortStringUnderBuf) {
   EXPECT_EQ(kOk, itr.status());
 }
 
+TEST(Read, ShortStringView) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
+  MemoryIterator itr{in, in + 4};
+  EXPECT_EQ("foo", ReadStringView(itr));
+  EXPECT_EQ(kOk, itr.status());
+}
+
+TEST(Read, ShortStringViewOverflow) {
+  const byte in[] = {byte{3}, byte{'f'}, byte{'o'}};
+  MemoryIterator itr{in, in + 3};
+  EXPECT_EQ("fo", ReadStringView(itr));
+  EXPECT_EQ(kEndOfStream, itr.status());
+}
+
 }  // namespace roo_io

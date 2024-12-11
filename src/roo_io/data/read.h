@@ -1,7 +1,11 @@
 #pragma once
 
+#include <type_traits>
+
+#include "roo_io/base/string_view.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/iterator/input_iterator.h"
+#include "roo_io/iterator/memory_input_iterator.h"
 
 namespace roo_io {
 
@@ -306,6 +310,20 @@ struct HostNativeReader {
   }
 };
 
+// Reads a string, represented in portable representation (varint length
+// followed by the character array), as a C string, into the specified buffer
+// `buf` of specified `capacity`, and returns the length of the returned C
+// string.
+//
+// If the string won't fit into the buffer, i.e. if the string's lengh plus 1
+// (to account for the terminating zero) is greater than `capacity`, the
+// returned string gets truncated. As long as `capacity` is greater than zero,
+// the result gets zero-terminated. The return value indicates the actual
+// returned length, not counting the terminal zero.
+//
+// Regardless whether the string gets truncated or not, it is always entirely
+// skipped in the input stream, so that subsequent reads can access the data
+// past the string.
 template <typename InputIterator>
 size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
@@ -326,6 +344,11 @@ size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   return 0;
 }
 
+// Reads a string, represented in portable representation (varint length
+// followed by the character array), up to `max_size` length.
+//
+// If the string length exceeds `max_size`, the result gets truncated to
+// `max_size`, but the entire string gets skipped in the input stream.
 template <typename InputIterator>
 std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
@@ -347,6 +370,33 @@ std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
     if (in.status() != kOk) return result;
     result.push_back(ch);
   }
+  in.skip(len - max_size);
+  return result;
+}
+
+// For memory iterators only. Reads a string, represented in portable
+// representation (varint length followed by the character array), as
+// a string_view up to `max_size` length, without copying the underlying data.
+// (The returned string_view is backed by the underlying iterator's memory
+// buffer).
+//
+// If the string length exceeds `max_size`, the result gets truncated to
+// `max_size`, but the entire string gets skipped in the input stream.
+template <typename InputIterator,
+          typename std::enable_if<
+              internal::MemoryIteratorTraits<InputIterator>::is_memory,
+              bool>::type = true>
+string_view ReadStringView(InputIterator& in, size_t max_size = SIZE_MAX) {
+  uint64_t len = ReadVarU64(in);
+  if (in.status() != kOk) return "";
+  typename InputIterator::PtrType start = in.ptr();
+  if (len <= max_size) {
+    // Common case.
+    in.skip(len);
+    return string_view((const char*)start, in.ptr() - start);
+  }
+  in.skip(max_size);
+  string_view result((const char*)start, in.ptr() - start);
   in.skip(len - max_size);
   return result;
 }
