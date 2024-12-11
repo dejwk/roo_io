@@ -271,10 +271,10 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
   if (value) {
     if (offset > 0) {
       if (offset + count < 8) {
-        *buf |= byte{(((1 << count) - 1) << offset)};
+        *buf |= (byte)(((1 << count) - 1) << offset);
         return;
       }
-      *buf++ |= byte{0xFF << offset};
+      *buf++ |= (byte)(0xFF << offset);
       count -= (8 - offset);
       offset = 0;
     }
@@ -282,14 +282,14 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
     buf += (count / 8);
     count %= 8;
     if (count == 0) return;
-    *buf |= byte{(1 << count) - 1};
+    *buf |= (byte)((1 << count) - 1);
   } else {
     if (offset > 0) {
       if (offset + count < 8) {
-        *buf &= byte{~(((1 << count) - 1) << offset)};
+        *buf &= (byte)(~(((1 << count) - 1) << offset));
         return;
       }
-      *buf++ &= byte{~(0xFF << offset)};
+      *buf++ &= (byte)(~(0xFF << offset));
       count -= (8 - offset);
       offset = 0;
     }
@@ -297,7 +297,7 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
     buf += (count / 8);
     count %= 8;
     if (count == 0) return;
-    *buf &= byte{~((1 << count) - 1)};
+    *buf &= (byte)(~((1 << count) - 1));
   }
 }
 
@@ -311,7 +311,7 @@ inline void NibbleFill(byte* buf, uint32_t offset, int16_t count, byte value) {
     if (count == 0) return;
   }
   if (count >= 2) {
-    memset(buf + offset / 2, (int)(value | byte{value << 4}), count / 2);
+    memset(buf + offset / 2, (int)(value | (value << 4)), count / 2);
     offset += count;
     count %= 2;
   }
