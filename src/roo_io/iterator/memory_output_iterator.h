@@ -38,6 +38,9 @@ class MemoryOutputIterator {
  public:
   MemoryOutputIterator(byte* ptr, const byte* end) : ptr_(ptr), end_(end) {}
 
+  MemoryOutputIterator(byte buf[])
+      : ptr_(buf), end_(buf + sizeof(buf) / sizeof(byte)) {}
+
   // Writes `v`, or sets status to 'kNoSpaceLeftOnDevice' if there is no more
   // space.
   void write(byte v) {
