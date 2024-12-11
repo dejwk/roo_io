@@ -39,13 +39,13 @@ class MultipassInputStreamReader {
     in_.reset();
   }
 
-  // bool isOpen() const {
-  //   return is_ != nullptr && is_->isOpen();
-  // }
+  bool isOpen() const {
+    return in_.ok() || in_.eos();
+  }
 
-  // bool ok() const {
-  //   return in_.ok();
-  // }
+  bool ok() const {
+    return in_.ok();
+  }
 
   uint64_t size() const { return in_.size(); }
   uint64_t position() const { return in_.position(); }
