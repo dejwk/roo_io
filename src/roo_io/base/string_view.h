@@ -2,8 +2,23 @@
 
 #include <cassert>
 #include <cstddef>
-#include <string>
 #include <cstring>
+#include <string>
+
+#if __cplusplus >= 201703L
+
+#include <string_view>
+
+namespace roo_io {
+
+template <typename CharT, typename Traits = std::char_traits<CharT>>
+using basic_string_view = std::basic_string_view<CharT, Traits>;
+
+using string_view = basic_string_view<char>;
+
+}  // namespace roo_io
+
+#else
 
 namespace roo_io {
 
@@ -30,12 +45,14 @@ class basic_string_view {
   constexpr basic_string_view(const CharT *str, size_type len) noexcept
       : len_(len), str_(str) {}
 
-  basic_string_view(const CharT *str) noexcept : len_(strlen(str)), str_(str) {}
+  constexpr basic_string_view(const CharT *str) noexcept
+      : len_(str == nullptr ? 0 : strlen(str)), str_(str) {}
 
-  basic_string_view(const std::string &str) noexcept
+  constexpr basic_string_view(const std::string &str) noexcept
       : len_(str.size()), str_(str.c_str()) {}
 
-  basic_string_view &operator=(const basic_string_view &) noexcept = default;
+  basic_string_view<CharT, Traits> &operator=(
+      const basic_string_view<CharT, Traits> &) noexcept = default;
 
   constexpr const_iterator begin() const noexcept { return str_; }
 
@@ -120,47 +137,142 @@ using string_view = basic_string_view<char>;
 using u8string_view = basic_string_view<char8_t>;
 #endif
 
-template <typename CharT>
-inline bool operator==(basic_string_view<CharT> x,
-                       basic_string_view<CharT> y) noexcept {
+namespace internal {
+template <typename T>
+struct __identity {
+  typedef T type;
+};
+}  // namespace internal
+
+template <typename CharT, typename Traits>
+constexpr bool operator==(basic_string_view<CharT, Traits> x,
+                          basic_string_view<CharT, Traits> y) {
   return x.size() == y.size() && x.compare(y) == 0;
 }
 
-template <typename CharT>
-inline bool operator!=(basic_string_view<CharT> x,
-                       basic_string_view<CharT> y) noexcept {
+template <typename CharT, typename Traits>
+constexpr bool operator==(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+    basic_string_view<CharT, Traits> y) {
+  return x.size() == y.size() && x.compare(y) == 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator==(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
+  return x.size() == y.size() && x.compare(y) == 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator!=(basic_string_view<CharT, Traits> x,
+                          basic_string_view<CharT, Traits> y) {
   return !(x == y);
 }
 
-template <typename CharT>
-inline bool operator<(basic_string_view<CharT> x,
-                      basic_string_view<CharT> y) noexcept {
+template <typename CharT, typename Traits>
+constexpr bool operator!=(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+
+    basic_string_view<CharT, Traits> y) {
+  return !(x == y);
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator!=(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
+  return !(x == y);
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator<(basic_string_view<CharT, Traits> x,
+                         basic_string_view<CharT, Traits> y) {
   return x.compare(y) < 0;
 }
 
-template <typename CharT>
-inline bool operator>(basic_string_view<CharT> x,
-                      basic_string_view<CharT> y) noexcept {
+template <typename CharT, typename Traits>
+constexpr bool operator<(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+    basic_string_view<CharT, Traits> y) {
+  return x.compare(y) < 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator<(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
+  return x.compare(y) < 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator>(basic_string_view<CharT, Traits> x,
+                         basic_string_view<CharT, Traits> y) {
   return x.compare(y) > 0;
 }
 
-template <typename CharT>
-inline bool operator<=(basic_string_view<CharT> x,
-                       basic_string_view<CharT> y) noexcept {
+template <typename CharT, typename Traits>
+constexpr bool operator>(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+    basic_string_view<CharT, Traits> y) {
+  return x.compare(y) > 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator>(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
+  return x.compare(y) > 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator<=(basic_string_view<CharT, Traits> x,
+                          basic_string_view<CharT, Traits> y) {
   return x.compare(y) <= 0;
 }
 
-template <typename CharT>
-inline bool operator>=(basic_string_view<CharT> x,
-                       basic_string_view<CharT> y) noexcept {
+template <typename CharT, typename Traits>
+constexpr bool operator<=(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+    basic_string_view<CharT, Traits> y) {
+  return x.compare(y) <= 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator<=(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
+  return x.compare(y) <= 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator>=(basic_string_view<CharT, Traits> x,
+                          basic_string_view<CharT, Traits> y) {
+  return x.compare(y) >= 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator>=(
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type x,
+    basic_string_view<CharT, Traits> y) {
+  return x.compare(y) >= 0;
+}
+
+template <typename CharT, typename Traits>
+constexpr bool operator>=(
+    basic_string_view<CharT, Traits> x,
+    typename internal::__identity<basic_string_view<CharT, Traits>>::type y) {
   return x.compare(y) >= 0;
 }
 
 // template <typename CharT>
-// inline std::ostream &operator<<(std::ostream &os, basic_string_view<CharT> v)
+// inline std::ostream &operator<<(std::ostream &os, basic_string_view<CharT>
+// v)
 // {
 //   os.write((const char *)v.data(), v.size());
 //   return os;
 // }
 
 }  // namespace roo_io
+
+#endif
