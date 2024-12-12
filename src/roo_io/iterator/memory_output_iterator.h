@@ -81,4 +81,24 @@ class MemoryOutputIterator {
   const byte* end_;
 };
 
+template <typename Collection>
+class BackInsertingIterator {
+ public:
+  BackInsertingIterator(Collection& c) : itr_(std::back_inserter(c)) {}
+
+  void write(byte b) { *itr_++ = (typename Collection::value_type)b; }
+
+  size_t write(const byte* buf, size_t count) {
+    for (size_t i = 0; i < count; ++i) write(buf[i]);
+    return count;
+  }
+
+  void flush() {}
+
+  Status status() const { return kOk; }
+
+ private:
+  std::back_insert_iterator<Collection> itr_;
+};
+
 }  // namespace roo_io

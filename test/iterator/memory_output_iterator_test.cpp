@@ -1,7 +1,13 @@
 #include "roo_io/iterator/memory_output_iterator.h"
 
+#include <vector>
+
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
 #include "output_iterator_p.h"
+
+using testing::ElementsAre;
 
 namespace roo_io {
 
@@ -58,5 +64,27 @@ class MemoryOutputIteratorFixture {
 
 INSTANTIATE_TYPED_TEST_SUITE_P(MemoryOutputIterator, OutputIteratorTest,
                                MemoryOutputIteratorFixture);
+
+TEST(BackInsertingIterator, SimpleEmpty) {
+  std::vector<byte> out;
+  auto itr = BackInsertingIterator(out);
+  EXPECT_TRUE(out.empty());
+}
+
+TEST(BackInsertingIterator, SimpleWrite) {
+  std::vector<byte> out;
+  auto itr = BackInsertingIterator(out);
+  itr.write(byte{4});
+  itr.write(byte{23});
+  EXPECT_THAT(out, ElementsAre(byte{4}, byte{23}));
+}
+
+TEST(BackInsertingIterator, StringAppend) {
+  std::string out = "foo";
+  auto itr = BackInsertingIterator(out);
+  itr.write(byte{32});
+  itr.write((const byte*)"bar", 3);
+  EXPECT_EQ("foo bar", out);
+}
 
 }  // namespace roo_io
