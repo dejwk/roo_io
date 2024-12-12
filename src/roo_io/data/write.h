@@ -191,6 +191,27 @@ void WriteString(OutputIterator& itr, const char* data) {
   WriteString(itr, string_view(data));
 }
 
+// Writes a single Unicode code point, encoded as UTF-8, to the specified
+// iterator.
+template <typename OutputIterator>
+void WriteUtf8Char(OutputIterator& itr, char32_t v) {
+  if (v <= 0x7F) {
+    itr.write((byte)v);
+  } else if (v <= 0x7FF) {
+    itr.write((byte)((v >> 6) | 0xC0));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  } else if (v <= 0xFFFF) {
+    itr.write((byte)((v >> 12) | 0xE0));
+    itr.write((byte)(((v >> 6) & 0x3F) | 0x80));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  } else {
+    itr.write((byte)((v >> 18) | 0xF0));
+    itr.write((byte)(((v >> 12) & 0x3F) | 0x80));
+    itr.write((byte)(((v >> 6) & 0x3F) | 0x80));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  }
+}
+
 // Helper to write numbers to output iterators, templated on a byte order.
 template <int ByteOrder>
 class NumberWriter;

@@ -241,4 +241,14 @@ TEST(Write, ArduinoString) {
   EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
 }
 
+TEST(Write, Utf8Char) {
+  uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
+  WriteUtf8Char(itr, 'f');
+  WriteUtf8Char(itr, 0x0123);
+  WriteUtf8Char(itr, 0x54d5);
+  ASSERT_EQ(kOk, itr.status());
+  EXPECT_THAT(result, ElementsAre('f', 0xC4, 0xA3, 0xE5, 0x93, 0x95, 9, 9));
+}
+
 }  // namespace roo_io
