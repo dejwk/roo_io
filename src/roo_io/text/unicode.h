@@ -1,58 +1,20 @@
 #pragma once
 
+#include <vector>
+
 #include "roo_io/base/byte.h"
 #include "roo_io/base/string_view.h"
+#include "roo_io/data/read.h"
+#include "roo_io/iterator/input_iterator.h"
+#include "roo_io/third_party/u8c.h"
 
 namespace roo_io {
 
-// Writes the UTF-8 representation of the rune to buf. The `buf` must have
-// sufficient size (4 is always safe). Returns the number of bytes actually
-// written.
-inline int Utf8Encode(char32_t rune, byte *buf) {
-  if (rune <= 0x7F) {
-    buf[0] = (byte)rune;
-    return 1;
-  }
-  if (rune <= 0x7FF) {
-    buf[1] = (byte)((rune & 0x3F) | 0x80);
-    rune >>= 6;
-    buf[0] = (byte)(rune | 0xC0);
-    return 2;
-  }
-  if (rune <= 0xFFFF) {
-    buf[2] = (byte)((rune & 0x3F) | 0x80);
-    rune >>= 6;
-    buf[1] = (byte)((rune & 0x3F) | 0x80);
-    rune >>= 6;
-    buf[0] = (byte)(rune | 0xE0);
-    return 3;
-  }
-  buf[3] = (byte)((rune & 0x3F) | 0x80);
-  rune >>= 6;
-  buf[2] = (byte)((rune & 0x3F) | 0x80);
-  rune >>= 6;
-  buf[1] = (byte)((rune & 0x3F) | 0x80);
-  rune >>= 6;
-  buf[0] = (byte)(rune | 0xF0);
-  return 4;
-}
-
-// Utility that can iteratively retrieve subsequent decoded Unicode code points,
-// out of UTF8-encoded input.
-//
-// Note: in the future, may be reimplemented as a decorator over a byte
-// iterator, but benchmarks are needed to confirm that it doesn't slow down the
-// main usage scenario (which is to iterate over bytes already read into
-// memory, e.g. a string).
-//
-// Note: as of now, this decoder does not reject malformed UTF; it simply
-// ignores incorrect bits in some cases. This will be changed in the future
-// versions.
 class Utf8Decoder {
  public:
   // Creates a decoder that will represent the specified byte array as Unicode
   // code points.
-  Utf8Decoder(const byte *data, size_t size) : data_(data), remaining_(size) {}
+  Utf8Decoder(const byte *data, size_t size) : ptr_(data), end_(data + size) {}
 
   // Creates a decoder that will represent the specified char array as Unicode
   // code points.
@@ -78,52 +40,83 @@ class Utf8Decoder {
       : Utf8Decoder((const byte *)s.data(), s.size()) {}
 #endif
 
-  bool has_next() const { return remaining_ > 0; }
+  const byte *data() const { return ptr_; }
 
-  const byte *data() const { return data_; }
-
-  size_t remaining() const { return remaining_; }
-
-  char32_t next() {
-    --remaining_;
-    byte first = *data_++;
-    // 7 bit Unicode.
-    if ((first & byte{0x80}) == byte{0x00}) {
-      return (char32_t)first;
-    }
-
-    // 11 bit Unicode.
-    if (((first & byte{0xE0}) == byte{0xC0}) && (remaining_ >= 1)) {
-      --remaining_;
-      byte second = *data_++;
-      return (((char32_t)first & 0x1F) << 6) | ((char32_t)second & 0x3F);
-    }
-
-    // 16 bit Unicode.
-    if (((first & byte{0xF0}) == byte{0xE0}) && (remaining_ >= 2)) {
-      remaining_ -= 2;
-      byte second = *data_++;
-      byte third = *data_++;
-      return (((char32_t)first & 0x0F) << 12) |
-             (((char32_t)second & 0x3F) << 6) | (((char32_t)third & 0x3F));
-    }
-
-    // 21 bit Unicode not supported so fall-back to extended ASCII
-    if ((first & byte{0xF8}) == byte{0xF0} && (remaining_ >= 3)) {
-      remaining_ -= 3;
-      byte second = *data_++;
-      byte third = *data_++;
-      byte fourth = *data_++;
-      return (((char32_t)first & 0x07) << 18) |
-             (((char32_t)second & 0x3F) << 12) |
-             (((char32_t)third & 0x3F) << 6) | (((char32_t)fourth & 0x3F));
-    }
-    return char32_t{0xFFFD};
+  bool next(char32_t &result) {
+    if (ptr_ == end_) return false;
+    ptr_ += u8c::u8next_((const char *)ptr_, (const char *)end_, result);
+    return true;
   }
 
  private:
-  const byte *data_;
-  size_t remaining_;
+  const byte *ptr_;
+  const byte *end_;
 };
+
+template <typename OutputItr>
+void DecodeUtfString(string_view s, OutputItr itr) {
+  Utf8Decoder decoder(s);
+  char32_t ch;
+  while (decoder.next(ch)) *itr++ = ch;
+}
+
+std::vector<char32_t> DecodeUtfStringToVector(string_view s) {
+  std::vector<char32_t> result;
+  DecodeUtfString(s, std::back_inserter(result));
+  return result;
+}
+
+// Writes a single Unicode code point, encoded as UTF-8, to the specified
+// iterator.
+template <typename OutputIterator>
+void WriteUtf8Char(OutputIterator &itr, char32_t v) {
+  if (v <= 0x7F) {
+    itr.write((byte)v);
+  } else if (v <= 0x7FF) {
+    itr.write((byte)((v >> 6) | 0xC0));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  } else if (v <= 0xFFFF) {
+    itr.write((byte)((v >> 12) | 0xE0));
+    itr.write((byte)(((v >> 6) & 0x3F) | 0x80));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  } else {
+    itr.write((byte)((v >> 18) | 0xF0));
+    itr.write((byte)(((v >> 12) & 0x3F) | 0x80));
+    itr.write((byte)(((v >> 6) & 0x3F) | 0x80));
+    itr.write((byte)((v & 0x3F) | 0x80));
+  }
+}
+
+// Writes the UTF-8 representation of the rune to buf. The `buf` must have
+// sufficient size (4 is always safe). Returns the number of bytes actually
+// written.
+inline int WriteUtf8Char(byte *buf, char32_t ch) {
+  if (ch <= 0x7F) {
+    buf[0] = (byte)ch;
+    return 1;
+  }
+  if (ch <= 0x7FF) {
+    buf[1] = (byte)((ch & 0x3F) | 0x80);
+    ch >>= 6;
+    buf[0] = (byte)(ch | 0xC0);
+    return 2;
+  }
+  if (ch <= 0xFFFF) {
+    buf[2] = (byte)((ch & 0x3F) | 0x80);
+    ch >>= 6;
+    buf[1] = (byte)((ch & 0x3F) | 0x80);
+    ch >>= 6;
+    buf[0] = (byte)(ch | 0xE0);
+    return 3;
+  }
+  buf[3] = (byte)((ch & 0x3F) | 0x80);
+  ch >>= 6;
+  buf[2] = (byte)((ch & 0x3F) | 0x80);
+  ch >>= 6;
+  buf[1] = (byte)((ch & 0x3F) | 0x80);
+  ch >>= 6;
+  buf[0] = (byte)(ch | 0xF0);
+  return 4;
+}
 
 }  // namespace roo_io
