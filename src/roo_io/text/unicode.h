@@ -60,7 +60,7 @@ void DecodeUtfString(string_view s, OutputItr itr) {
   while (decoder.next(ch)) *itr++ = ch;
 }
 
-std::vector<char32_t> DecodeUtfStringToVector(string_view s) {
+inline std::vector<char32_t> DecodeUtfStringToVector(string_view s) {
   std::vector<char32_t> result;
   DecodeUtfString(s, std::back_inserter(result));
   return result;
