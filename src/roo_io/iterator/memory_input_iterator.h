@@ -55,16 +55,16 @@ class SafeGenericMemoryIterator {
       : ptr_(begin), end_(end) {}
 
   byte read() {
-    if (ptr_ == end_ || ptr_ == nullptr) {
-      ptr_ = nullptr;
+    if (ptr_ == end_ || end_ == nullptr) {
+      end_ = nullptr;
       return byte{0};
     }
     return *ptr_++;
   }
 
   size_t read(byte* result, size_t count) {
-    if (ptr_ == end_ || ptr_ == nullptr) {
-      ptr_ = nullptr;
+    if (ptr_ == end_ || end_ == nullptr) {
+      end_ = nullptr;
       return 0;
     }
     if (count > end_ - ptr_) {
@@ -76,18 +76,20 @@ class SafeGenericMemoryIterator {
   }
 
   void skip(size_t count) {
-    if (ptr_ != nullptr) {
+    if (end_ != nullptr) {
       if (count <= end_ - ptr_) {
         ptr_ += count;
       } else {
-        ptr_ = nullptr;
+        ptr_ = end_;
+        end_ = nullptr;
       }
     }
   }
 
-  Status status() const { return ptr_ == nullptr ? kEndOfStream : kOk; }
+  Status status() const { return end_ == nullptr ? kEndOfStream : kOk; }
 
-  PtrType ptr() const { return ptr_ != nullptr ? ptr_ : end_; }
+  PtrType ptr() const { return ptr_; }
+  // PtrType end() const { return end_; }
 
  private:
   PtrType ptr_;
