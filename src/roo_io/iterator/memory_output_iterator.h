@@ -44,11 +44,11 @@ class MemoryOutputIterator {
   // Writes `v`, or sets status to 'kNoSpaceLeftOnDevice' if there is no more
   // space.
   void write(byte v) {
-    if (ptr_ == nullptr) {
+    if (end_ == nullptr) {
       return;
     }
     if (ptr_ == end_) {
-      ptr_ = nullptr;
+      end_ = nullptr;
       return;
     }
     *ptr_++ = v;
@@ -58,21 +58,19 @@ class MemoryOutputIterator {
   // status to 'kNoSpaceLeftOnDevice' if there is not enough space to write
   // `count` butes.
   size_t write(const byte* buf, size_t count) {
-    if (ptr_ == nullptr) return 0;
+    if (end_ == nullptr) return 0;
     if (count > end_ - ptr_) {
       count = end_ - ptr_;
-      memcpy(ptr_, buf, count);
-      ptr_ = nullptr;
-      return count;
+      end_ = nullptr;
     }
     memcpy(ptr_, buf, count);
     ptr_ += count;
     return count;
   }
 
-  Status status() const { return ptr_ == nullptr ? kNoSpaceLeftOnDevice : kOk; }
+  Status status() const { return end_ == nullptr ? kNoSpaceLeftOnDevice : kOk; }
 
-  const byte* ptr() const { return ptr_ != nullptr ? ptr_ : end_; }
+  const byte* ptr() const { return ptr_; }
 
   void flush() {}
 
