@@ -7,20 +7,17 @@ namespace esp32 {
 
 class SpiffsFs : public Filesystem {
  public:
-  SpiffsFs();
-  SpiffsFs(const char* mount_point, const char* partition_label = nullptr);
+  const char* mountPoint() const;
+  void setMountPoint(const char* mount_point);
 
-  const char* mount_point() const;
-  void set_mount_point(const char* mount_point);
+  const char* partitionLabel() const;
+  void setPartitionLabel(const char* partition_label);
 
-  const char* partition_label() const;
-  void set_partition_label(const char* partition_label);
+  uint8_t maxOpenFiles() const;
+  void setMaxOpenFiles(uint8_t max_files);
 
-  uint8_t max_files() const;
-  void set_max_files(uint8_t max_files);
-
-  bool format_if_empty() const;
-  void set_format_if_empty(bool format_if_empty);
+  // bool format_if_empty() const;
+  // void set_format_if_empty(bool format_if_empty);
 
   MediaPresence checkMediaPresence() override;
 
@@ -29,14 +26,16 @@ class SpiffsFs : public Filesystem {
 
   void unmountImpl() override;
 
-  Status format();
+  // Status format();
 
  private:
-  std::string mount_point_;
-  uint8_t max_files_;
-  bool format_if_empty_;
+  friend SpiffsFs CreateSpiffsFs();
 
-  uint32_t spi_frequency_;
+  SpiffsFs();
+
+  std::string mount_point_;
+  uint8_t max_open_files_;
+  // bool format_if_empty_;
 
   bool has_partition_label_;
   std::string partition_label_;
