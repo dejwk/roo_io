@@ -16,7 +16,9 @@ class PosixFileInputStream : public MultipassInputStream {
   PosixFileInputStream(FILE* file)
       : file_(file), status_(file_ != nullptr ? kOk : kClosed) {}
 
-  ~PosixFileInputStream() { ::fclose(file_); }
+  ~PosixFileInputStream() {
+    if (file_ != nullptr) ::fclose(file_);
+  }
 
   size_t read(byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
@@ -98,6 +100,7 @@ class PosixFileInputStream : public MultipassInputStream {
     if (status_ != kOk && status_ != kEndOfStream) return;
     if (::fclose(file_) == 0) {
       status_ = kClosed;
+      file_ = nullptr;
       return;
     }
     switch (errno) {
