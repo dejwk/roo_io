@@ -39,7 +39,6 @@ void Filesystem::setUnmountingPolicy(UnmountingPolicy unmounting_policy) {
 void Filesystem::forceUnmount() {
   auto m = mount_.lock();
   if (m != nullptr) {
-    LOG(INFO) << "CLOSING!";
     m->deactivate();
   }
   mount_.reset();
