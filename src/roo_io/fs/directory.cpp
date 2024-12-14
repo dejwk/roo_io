@@ -17,9 +17,9 @@ const char* Directory::path() const {
   return status_ != kOk ? "" : dir_->path();
 }
 
-const char* Directory::name() const {
-  return status_ != kOk ? "" : dir_->name();
-}
+// const char* Directory::name() const {
+//   return status_ != kOk ? "" : dir_->name();
+// }
 
 void Directory::rewind() {
   if (!isOpen()) return;

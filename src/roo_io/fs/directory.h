@@ -64,9 +64,9 @@ class Directory {
   // Returns the absolute path of this directory. Empty if closed.
   const char* path() const;
 
-  // Returns the name of this directory, relative to its parent. Empty if
-  // closed.
-  const char* name() const;
+  // // Returns the name of this directory, relative to its parent. Empty if
+  // // closed.
+  // const char* name() const;
 
   // Returns true if the directory object represents an existing, open
   // directory.

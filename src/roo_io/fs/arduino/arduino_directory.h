@@ -22,7 +22,7 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
 
   const char* path() const override { return file_.path(); }
 
-  const char* name() const override { return file_.name(); }
+  // const char* name() const override { return file_.name(); }
 
   Status status() const override { return status_; }
 

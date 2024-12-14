@@ -21,7 +21,7 @@ class DirectoryErrorImpl : public DirectoryImpl {
   DirectoryErrorImpl(Status status) : status_(status) {}
 
   const char* path() const override { return nullptr; }
-  const char* name() const override { return nullptr; }
+  // const char* name() const override { return nullptr; }
 
   Status status() const override { return status_; }
   bool close() override { return true; }

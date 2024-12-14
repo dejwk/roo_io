@@ -10,7 +10,7 @@ class DirectoryImpl {
   ~DirectoryImpl() = default;
 
   virtual const char* path() const = 0;
-  virtual const char* name() const = 0;
+  // virtual const char* name() const = 0;
 
   virtual Status status() const = 0;
 

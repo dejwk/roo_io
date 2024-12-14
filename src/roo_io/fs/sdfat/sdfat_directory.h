@@ -37,7 +37,7 @@ class SdFatDirectoryImpl : public DirectoryImpl {
 
   const char* path() const override { return path_.get(); }
 
-  const char* name() const override { return filename_; }
+  // const char* name() const override { return filename_; }
 
   Status status() const override { return status_; }
 

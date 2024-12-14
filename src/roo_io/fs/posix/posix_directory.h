@@ -26,7 +26,7 @@ class PosixDirectoryImpl : public DirectoryImpl {
 
   const char* path() const override { return path_.c_str(); }
 
-  const char* name() const override { return GetFileName(path_.c_str()); }
+  // const char* name() const override { return GetFileName(path_.c_str()); }
 
   Status status() const override { return status_; }
 
@@ -45,7 +45,9 @@ class PosixDirectoryImpl : public DirectoryImpl {
       return false;
     }
     file_ = path_;
-    file_ += '/';
+    if (file_.empty() || file_.back() != '/') {
+      file_ += '/';
+    }
     file_.append(next_->d_name);
     setEntry(entry, file_.c_str(), path_.size() + 1, next_->d_type == DT_DIR);
     return true;
