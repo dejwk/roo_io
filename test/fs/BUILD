@@ -6,7 +6,8 @@ cc_library(
         "fakefs.cpp",
         "fakefs_reference.h",
         "fakefs_reference.cpp",
-        "fs_p.h"
+        "fs_p.h",
+        "fs_mount_p.h",
     ],
     includes = ["."],
     linkstatic = 1,
