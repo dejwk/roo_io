@@ -16,10 +16,8 @@ class Mount {
   // Creates a mount in a 'not mounted' state.
   Mount() : Mount(kNotMounted) {}
 
-  // Mount is copyable. All copies of a healthy mount reference the same
-  // underlying filesystem.
-  Mount(const Mount& other) = default;
-  Mount& operator=(const Mount& other) = default;
+  Mount(const Mount& other) = delete;
+  Mount& operator=(const Mount& other) = delete;
 
   // Move constructor moves the original to the 'kNotMounted' state.
   Mount(Mount&& other) {
@@ -27,6 +25,14 @@ class Mount {
     status_ = other.status_;
     read_only_ = other.read_only_;
     other.close();
+  }
+
+  Mount& operator=(Mount&& other) {
+    mount_ = other.mount_;
+    status_ = other.status_;
+    read_only_ = other.read_only_;
+    other.close();
+    return *this;
   }
 
   // Returns the mount status, which can be:
