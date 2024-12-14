@@ -23,9 +23,6 @@ class SdMmcFs : public Filesystem {
   bool formatIfEmpty() const;
   void setFormatIfEmpty(bool format_if_empty);
 
-  //   void spi_config(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
-  //                   uint8_t pin_cs, spi_host_device_t spi_host);
-
   MediaPresence checkMediaPresence() override;
 
  protected:
