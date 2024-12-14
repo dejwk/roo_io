@@ -76,6 +76,17 @@ TYPED_TEST_P(FsMountTest, ForcedUnmount) {
   EXPECT_FALSE(fs.isInUse());
   EXPECT_EQ(kNotMounted, m.status());
   EXPECT_EQ(kNotMounted, m.mkdir("/foo"));
+
+  // New mount should be fine.
+  Mount m2 = fs.mount();
+  ASSERT_TRUE(m2.ok());
+  EXPECT_TRUE(fs.isMounted());
+  EXPECT_TRUE(fs.isInUse());
+  EXPECT_TRUE(m2.exists("/"));
+
+  // But the original mount should still be deactivated.
+  EXPECT_EQ(kNotMounted, m.status());
+  EXPECT_EQ(kNotMounted, m.mkdir("/foo"));
 }
 
 REGISTER_TYPED_TEST_SUITE_P(FsMountTest, LazyMountEagerUnmount,
