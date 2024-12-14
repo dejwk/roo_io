@@ -78,6 +78,14 @@ class Filesystem {
   // filesystem gets unmounted. Otherwise, the call has no immediate effect.
   void setUnmountingPolicy(UnmountingPolicy unmounting_policy);
 
+  // Invalidates all existing mount objects, and unmounts the filesystem
+  // immediately. The mounts will return 'kNotMounted' from any subsequent
+  // calls.
+  //
+  // Prefer relying on automount, rather than calling this method. This method
+  // is meant for use in special circumstances, such as forceful shutdown.
+  void forceUnmount();
+
  protected:
   Filesystem() : unmounting_policy_(kEagerUnmount) {}
 

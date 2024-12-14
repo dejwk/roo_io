@@ -36,6 +36,17 @@ void Filesystem::setUnmountingPolicy(UnmountingPolicy unmounting_policy) {
   }
 }
 
+void Filesystem::forceUnmount() {
+  auto m = mount_.lock();
+  if (m != nullptr) {
+    LOG(INFO) << "CLOSING!";
+    m->deactivate();
+  }
+  mount_.reset();
+  lazy_unmount_.reset();
+  unmountImpl();
+}
+
 const char* GetFileName(const char* path) {
   size_t i = 0;
   size_t pos = 0;

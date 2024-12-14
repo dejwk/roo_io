@@ -34,8 +34,13 @@ class ArduinoMountImpl : public MountImpl {
   std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) override;
 
+  bool active() const override { return active_; }
+
+  void deactivate() override;
+
  private:
   FS& fs_;
+  bool active_;
   bool read_only_;
 };
 

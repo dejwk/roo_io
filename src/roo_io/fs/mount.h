@@ -43,11 +43,14 @@ class Mount {
   // * kOutOfMemory, if mount failed due to insufficient memory,
   // * kAccessDenied, if mount failed due to insufficient permissions,
   // * kGenericMountError, if mount failed for undetermined reasons.
-  Status status() const { return status_; }
+  Status status() const {
+    if (status_ == kOk && !mount_->active()) status_ = kNotMounted;
+    return status_;
+  }
 
   // Returns true if the mount is healthy and can be used for filesystem
   // operations.
-  bool ok() const { return status_ == kOk; }
+  bool ok() const { return status() == kOk; }
 
   // A convenience shortcut for testing the existence of a specified file or
   // directory. Equivalent to stat(path).exists().
@@ -236,8 +239,8 @@ class Mount {
   // filesystem. Does not actually unmount the filesystem, unless this was the
   // last healthy mount object.
   void close() {
-    mount_ = nullptr;
     if (status_ == kOk) status_ = kNotMounted;
+    mount_ = nullptr;
   }
 
  private:
@@ -247,7 +250,7 @@ class Mount {
   Mount(std::shared_ptr<MountImpl> impl) : mount_(impl), status_(kOk) {}
 
   std::shared_ptr<MountImpl> mount_;
-  Status status_;
+  mutable Status status_;
   bool read_only_;
 };
 

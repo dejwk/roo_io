@@ -52,6 +52,12 @@ class MountImpl {
   virtual std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) = 0;
 
+  virtual bool active() const = 0;
+
+  // Called in case this mount gets forcefully closed. Further method calls
+  // should fail with kNotMounted.
+  virtual void deactivate() = 0;
+
  protected:
   MountImpl(std::function<void()> unmount_fn) : unmount_fn_(unmount_fn) {}
 

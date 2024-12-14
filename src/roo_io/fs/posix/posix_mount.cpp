@@ -42,15 +42,16 @@ PosixMountImpl::PosixMountImpl(const char* mount_point, bool read_only,
                                std::function<void()> unmount_fn)
     : MountImpl(unmount_fn),
       mount_point_(strdup(mount_point)),
+      active_(true),
       read_only_(read_only) {}
 
 bool PosixMountImpl::isReadOnly() const { return read_only_; }
 
 Stat PosixMountImpl::stat(const char* path) const {
-  if (mount_point_ == nullptr) return kNotMounted;
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (mount_point_ == nullptr) return kNotMounted;
   auto full_path = cat(mount_point_.get(), path);
   if (full_path == nullptr) return kOutOfMemory;
   struct stat st;
@@ -75,10 +76,10 @@ Stat PosixMountImpl::stat(const char* path) const {
 }
 
 Status PosixMountImpl::remove(const char* path) {
-  if (mount_point_ == nullptr) return kNotMounted;
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (mount_point_ == nullptr) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   auto full_path = cat(mount_point_.get(), path);
   if (full_path == nullptr) return kOutOfMemory;
@@ -100,13 +101,13 @@ Status PosixMountImpl::remove(const char* path) {
 }
 
 Status PosixMountImpl::rename(const char* pathFrom, const char* pathTo) {
-  if (mount_point_ == nullptr) return kNotMounted;
   if (pathFrom == nullptr || pathFrom[0] != '/') {
     return kInvalidPath;
   }
   if (pathTo == nullptr || pathTo[0] != '/') {
     return kInvalidPath;
   }
+  if (mount_point_ == nullptr) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
 
   auto full_src_path = cat(mount_point_.get(), pathFrom);
@@ -129,10 +130,10 @@ Status PosixMountImpl::rename(const char* pathFrom, const char* pathTo) {
 }
 
 Status PosixMountImpl::mkdir(const char* path) {
-  if (mount_point_ == nullptr) return kNotMounted;
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (mount_point_ == nullptr) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   auto full_path = cat(mount_point_.get(), path);
   if (full_path.get() == nullptr) return kOutOfMemory;
@@ -155,10 +156,10 @@ Status PosixMountImpl::mkdir(const char* path) {
 }
 
 Status PosixMountImpl::rmdir(const char* path) {
-  if (mount_point_ == nullptr) return kNotMounted;
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (mount_point_ == nullptr) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   auto full_path = cat(mount_point_.get(), path);
   if (full_path.get() == nullptr) return kOutOfMemory;
@@ -184,10 +185,10 @@ Status PosixMountImpl::rmdir(const char* path) {
 }
 
 std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
-  if (mount_point_ == nullptr) return DirectoryError(kNotMounted);
   if (path == nullptr || path[0] != '/') {
     return DirectoryError(kInvalidPath);
   }
+  if (mount_point_ == nullptr) return DirectoryError(kNotMounted);
 
   auto full_path = cat(mount_point_.get(), path);
   if (full_path.get() == nullptr) return DirectoryError(kOutOfMemory);
@@ -210,18 +211,16 @@ std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
   }
 }
 
-std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(
-    const char* path) {
-  if (mount_point_ == nullptr) return InputError(kNotMounted);
+std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return InputError(kInvalidPath);
   }
+  if (mount_point_ == nullptr) return InputError(kNotMounted);
   auto full_path = cat(mount_point_.get(), path);
   if (full_path.get() == nullptr) return InputError(kOutOfMemory);
   FILE* f = ::fopen(full_path.get(), "r");
   if (f != nullptr) {
-    return std::unique_ptr<MultipassInputStream>(
-        new PosixFileInputStream(f));
+    return std::unique_ptr<MultipassInputStream>(new PosixFileInputStream(f));
   }
   switch (errno) {
     case ENAMETOOLONG:
@@ -253,15 +252,15 @@ const char* Policy2Mode(FileUpdatePolicy policy) {
 
 std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
     const char* path, FileUpdatePolicy update_policy) {
-  if (mount_point_ == nullptr) return OutputError(kNotMounted);
   if (path == nullptr || path[0] != '/') {
     return OutputError(kInvalidPath);
   }
-  auto full_path = cat(mount_point_.get(), path);
-  if (full_path.get() == nullptr) return OutputError(kOutOfMemory);
+  if (mount_point_ == nullptr) return OutputError(kNotMounted);
   if (read_only_) {
     return OutputError(kReadOnlyFilesystem);
   }
+  auto full_path = cat(mount_point_.get(), path);
+  if (full_path.get() == nullptr) return OutputError(kOutOfMemory);
   FILE* f = ::fopen(full_path.get(), Policy2Mode(update_policy));
   if (f != nullptr) {
     return std::unique_ptr<OutputStream>(new PosixFileOutputStream(f));
@@ -283,6 +282,8 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
       return OutputError(kUnknownIOError);
   }
 }
+
+void PosixMountImpl::deactivate() { mount_point_ = nullptr; }
 
 }  // namespace roo_io
 

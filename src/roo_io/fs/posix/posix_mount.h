@@ -30,8 +30,13 @@ class PosixMountImpl : public MountImpl {
   std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) override;
 
+  bool active() const override { return mount_point_ != nullptr; }
+
+  void deactivate() override;
+
  private:
   std::unique_ptr<const char[]> mount_point_;
+  bool active_;
   bool read_only_;
 };
 

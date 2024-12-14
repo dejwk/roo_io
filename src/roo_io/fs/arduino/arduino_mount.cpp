@@ -32,14 +32,15 @@ Status CheckParentage(FS& fs, const char* path) {
 
 ArduinoMountImpl::ArduinoMountImpl(FS& fs, bool read_only,
                                    std::function<void()> unmount_fn)
-    : MountImpl(unmount_fn), fs_(fs), read_only_(read_only) {}
+    : MountImpl(unmount_fn), fs_(fs), active_(true), read_only_(read_only) {}
 
 bool ArduinoMountImpl::isReadOnly() const { return read_only_; }
 
 Stat ArduinoMountImpl::stat(const char* path) const {
   if (path == nullptr || path[0] != '/') {
-    return kInvalidPath;
+    return Stat(kInvalidPath);
   }
+  if (!active_) return Stat(kNotMounted);
   if (!fs_.exists(path)) return Stat(kNotFound);
   fs::File f = fs_.open(path);
   if (!f) return Stat(kNotFound);
@@ -50,16 +51,18 @@ Status ArduinoMountImpl::remove(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
+  if (read_only_) return kReadOnlyFilesystem;
   {
     fs::File f = fs_.open(path);
     if (!f) return kNotFound;
     if (f.isDirectory()) return kNotFile;
   }
-  if (read_only_) return kReadOnlyFilesystem;
   return fs_.remove(path) ? kOk : kUnknownIOError;
 }
 
 Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
+  if (read_only_) return kReadOnlyFilesystem;
   if (fs_.rename(pathFrom, pathTo)) return kOk;
   Stat src = stat(pathFrom);
   if (!src.exists()) {
@@ -87,6 +90,7 @@ Status ArduinoMountImpl::mkdir(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   if (fs_.mkdir(path)) return kOk;
   if (fs_.exists(path)) {
@@ -106,11 +110,12 @@ Status ArduinoMountImpl::rmdir(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
+  if (read_only_) return kReadOnlyFilesystem;
   {
     fs::File f = fs_.open(path);
     if (!f) return kNotFound;
     if (!f.isDirectory()) return kNotDirectory;
-    if (read_only_) return kReadOnlyFilesystem;
     if (fs_.rmdir(path)) return kOk;
 
     fs::File child;
@@ -124,6 +129,7 @@ Status ArduinoMountImpl::rmdir(const char* path) {
 }
 
 std::unique_ptr<DirectoryImpl> ArduinoMountImpl::opendir(const char* path) {
+  if (!active_) return DirectoryError(kNotMounted);
   fs::File f = fs_.open(path, "r");
   roo_io::Status status = roo_io::kOk;
   if (!f) {
@@ -142,6 +148,7 @@ std::unique_ptr<MultipassInputStream> ArduinoMountImpl::fopen(
   if (path == nullptr || path[0] != '/') {
     return InputError(kInvalidPath);
   }
+  if (!active_) return InputError(kNotMounted);
   fs::File f = fs_.open(path, "r");
   if (!f) {
     if (!fs_.exists(path)) {
@@ -162,6 +169,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
   if (path == nullptr || path[0] != '/') {
     return OutputError(kInvalidPath);
   }
+  if (!active_) return OutputError(kNotMounted);
   if (read_only_) {
     return OutputError(kReadOnlyFilesystem);
   }
@@ -190,5 +198,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
   return std::unique_ptr<OutputStream>(
       new ArduinoFileOutputStream(std::move(f)));
 }
+
+void ArduinoMountImpl::deactivate() { active_ = false; }
 
 }  // namespace roo_io

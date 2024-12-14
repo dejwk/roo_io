@@ -85,11 +85,12 @@ class FakeOutputStream : public OutputStream {
 class FakeMount : public MountImpl {
  public:
   FakeMount(FakeFs& fs, bool read_only, std::function<void()> unmount_fn)
-      : MountImpl(unmount_fn), fs_(fs), read_only_(read_only) {}
+      : MountImpl(unmount_fn), fs_(fs), active_(true), read_only_(read_only) {}
 
   bool isReadOnly() const override { return read_only_; }
 
   Stat stat(const char* path) const override {
+    if (!active_) return Stat(kNotMounted);
     StatResult s = fs_.stat(path);
     if (s.status != kOk) return Stat(s.status);
     if (s.type == StatResult::kDir) {
@@ -99,17 +100,32 @@ class FakeMount : public MountImpl {
     }
   }
 
-  Status remove(const char* path) override { return fs_.remove(path); }
+  Status remove(const char* path) override {
+    if (!active_) return kNotMounted;
+    if (read_only_) return kReadOnlyFilesystem;
+    return fs_.remove(path);
+  }
 
   Status rename(const char* pathFrom, const char* pathTo) override {
+    if (!active_) return kNotMounted;
+    if (read_only_) return kReadOnlyFilesystem;
     return fs_.rename(pathFrom, pathTo);
   }
 
-  Status mkdir(const char* path) override { return fs_.mkdir(path); }
+  Status mkdir(const char* path) override {
+    if (!active_) return kNotMounted;
+    if (read_only_) return kReadOnlyFilesystem;
+    return fs_.mkdir(path);
+  }
 
-  Status rmdir(const char* path) override { return fs_.rmdir(path); }
+  Status rmdir(const char* path) override {
+    if (!active_) return kNotMounted;
+    if (read_only_) return kReadOnlyFilesystem;
+    return fs_.rmdir(path);
+  }
 
   std::unique_ptr<DirectoryImpl> opendir(const char* path) override {
+    if (!active_) return DirectoryError(kNotMounted);
     DirIterator itr;
     Status status = fs_.opendir(path, itr);
     if (status != kOk) return DirectoryError(status);
@@ -118,6 +134,7 @@ class FakeMount : public MountImpl {
   }
 
   std::unique_ptr<MultipassInputStream> fopen(const char* path) override {
+    if (!active_) return InputError(kNotMounted);
     FileStream f = fs_.open(path, FakeFs::kRead);
     if (!f.isOpen()) {
       return InputError(f.status());
@@ -141,6 +158,8 @@ class FakeMount : public MountImpl {
       default: {
       }
     }
+    if (!active_) return OutputError(kNotMounted);
+    if (read_only_) return OutputError(kReadOnlyFilesystem);
     FileStream f = fs_.open(path, flags);
     if (!f.isOpen()) {
       return OutputError(f.status());
@@ -148,8 +167,13 @@ class FakeMount : public MountImpl {
     return std::unique_ptr<OutputStream>(new FakeOutputStream(std::move(f)));
   }
 
+  bool active() const override { return active_; }
+
+  void deactivate() override { active_ = false; }
+
  private:
   FakeFs& fs_;
+  bool active_;
   bool read_only_;
 };
 
