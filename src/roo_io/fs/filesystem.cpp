@@ -26,7 +26,7 @@ Mount Filesystem::mount() {
     return Mount(kGenericMountError);
   }
   mount_ = impl;
-  if (unmounting_policy_ == kLazyUnmount) {
+  if (unmounting_policy_ == kUnmountLazily) {
     lazy_unmount_ = impl;
   }
   return Mount(impl, read_only);
@@ -34,7 +34,7 @@ Mount Filesystem::mount() {
 
 void Filesystem::setUnmountingPolicy(UnmountingPolicy unmounting_policy) {
   unmounting_policy_ = unmounting_policy;
-  if (unmounting_policy_ == kEagerUnmount) {
+  if (unmounting_policy_ == kUnmountEagerly) {
     lazy_unmount_.reset();
   } else {
     lazy_unmount_ = mount_.lock();

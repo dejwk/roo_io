@@ -44,15 +44,15 @@ class Filesystem {
   // Decides how aggressive the filesystem gets unmounted when no longer used.
   enum UnmountingPolicy {
     // Unmount as soon as all mount objects go out of scope.
-    kLazyUnmount = 0,
+    kUnmountLazily = 0,
 
     // Keep mounted until explicit call to unmount.
-    kEagerUnmount = 1
+    kUnmountEagerly = 1
   };
 
   // Returns a new mount for the filesystem, or error status. The error can be:
   // * kNoMedia, when mount fails because there is no media (e.g. no SD card
-  // inserted),
+  //   inserted),
   // * kGenericMountError, if the cause of error is unknown.
   //
   // Multiple mount objects can be independently created. They are all backed by
@@ -74,7 +74,7 @@ class Filesystem {
   // as 'isMounted()'. With 'kLazyUnmount', 'isUnUse()' can be false while
   // 'isMounted()' is still true.
   bool isInUse() const {
-    return mount_.use_count() > (unmounting_policy_ == kEagerUnmount ? 0 : 1);
+    return mount_.use_count() > (unmounting_policy_ == kUnmountEagerly ? 0 : 1);
   }
 
   // Checks whether media is present. Does not require the filesystem to be
@@ -114,7 +114,8 @@ class Filesystem {
 
  protected:
   Filesystem()
-      : mounting_policy_(kMountReadWrite), unmounting_policy_(kEagerUnmount) {}
+      : mounting_policy_(kMountReadWrite),
+        unmounting_policy_(kUnmountEagerly) {}
 
   virtual MountImpl::MountResult mountImpl(
       std::function<void()> unmount_fn) = 0;

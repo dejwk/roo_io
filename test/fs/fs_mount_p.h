@@ -32,7 +32,7 @@ TYPED_TEST_P(FsMountTest, LazyMountEagerUnmount) {
 
 TYPED_TEST_P(FsMountTest, LazyMountLazyUnmount) {
   Filesystem& fs = this->fs();
-  fs.setUnmountingPolicy(Filesystem::kLazyUnmount);
+  fs.setUnmountingPolicy(Filesystem::kUnmountLazily);
   EXPECT_FALSE(fs.isMounted());
   {
     Mount m = fs.mount();
@@ -42,7 +42,7 @@ TYPED_TEST_P(FsMountTest, LazyMountLazyUnmount) {
   }
   EXPECT_FALSE(fs.isInUse());
   EXPECT_TRUE(fs.isMounted());
-  fs.setUnmountingPolicy(Filesystem::kEagerUnmount);
+  fs.setUnmountingPolicy(Filesystem::kUnmountEagerly);
   EXPECT_FALSE(fs.isInUse());
   EXPECT_FALSE(fs.isMounted());
 }
@@ -55,11 +55,11 @@ TYPED_TEST_P(FsMountTest, UnmountPolicySwitched) {
     ASSERT_TRUE(m.ok());
     EXPECT_TRUE(fs.isMounted());
     EXPECT_TRUE(fs.isInUse());
-    fs.setUnmountingPolicy(Filesystem::kLazyUnmount);
+    fs.setUnmountingPolicy(Filesystem::kUnmountLazily);
   }
   EXPECT_FALSE(fs.isInUse());
   EXPECT_TRUE(fs.isMounted());
-  fs.setUnmountingPolicy(Filesystem::kEagerUnmount);
+  fs.setUnmountingPolicy(Filesystem::kUnmountEagerly);
   EXPECT_FALSE(fs.isInUse());
   EXPECT_FALSE(fs.isMounted());
 }
