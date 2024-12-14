@@ -48,7 +48,7 @@ SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, HSPI_HOST) {}
 
 #else
 
-SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, HSPI_HOST) {}
+SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, SPI3_HOST) {}
 
 #endif
 

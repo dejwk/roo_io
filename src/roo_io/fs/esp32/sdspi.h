@@ -12,7 +12,7 @@ class SdSpiFs : public Filesystem {
  public:
   SdSpiFs();
   SdSpiFs(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi, uint8_t pin_cs,
-          spi_host_device_t spi_host = HSPI_HOST);
+          spi_host_device_t spi_host);
 
   const char* mount_point() const;
   void set_mount_point(const char* mount_point);
@@ -24,7 +24,7 @@ class SdSpiFs : public Filesystem {
   void set_format_if_empty(bool format_if_empty);
 
   void spi_config(uint8_t pin_sck, uint8_t pin_miso, uint8_t pin_mosi,
-                  uint8_t pin_cs, spi_host_device_t spi_host = HSPI_HOST);
+                  uint8_t pin_cs, spi_host_device_t spi_host);
 
   MediaPresence checkMediaPresence() override;
 
