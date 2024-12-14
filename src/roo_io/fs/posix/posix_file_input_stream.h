@@ -16,6 +16,8 @@ class PosixFileInputStream : public MultipassInputStream {
   PosixFileInputStream(FILE* file)
       : file_(file), status_(file_ != nullptr ? kOk : kClosed) {}
 
+  ~PosixFileInputStream() { ::fclose(file_); }
+
   size_t read(byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
     int result = fread(buf, 1, count, file_);

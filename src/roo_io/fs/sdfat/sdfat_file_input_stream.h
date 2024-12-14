@@ -13,6 +13,8 @@ class SdFatFileInputStream : public MultipassInputStream {
   SdFatFileInputStream(FsFile file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
 
+  ~SdFatFileInputStream() { file_.close(); }
+
   size_t read(byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
     int result = file_.read(buf, count);

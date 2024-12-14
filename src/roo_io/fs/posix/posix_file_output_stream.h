@@ -11,10 +11,13 @@ namespace roo_io {
 
 class PosixFileOutputStream : public OutputStream {
  public:
-  PosixFileOutputStream(Status error) : file_(nullptr), size_(-1), status_(error) {}
+  PosixFileOutputStream(Status error)
+      : file_(nullptr), size_(-1), status_(error) {}
 
   PosixFileOutputStream(FILE* file)
       : file_(file), size_(-1), status_(file_ != nullptr ? kOk : kClosed) {}
+
+  ~PosixFileOutputStream() { ::fclose(file_); }
 
   size_t write(const byte* buf, size_t count) override {
     if (status_ != kOk) return 0;

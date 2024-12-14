@@ -8,11 +8,12 @@ namespace roo_io {
 
 class SdFatFileOutputStream : public OutputStream {
  public:
-  SdFatFileOutputStream(Status error)
-      : file_(), status_(error) {}
+  SdFatFileOutputStream(Status error) : file_(), status_(error) {}
 
   SdFatFileOutputStream(FsFile file)
       : file_(std::move(file)), status_(file_ ? kOk : kClosed) {}
+
+  ~SdFatFileOutputStream() { file_.close(); }
 
   size_t write(const byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
