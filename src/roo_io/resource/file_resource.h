@@ -8,7 +8,7 @@
 
 namespace roo_io {
 
-class FileResource : public Resource {
+class FileResource : public MultipassResource {
  public:
   FileResource(Filesystem& fs, std::string path)
       : fs_(fs), path_(std::move(path)) {}

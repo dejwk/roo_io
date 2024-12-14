@@ -9,9 +9,10 @@
 
 namespace roo_io {
 
-class ArduinoFileResource : public Resource {
+class ArduinoFileResource : public MultipassResource {
  public:
-  ArduinoFileResource(fs::FS& fs, String path) : fs_(fs), path_(std::move(path)) {}
+  ArduinoFileResource(fs::FS& fs, String path)
+      : fs_(fs), path_(std::move(path)) {}
 
   std::unique_ptr<MultipassInputStream> open() const override {
     return std::unique_ptr<MultipassInputStream>(

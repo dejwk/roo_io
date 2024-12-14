@@ -9,7 +9,7 @@
 namespace roo_io {
 
 template <typename PtrType>
-class MemoryResource : public Resource {
+class MemoryResource : public MultipassResource {
  public:
   MemoryResource(PtrType begin, PtrType end)
       : fs_(fs), path_(std::move(path)) {}
