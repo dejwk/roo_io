@@ -21,7 +21,19 @@ Mount Filesystem::mount() {
     return Mount(kGenericMountError);
   }
   mount_ = impl;
+  if (unmounting_policy_ == kLazyUnmount) {
+    lazy_unmount_ = impl;
+  }
   return Mount(impl);
+}
+
+void Filesystem::setUnmountingPolicy(UnmountingPolicy unmounting_policy) {
+  unmounting_policy_ = unmounting_policy;
+  if (unmounting_policy_ == kEagerUnmount) {
+    lazy_unmount_.reset();
+  } else {
+    lazy_unmount_ = mount_.lock();
+  }
 }
 
 const char* GetFileName(const char* path) {
