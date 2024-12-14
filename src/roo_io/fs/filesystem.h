@@ -27,6 +27,21 @@ class Filesystem {
     kMediaPresenceUnknown = 2
   };
 
+  // Decides the level of access allowed for new mounts. Does not affect
+  // existing mounts.
+  enum MountingPolicy {
+    // New mounts can both read and write (as long as the filesystem supports
+    // that).
+    kMountReadWrite,
+
+    // New mounts cannot write to the file system.
+    kMountReadOnly,
+
+    // New mounts are disallowed.
+    kMountDisabled,
+  };
+
+  // Decides how aggressive the filesystem gets unmounted when no longer used.
   enum UnmountingPolicy {
     // Unmount as soon as all mount objects go out of scope.
     kLazyUnmount = 0,
@@ -68,11 +83,20 @@ class Filesystem {
   // kMediaPresenceUnknown in such case.
   virtual MediaPresence checkMediaPresence() = 0;
 
-  // Returns the current value of unmounting policy.
+  // Returns the current value of the mounting policy.
+  MountingPolicy mountingPolicy() const { return mounting_policy_; }
+
+  // Sets the mounting policy, which decides what do to when `mount()` gets
+  // called.
+  void setMountingPolicy(MountingPolicy mounting_policy) {
+    mounting_policy_ = mounting_policy;
+  }
+
+  // Returns the current value of the unmounting policy.
   UnmountingPolicy unmountingPolicy() const { return unmounting_policy_; }
 
-  // Sets unmounting policy, to be applied when all mount objects go out of
-  // scope.
+  // Sets unmounting policy, which decides how aggressively to unmount the
+  // filesystem when it stops being used.
   //
   // If switching from lazy to eager, and no mount objects currently exist, the
   // filesystem gets unmounted. Otherwise, the call has no immediate effect.
@@ -82,12 +106,15 @@ class Filesystem {
   // immediately. The mounts will return 'kNotMounted' from any subsequent
   // calls.
   //
-  // Prefer relying on automount, rather than calling this method. This method
-  // is meant for use in special circumstances, such as forceful shutdown.
+  // New mounts can still be created, as long as the mounting policy allows it.
+  //
+  // Prefer relying on automount. This method is indended for use in special
+  // circumstances, such as forceful shutdown.
   void forceUnmount();
 
  protected:
-  Filesystem() : unmounting_policy_(kEagerUnmount) {}
+  Filesystem()
+      : mounting_policy_(kMountReadWrite), unmounting_policy_(kEagerUnmount) {}
 
   virtual MountImpl::MountResult mountImpl(
       std::function<void()> unmount_fn) = 0;
@@ -100,6 +127,7 @@ class Filesystem {
   // Used when unmounting_policy_ == kLazyUnmount, to keep the mount alive.
   std::shared_ptr<MountImpl> lazy_unmount_;
 
+  MountingPolicy mounting_policy_;
   UnmountingPolicy unmounting_policy_;
 };
 

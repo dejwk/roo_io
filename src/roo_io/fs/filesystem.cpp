@@ -3,9 +3,14 @@
 namespace roo_io {
 
 Mount Filesystem::mount() {
+  MountingPolicy policy = mountingPolicy();
+  if (policy == kMountDisabled) {
+    return Mount(kNotMounted);
+  }
+  bool read_only = (policy == kMountReadOnly);
   std::shared_ptr<MountImpl> existing = mount_.lock();
   if (existing != nullptr) {
-    return Mount(existing);
+    return Mount(existing, read_only);
   }
   MountImpl::MountResult mount_result = mountImpl([this]() { unmountImpl(); });
   if (mount_result.status != kOk) {
@@ -24,7 +29,7 @@ Mount Filesystem::mount() {
   if (unmounting_policy_ == kLazyUnmount) {
     lazy_unmount_ = impl;
   }
-  return Mount(impl);
+  return Mount(impl, read_only);
 }
 
 void Filesystem::setUnmountingPolicy(UnmountingPolicy unmounting_policy) {

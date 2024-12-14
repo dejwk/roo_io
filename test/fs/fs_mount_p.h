@@ -89,8 +89,60 @@ TYPED_TEST_P(FsMountTest, ForcedUnmount) {
   EXPECT_EQ(kNotMounted, m.mkdir("/foo"));
 }
 
+TYPED_TEST_P(FsMountTest, ReadWriteReadOnlyReadWrite) {
+  Filesystem& fs = this->fs();
+  Mount rw1 = fs.mount();
+  ASSERT_TRUE(rw1.ok());
+  EXPECT_TRUE(fs.isMounted());
+  EXPECT_TRUE(fs.isInUse());
+  EXPECT_FALSE(rw1.isReadOnly());
+  EXPECT_EQ(kOk, rw1.mkdir("/foo"));
+
+  fs.setMountingPolicy(Filesystem::kMountReadOnly);
+  Mount ro1 = fs.mount();
+  ASSERT_TRUE(ro1.ok());
+  EXPECT_TRUE(ro1.isReadOnly());
+  EXPECT_EQ(kReadOnlyFilesystem, ro1.mkdir("/bar"));
+
+  fs.setMountingPolicy(Filesystem::kMountReadWrite);
+  Mount rw2 = fs.mount();
+  ASSERT_TRUE(rw2.ok());
+  EXPECT_FALSE(rw2.isReadOnly());
+  EXPECT_EQ(kOk, rw2.mkdir("/baz"));
+
+  // Re-check that the ro is still read-only.
+  EXPECT_TRUE(ro1.isReadOnly());
+  EXPECT_EQ(kReadOnlyFilesystem, ro1.mkdir("/bar"));
+}
+
+TYPED_TEST_P(FsMountTest, ReadWriteDisabledReadOnly) {
+  Filesystem& fs = this->fs();
+  Mount rw1 = fs.mount();
+  ASSERT_TRUE(rw1.ok());
+  EXPECT_TRUE(fs.isMounted());
+  EXPECT_TRUE(fs.isInUse());
+  EXPECT_FALSE(rw1.isReadOnly());
+  EXPECT_EQ(kOk, rw1.mkdir("/foo"));
+
+  fs.setMountingPolicy(Filesystem::kMountDisabled);
+  Mount disabled = fs.mount();
+  ASSERT_FALSE(disabled.ok());
+  EXPECT_EQ(kNotMounted, disabled.mkdir("/bar"));
+
+  fs.setMountingPolicy(Filesystem::kMountReadWrite);
+  Mount rw2 = fs.mount();
+  ASSERT_TRUE(rw2.ok());
+  EXPECT_FALSE(rw2.isReadOnly());
+  EXPECT_EQ(kOk, rw2.mkdir("/baz"));
+
+  // Re-check that the ro is still read-only.
+  EXPECT_EQ(kNotMounted, disabled.status());
+  EXPECT_EQ(kNotMounted, disabled.mkdir("/bar"));
+}
+
 REGISTER_TYPED_TEST_SUITE_P(FsMountTest, LazyMountEagerUnmount,
                             LazyMountLazyUnmount, UnmountPolicySwitched,
-                            ForcedUnmount);
+                            ForcedUnmount, ReadWriteReadOnlyReadWrite,
+                            ReadWriteDisabledReadOnly);
 
 }  // namespace roo_io

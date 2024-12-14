@@ -94,7 +94,9 @@ class Mount {
   // * a copy of mount.status() (e.g. kNotMounted, kNoMedia, etc.) if the mount
   //   is not healhty.
   Status remove(const char* path) {
-    return status_ != kOk ? status_ : mount_->remove(path);
+    return status_ != kOk ? status_
+           : read_only_   ? kReadOnlyFilesystem
+                          : mount_->remove(path);
   }
 
   // Renames or moves the specified file or directory.
@@ -118,7 +120,9 @@ class Mount {
   // * a copy of mount.status() (e.g. kNotMounted, kNoMedia, etc.) if the mount
   //   is not healhty.
   Status rename(const char* pathFrom, const char* pathTo) {
-    return status_ != kOk ? status_ : mount_->rename(pathFrom, pathTo);
+    return status_ != kOk ? status_
+           : read_only_   ? kReadOnlyFilesystem
+                          : mount_->rename(pathFrom, pathTo);
   }
 
   // Creates the specified directory. The parent sub-directory must already
@@ -140,7 +144,9 @@ class Mount {
   // * a copy of mount.status() (e.g. kNotMounted, kNoMedia, etc.) if the mount
   //   is not healhty.
   Status mkdir(const char* path) {
-    return status_ != kOk ? status_ : mount_->mkdir(path);
+    return status_ != kOk ? status_
+           : read_only_   ? kReadOnlyFilesystem
+                          : mount_->mkdir(path);
   }
 
   // Removes the specified empty directory.
@@ -161,7 +167,9 @@ class Mount {
   // * a copy of mount.status() (e.g. kNotMounted, kNoMedia, etc.) if the mount
   //   is not healhty.
   Status rmdir(const char* path) {
-    return status_ != kOk ? status_ : mount_->rmdir(path);
+    return status_ != kOk ? status_
+           : read_only_   ? kReadOnlyFilesystem
+                          : mount_->rmdir(path);
   }
 
   // Opens the specified directory for browsing.
@@ -228,6 +236,7 @@ class Mount {
   std::unique_ptr<OutputStream> fopenForWrite(const char* path,
                                               FileUpdatePolicy update_policy) {
     return status_ != kOk ? OutputError(status_)
+           : read_only_   ? OutputError(kReadOnlyFilesystem)
                           : mount_->fopenForWrite(path, update_policy);
   }
 
@@ -247,7 +256,9 @@ class Mount {
   friend class Filesystem;
 
   Mount(Status error) : mount_(nullptr), status_(error), read_only_(false) {}
-  Mount(std::shared_ptr<MountImpl> impl) : mount_(impl), status_(kOk) {}
+
+  Mount(std::shared_ptr<MountImpl> impl, bool read_only)
+      : mount_(impl), status_(kOk), read_only_(read_only) {}
 
   std::shared_ptr<MountImpl> mount_;
   mutable Status status_;
