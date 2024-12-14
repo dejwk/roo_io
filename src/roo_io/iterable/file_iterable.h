@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "roo_logging.h"
 #include "roo_io/fs/filesystem.h"
 #include "roo_io/iterator/buffered_input_stream_iterator.h"
 
@@ -13,11 +14,16 @@ class FileIterable {
   class FileIterator {
    public:
     FileIterator(Filesystem& fs, const char* path)
-        : mount_(fs.mount()), input_(mount_.fopen(path)), itr_(*input_) {}
+        : mount_(fs.mount()), input_(mount_.fopen(path)), itr_(*input_) {
+      if (!itr_.ok()) {
+        LOG(ERROR) << "Failed to open file " << path << ": "
+                   << StatusAsString(itr_.status());
+      }
+    }
 
     byte read() { return itr_.read(); }
 
-    int read(byte* buf, size_t count) { return itr_.read(buf, count); }
+    size_t read(byte* buf, size_t count) { return itr_.read(buf, count); }
 
     void skip(size_t count) { itr_.skip(count); }
 
