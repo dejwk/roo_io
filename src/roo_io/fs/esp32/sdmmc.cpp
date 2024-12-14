@@ -7,6 +7,7 @@
 #endif
 
 #if (defined(ESP32) || defined(ROO_TESTING))
+#if (CONFIG_IDF_TARGET_ESP32S3)
 
 #include "driver/sdmmc_host.h"
 // #include "driver/spi_common.h"
@@ -138,4 +139,5 @@ SdMmcFs SDMMC = CreateSdMmcFs();
 }  // namespace esp32
 }  // namespace roo_io
 
+#endif
 #endif
