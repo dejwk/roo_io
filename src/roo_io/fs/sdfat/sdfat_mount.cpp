@@ -8,7 +8,7 @@ namespace roo_io {
 
 SdFatMountImpl::SdFatMountImpl(SdFs& fs, bool read_only,
                                std::function<void()> unmount_fn)
-    : MountImpl(unmount_fn), fs_(fs), read_only_(read_only) {}
+    : MountImpl(unmount_fn), fs_(fs), active_(true), read_only_(read_only) {}
 
 bool SdFatMountImpl::isReadOnly() const { return read_only_; }
 
@@ -25,12 +25,13 @@ Status SdFatMountImpl::remove(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
+  if (read_only_) return kReadOnlyFilesystem;
   {
     FsFile f = fs_.open(path);
     if (!f) return kNotFound;
     if (!f.isFile()) return kNotFile;
   }
-  if (read_only_) return kReadOnlyFilesystem;
   return fs_.remove(path) ? kOk : kUnknownIOError;
 }
 
@@ -49,13 +50,14 @@ Status SdFatMountImpl::mkdir(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
+  if (read_only_) return kReadOnlyFilesystem;
   {
     FsFile f = fs_.open(path);
     if (f) {
       return f.isDirectory() ? kDirectoryExists : kFileExists;
     }
   }
-  if (read_only_) return kReadOnlyFilesystem;
   return fs_.mkdir(path) ? kOk : kUnknownIOError;
 }
 
@@ -63,11 +65,12 @@ Status SdFatMountImpl::rmdir(const char* path) {
   if (path == nullptr || path[0] != '/') {
     return kInvalidPath;
   }
+  if (!active_) return kNotMounted;
+  if (read_only_) return kReadOnlyFilesystem;
   {
     FsFile f = fs_.open(path);
     if (!f) return kNotFound;
     if (!f.isDirectory()) return kNotDirectory;
-    if (read_only_) return kReadOnlyFilesystem;
     if (fs_.rmdir(path)) return kOk;
 
     FsFile child;
@@ -81,6 +84,7 @@ Status SdFatMountImpl::rmdir(const char* path) {
 }
 
 std::unique_ptr<DirectoryImpl> SdFatMountImpl::opendir(const char* path) {
+  if (!active_) return DirectoryError(kNotMounted);
   FsFile f = fs_.open(path, O_RDONLY);
   if (!f) {
     if (!fs_.exists(path)) {
@@ -96,8 +100,8 @@ std::unique_ptr<DirectoryImpl> SdFatMountImpl::opendir(const char* path) {
       new SdFatDirectoryImpl(path, std::move(f), kOk));
 }
 
-std::unique_ptr<MultipassInputStream> SdFatMountImpl::fopen(
-    const char* path) {
+std::unique_ptr<MultipassInputStream> SdFatMountImpl::fopen(const char* path) {
+  if (!active_) return InputError(kNotMounted);
   FsFile f = fs_.open(path, O_RDONLY);
   if (!f.isOpen()) {
     if (!(fs_.exists(path))) {
@@ -112,6 +116,7 @@ std::unique_ptr<MultipassInputStream> SdFatMountImpl::fopen(
 
 std::unique_ptr<OutputStream> SdFatMountImpl::fopenForWrite(
     const char* path, FileUpdatePolicy update_policy) {
+  if (!active_) return OutputError(kNotMounted);
   if (read_only_) {
     return OutputError(kReadOnlyFilesystem);
   }

@@ -31,8 +31,13 @@ class SdFatMountImpl : public MountImpl {
   std::unique_ptr<OutputStream> fopenForWrite(
       const char* path, FileUpdatePolicy update_policy) override;
 
+  bool active() const { return active_; }
+
+  void deactivate() { active_ = false; }
+
  private:
   SdFs& fs_;
+  bool active_;
   bool read_only_;
 };
 
