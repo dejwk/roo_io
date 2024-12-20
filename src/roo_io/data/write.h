@@ -13,55 +13,55 @@ namespace roo_io {
 // Writes an unsigned 8-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteU8(OutputIterator& out, uint8_t v) {
-  out.write(byte{v >> 0});
+  out.write((byte)(v >> 0));
 }
 
 // Writes a big-endian unsigned 16-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteBeU16(OutputIterator& out, uint16_t v) {
-  out.write(byte{v >> 8});
-  out.write(byte{v >> 0});
+  out.write((byte)(v >> 8));
+  out.write((byte)(v >> 0));
 }
 
 // Writes a little-endian unsigned 16-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteLeU16(OutputIterator& out, uint16_t v) {
-  out.write(byte{v >> 0});
-  out.write(byte{v >> 8});
+  out.write((byte)(v >> 0));
+  out.write((byte)(v >> 8));
 }
 
 // Writes a big-endian unsigned 24-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteBeU24(OutputIterator& out, uint32_t v) {
-  out.write(byte{v >> 16});
-  out.write(byte{v >> 8});
-  out.write(byte{v >> 0});
+  out.write((byte)(v >> 16));
+  out.write((byte)(v >> 8));
+  out.write((byte)(v >> 0));
 }
 
 // Writes a little-endian unsigned 24-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteLeU24(OutputIterator& out, uint32_t v) {
-  out.write(byte{v >> 0});
-  out.write(byte{v >> 8});
-  out.write(byte{v >> 16});
+  out.write((byte)(v >> 0));
+  out.write((byte)(v >> 8));
+  out.write((byte)(v >> 16));
 }
 
 // Writes a big-endian unsigned 32-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteBeU32(OutputIterator& out, uint32_t v) {
-  out.write(byte{v >> 24});
-  out.write(byte{v >> 16});
-  out.write(byte{v >> 8});
-  out.write(byte{v >> 0});
+  out.write((byte)(v >> 24));
+  out.write((byte)(v >> 16));
+  out.write((byte)(v >> 8));
+  out.write((byte)(v >> 0));
 }
 
 // Writes a little-endian unsigned 32-bit int to the specified iterator.
 template <typename OutputIterator>
 constexpr void WriteLeU32(OutputIterator& out, uint32_t v) {
-  out.write(byte{v >> 0});
-  out.write(byte{v >> 8});
-  out.write(byte{v >> 16});
-  out.write(byte{v >> 24});
+  out.write((byte)(v >> 0));
+  out.write((byte)(v >> 8));
+  out.write((byte)(v >> 16));
+  out.write((byte)(v >> 24));
 }
 
 // Writes a big-endian unsigned 64-bit int to the specified iterator.
@@ -159,13 +159,13 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   byte buffer[10];
   if (data <= 0x7F) {
     // Fast-path and special-case for single-byte data.
-    out.write(byte{data});
+    out.write((byte)data);
     return;
   }
 
   size_t size = 0;
   while (data > 0) {
-    buffer[size++] = (byte{data} & byte{0x7F}) | byte{0x80};
+    buffer[size++] = ((byte)data & byte{0x7F}) | byte{0x80};
     data >>= 7;
   }
   buffer[size - 1] &= byte{0x7F};
