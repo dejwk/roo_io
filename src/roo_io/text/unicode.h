@@ -5,7 +5,7 @@
 #include "roo_io/base/byte.h"
 #include "roo_io/base/string_view.h"
 #include "roo_io/data/read.h"
-#include "roo_io/iterator/input_iterator.h"
+#include "roo_io/core/input_iterator.h"
 #include "roo_io/third_party/u8c.h"
 
 namespace roo_io {

@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/stream/output_stream.h"
+#include "roo_io/core/output_stream.h"
 
 namespace roo_io {
 

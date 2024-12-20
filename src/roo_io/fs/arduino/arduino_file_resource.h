@@ -4,8 +4,8 @@
 
 #include <memory>
 
+#include "roo_io/core/resource.h"
 #include "roo_io/fs/arduino/arduino_file_input_stream.h"
-#include "roo_io/resource/resource.h"
 
 namespace roo_io {
 

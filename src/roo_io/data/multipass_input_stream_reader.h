@@ -2,10 +2,10 @@
 
 #include <memory>
 
+#include "roo_io/core/buffered_multipass_input_stream_iterator.h"
+#include "roo_io/core/multipass_input_stream.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/data/read.h"
-#include "roo_io/iterator/buffered_multipass_input_stream_iterator.h"
-#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 
@@ -15,7 +15,8 @@ class MultipassInputStreamReader {
 
   MultipassInputStreamReader(MultipassInputStreamReader&& other) = default;
 
-  MultipassInputStreamReader& operator=(MultipassInputStreamReader&& other) = default;
+  MultipassInputStreamReader& operator=(MultipassInputStreamReader&& other) =
+      default;
 
   MultipassInputStreamReader(std::unique_ptr<roo_io::MultipassInputStream> is)
       : is_(std::move(is)), in_(*is_) {}
@@ -39,24 +40,16 @@ class MultipassInputStreamReader {
     in_.reset();
   }
 
-  bool isOpen() const {
-    return in_.ok() || in_.eos();
-  }
+  bool isOpen() const { return in_.ok() || in_.eos(); }
 
-  bool ok() const {
-    return in_.ok();
-  }
+  bool ok() const { return in_.ok(); }
 
   uint64_t size() const { return in_.size(); }
   uint64_t position() const { return in_.position(); }
 
-  void rewind() {
-    in_.rewind();
-  }
+  void rewind() { in_.rewind(); }
 
-  void seek(uint64_t position) {
-    in_.seek(position);
-  }
+  void seek(uint64_t position) { in_.seek(position); }
 
   byte read() { return in_.read(); }
 

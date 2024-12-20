@@ -3,8 +3,8 @@
 #include <string>
 
 #include "roo_io/base/string_view.h"
+#include "roo_io/core/output_iterator.h"
 #include "roo_io/data/byte_order.h"
-#include "roo_io/iterator/output_iterator.h"
 
 namespace roo_io {
 

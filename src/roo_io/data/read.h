@@ -3,9 +3,9 @@
 #include <type_traits>
 
 #include "roo_io/base/string_view.h"
+#include "roo_io/core/input_iterator.h"
 #include "roo_io/data/byte_order.h"
-#include "roo_io/iterator/input_iterator.h"
-#include "roo_io/iterator/memory_input_iterator.h"
+#include "roo_io/memory/memory_input_iterator.h"
 
 namespace roo_io {
 

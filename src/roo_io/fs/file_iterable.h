@@ -3,9 +3,9 @@
 #include <memory>
 #include <string>
 
-#include "roo_logging.h"
+#include "roo_io/core/buffered_input_stream_iterator.h"
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/iterator/buffered_input_stream_iterator.h"
+#include "roo_logging.h"
 
 namespace roo_io {
 

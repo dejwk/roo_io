@@ -4,10 +4,9 @@
 
 #include <functional>
 
+#include "roo_io/core/multipass_input_stream.h"
 #include "roo_io/fs/arduino/arduino_directory.h"
-#include "roo_io/fs/arduino/arduino_file.h"
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/stream/multipass_input_stream.h"
 
 namespace roo_io {
 

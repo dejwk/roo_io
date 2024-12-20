@@ -4,7 +4,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "roo_io/iterator/memory_output_iterator.h"
+#include "roo_io/memory/memory_output_iterator.h"
 
 using testing::ElementsAre;
 

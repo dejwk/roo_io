@@ -2,10 +2,10 @@
 
 #include <memory>
 
+#include "roo_io/core/buffered_input_stream_iterator.h"
+#include "roo_io/core/input_stream.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/data/read.h"
-#include "roo_io/iterator/buffered_input_stream_iterator.h"
-#include "roo_io/stream/input_stream.h"
 
 namespace roo_io {
 

@@ -3,7 +3,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "roo_io/data/read.h"
-#include "roo_io/stream/memory_input_stream.h"
+#include "roo_io/memory/memory_input_stream.h"
 
 using testing::ElementsAre;
 

@@ -5,8 +5,8 @@
 #include "roo_io/fs/directory.h"
 #include "roo_io/fs/mount_impl.h"
 #include "roo_io/fs/stat.h"
-#include "roo_io/stream/multipass_input_stream.h"
-#include "roo_io/stream/output_stream.h"
+#include "roo_io/core/multipass_input_stream.h"
+#include "roo_io/core/output_stream.h"
 
 namespace roo_io {
 

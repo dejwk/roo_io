@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#include "roo_io/iterator/input_iterator.h"
+#include "roo_io/core/input_iterator.h"
 
 namespace roo_io {
 

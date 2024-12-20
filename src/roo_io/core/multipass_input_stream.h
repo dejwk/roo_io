@@ -2,7 +2,7 @@
 
 #include <inttypes.h>
 
-#include "roo_io/stream/input_stream.h"
+#include "roo_io/core/input_stream.h"
 
 namespace roo_io {
 

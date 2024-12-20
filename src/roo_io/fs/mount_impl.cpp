@@ -1,7 +1,7 @@
 #include "roo_io/fs/mount_impl.h"
 
-#include "roo_io/stream/null_input_stream.h"
-#include "roo_io/stream/null_output_stream.h"
+#include "roo_io/core/null_input_stream.h"
+#include "roo_io/core/null_output_stream.h"
 
 namespace roo_io {
 

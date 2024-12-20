@@ -2,7 +2,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "roo_io/iterator/memory_input_iterator.h"
+#include "roo_io/memory/memory_input_iterator.h"
 
 using testing::ElementsAre;
 

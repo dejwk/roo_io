@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "roo_io/iterator/output_iterator.h"
+#include "roo_io/core/output_iterator.h"
 
 namespace roo_io {
 

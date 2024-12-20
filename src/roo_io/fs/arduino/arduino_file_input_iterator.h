@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "roo_io/base/byte.h"
-#include "roo_io/iterator/input_iterator.h"
+#include "roo_io/core/input_iterator.h"
 #include "roo_io/status.h"
 
 namespace roo_io {

@@ -3,8 +3,8 @@
 #include <cstring>
 #include <memory>
 
-#include "roo_io/iterator/output_iterator.h"
-#include "roo_io/stream/output_stream.h"
+#include "roo_io/core/output_iterator.h"
+#include "roo_io/core/output_stream.h"
 
 namespace roo_io {
 

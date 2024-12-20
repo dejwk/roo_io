@@ -46,6 +46,10 @@ SdSpiFs::SdSpiFs() : SdSpiFs(18, 19, 23, -1, HSPI_HOST) {}
 
 SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, HSPI_HOST) {}
 
+#elif CONFIG_IDF_TARGET_ESP32C3
+
+SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, SPI2_HOST) {}
+
 #else
 
 SdSpiFs::SdSpiFs() : SdSpiFs(36, 37, 35, -1, SPI3_HOST) {}

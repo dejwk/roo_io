@@ -1,6 +1,7 @@
 #pragma once
 
-#include "roo_io/stream/output_stream.h"
+#include "roo_io/base/byte.h"
+#include "roo_io/core/output_stream.h"
 
 namespace roo_io {
 

@@ -1,10 +1,10 @@
-#include "roo_io/iterator/buffered_output_stream_iterator.h"
+#include "roo_io/core/buffered_output_stream_iterator.h"
 
 #include <memory>
 
 #include "gtest/gtest.h"
 #include "output_iterator_p.h"
-#include "roo_io/stream/memory_output_stream.h"
+#include "roo_io/memory/memory_output_stream.h"
 
 namespace roo_io {
 
@@ -23,8 +23,7 @@ class BufferedOutputStreamIteratorFixture {
   }
 
   std::string getResultAsString() const {
-    return std::string((const char*)contents_.get(),
-                       (const char*)os_->ptr());
+    return std::string((const char*)contents_.get(), (const char*)os_->ptr());
   }
 
   static constexpr bool strict = true;

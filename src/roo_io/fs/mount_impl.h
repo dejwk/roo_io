@@ -3,12 +3,12 @@
 #include <functional>
 #include <memory>
 
+#include "roo_io/core/multipass_input_stream.h"
+#include "roo_io/core/output_stream.h"
 #include "roo_io/fs/directory_impl.h"
 #include "roo_io/fs/file_update_policy.h"
 #include "roo_io/fs/stat.h"
 #include "roo_io/status.h"
-#include "roo_io/stream/multipass_input_stream.h"
-#include "roo_io/stream/output_stream.h"
 
 namespace roo_io {
 

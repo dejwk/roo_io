@@ -1,4 +1,4 @@
-#include "roo_io/iterable/memory_iterable.h"
+#include "roo_io/memory/memory_iterable.h"
 
 #include "gtest/gtest.h"
 
