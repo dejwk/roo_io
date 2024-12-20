@@ -1,8 +1,8 @@
-#include "roo_io/fs/sdfat/sdfat_mount.h"
+#include "roo_io_sdfat/fs/sdfat_mount.h"
 
-#include "roo_io/fs/sdfat/sdfat_directory.h"
-#include "roo_io/fs/sdfat/sdfat_file_input_stream.h"
-#include "roo_io/fs/sdfat/sdfat_file_output_stream.h"
+#include "roo_io_sdfat/fs/sdfat_directory.h"
+#include "roo_io_sdfat/fs/sdfat_file_input_stream.h"
+#include "roo_io_sdfat/fs/sdfat_file_output_stream.h"
 
 namespace roo_io {
 

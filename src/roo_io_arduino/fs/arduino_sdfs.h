@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "roo_io/fs/arduino/arduino_mount.h"
+#include "roo_io_arduino/fs/arduino_mount.h"
 
 namespace roo_io {
 

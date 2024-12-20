@@ -1,7 +1,7 @@
-#include "roo_io/fs/arduino/arduino_mount.h"
+#include "roo_io_arduino/fs/arduino_mount.h"
 
-#include "roo_io/fs/arduino/arduino_file_input_stream.h"
-#include "roo_io/fs/arduino/arduino_file_output_stream.h"
+#include "roo_io_arduino/fs/arduino_file_input_stream.h"
+#include "roo_io_arduino/fs/arduino_file_output_stream.h"
 
 namespace roo_io {
 

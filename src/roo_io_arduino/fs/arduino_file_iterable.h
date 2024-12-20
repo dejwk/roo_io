@@ -5,7 +5,7 @@
 #include <memory>
 
 #include "roo_io/core/resource.h"
-#include "roo_io/fs/arduino/arduino_file_input_iterator.h"
+#include "roo_io_arduino/fs/arduino_file_input_iterator.h"
 
 namespace roo_io {
 

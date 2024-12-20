@@ -10,7 +10,7 @@
 #include "fakefs.h"
 #include "gtest/gtest.h"
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/fs/arduino/arduino_mount.h"
+#include "roo_io_arduino/fs/arduino_mount.h"
 
 namespace roo_io {
 namespace fakefs {

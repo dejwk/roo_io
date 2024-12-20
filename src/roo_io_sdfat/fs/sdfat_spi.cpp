@@ -1,6 +1,6 @@
-#include "roo_io/fs/sdfat/sdfat_spi.h"
+#include "roo_io_sdfat/fs/sdfat_spi.h"
 
-#include "roo_io/fs/sdfat/sdfat_mount.h"
+#include "roo_io_sdfat/fs/sdfat_mount.h"
 
 #ifdef ROO_TESTING
 #include <string>

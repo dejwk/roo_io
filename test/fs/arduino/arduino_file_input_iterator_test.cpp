@@ -1,4 +1,4 @@
-#include "roo_io/fs/arduino/arduino_file_input_iterator.h"
+#include "roo_io_arduino/fs/arduino_file_input_iterator.h"
 
 #include "fakefs.h"
 #include "fakefs_arduino.h"
@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 #include "input_iterator_p.h"
 #include "multipass_input_iterator_p.h"
-#include "roo_io/fs/arduino/arduino_sdfs.h"
+#include "roo_io_arduino/fs/arduino_sdfs.h"
 
 namespace roo_io {
 

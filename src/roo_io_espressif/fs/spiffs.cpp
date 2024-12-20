@@ -1,4 +1,4 @@
-#include "roo_io/fs/esp32/spiffs.h"
+#include "roo_io_espressif/fs/spiffs.h"
 
 #if defined(ROO_TESTING)
 
