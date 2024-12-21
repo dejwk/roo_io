@@ -4,8 +4,8 @@
 
 #include "roo_io/base/byte.h"
 #include "roo_io/base/string_view.h"
-#include "roo_io/data/read.h"
 #include "roo_io/core/input_iterator.h"
+#include "roo_io/data/read.h"
 #include "roo_io/third_party/u8c.h"
 
 namespace roo_io {
@@ -117,6 +117,10 @@ inline int WriteUtf8Char(byte *buf, char32_t ch) {
   ch >>= 6;
   buf[0] = (byte)(ch | 0xF0);
   return 4;
+}
+
+inline int WriteUtf8Char(char *buf, char32_t ch) {
+  return WriteUtf8Char((byte *)buf, ch);
 }
 
 }  // namespace roo_io
