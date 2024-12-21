@@ -1,6 +1,6 @@
 {
-    "name": "roo_display",
-    "description": "Arduino-compliant unified I/O library.",
+    "name": "roo_io",
+    "description": "Unified I/O library for microcontrollers. Standard C++. On ESP32, works with Arduino as well as esp-idf.",
     "keywords": [
     ],
     "authors": [
@@ -16,9 +16,6 @@
     },
     "version": "1.0.0",
     "homepage": "https://github.com/dejwk/roo_io",
-    "frameworks": [
-        "Arduino"
-    ],
     "build": {
         "srcDir": "src",
         "srcFilter": "+<*> -<examples> -<benchmarks> -<doc> -<test>"
@@ -27,8 +24,6 @@
         "examples/**/*.ino"
     ],
     "dependencies": {
-        "FS": ">0",
-        "greiman/SdFat": ">0",
         "dejwk/roo_logging": ">0"
     }
 }
