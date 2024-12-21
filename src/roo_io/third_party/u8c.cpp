@@ -68,87 +68,86 @@ size_t u8next_(const char *start, const char* end, char32_t &val)
   size_t len = 0;
   const unsigned char *s = (const unsigned char *)start;
   const unsigned char *e = (const unsigned char *)end;
+  if (s == e) return 0;
   char first = *s;
   
-  if (first) {
-    val = first;
-    fsm {
-      fsmSTATE(START) {
-        if (*s <  0x80) {              len = 1; fsmGOTO(end);     }
-        // if (*s == 0xC0) {              len = 2; fsmGOTO(null);    }
-        if (*s <= 0xC1) {                       fsmGOTO(invalid); }
-        if (*s <= 0xDF) { val &= 0x1F; len = 2; fsmGOTO(len2_0);  }
-        if (*s == 0xE0) { val &= 0x0F; len = 3; fsmGOTO(len3_0);  }
-        if (*s <= 0xEC) { val &= 0x0F; len = 3; fsmGOTO(len3_1);  }
-        if (*s == 0xED) { val &= 0x0F; len = 3; fsmGOTO(len3_2);  }
-        if (*s <= 0xEF) { val &= 0x0F; len = 3; fsmGOTO(len3_1);  }
-        if (*s == 0xF0) { val &= 0x07; len = 4; fsmGOTO(len4_0);  }
-        if (*s <= 0xF3) { val &= 0x07; len = 4; fsmGOTO(len4_1);  }
-        if (*s == 0xF4) { val &= 0x07; len = 4; fsmGOTO(len4_2);  }
-        fsmGOTO(invalid);
-      } 
-      
-      // fsmSTATE(null) {  // Modified UTF-8 encodes NULL (U+0000) to C0 80
-      //   val = 0;
-      //   s++; if (s == e || *s != 0x80) fsmGOTO(invalid);
-      //   fsmGOTO(end);
-      // }
-
-      fsmSTATE(len4_0) {
-        s++; if (s == e || *s < 0x90 || 0xBF < *s) fsmGOTO(invalid);
-        fsmGOTO(len4);
-      }
-      
-      fsmSTATE(len4_1) {
-        s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
-        fsmGOTO(len4);
-      }
-      
-      fsmSTATE(len4_2) {
-        s++; if (s == e || *s < 0x80 || 0x8F < *s) fsmGOTO(invalid);
-        fsmGOTO(len4);
-      }
-
-      fsmSTATE(len4) {
-        val = (val << 6) | (*s & 0x3F);
-        fsmGOTO(len3_1);
-      }
-      
-      fsmSTATE(len3_0) {
-        s++; if (s == e || *s < 0xA0 || 0xBF < *s) fsmGOTO(invalid);
-        fsmGOTO(len3);
-      }
-      
-      fsmSTATE(len3_1) {
-        s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
-        fsmGOTO(len3);
-      }
-  
-      fsmSTATE(len3_2) {
-        s++; if (s == e || *s < 0x80 || 0x9F < *s) fsmGOTO(invalid);
-        fsmGOTO(len3);
-      }
-      
-      fsmSTATE(len3) {
-        val = (val << 6) | (*s & 0x3F);
-        fsmGOTO(len2_0);
-      }
-
-      fsmSTATE(len2_0) {
-        s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
-        val = (val << 6) | (*s & 0x3F);
-        fsmGOTO(end);
-      }
-      
-      // Try rewinding one byte, but consume at least one.
-      fsmSTATE(invalid) {
-        size_t adv = s - (const unsigned char*)start;
-        len = (adv <= 1 ? 1 : adv);
-        val = 0xFFFD;
-      }
-
-      fsmSTATE(end)   { }
+  val = first;
+  fsm {
+    fsmSTATE(START) {
+      if (*s <  0x80) {              len = 1; fsmGOTO(end);     }
+      // if (*s == 0xC0) {              len = 2; fsmGOTO(null);    }
+      if (*s <= 0xC1) {                       fsmGOTO(invalid); }
+      if (*s <= 0xDF) { val &= 0x1F; len = 2; fsmGOTO(len2_0);  }
+      if (*s == 0xE0) { val &= 0x0F; len = 3; fsmGOTO(len3_0);  }
+      if (*s <= 0xEC) { val &= 0x0F; len = 3; fsmGOTO(len3_1);  }
+      if (*s == 0xED) { val &= 0x0F; len = 3; fsmGOTO(len3_2);  }
+      if (*s <= 0xEF) { val &= 0x0F; len = 3; fsmGOTO(len3_1);  }
+      if (*s == 0xF0) { val &= 0x07; len = 4; fsmGOTO(len4_0);  }
+      if (*s <= 0xF3) { val &= 0x07; len = 4; fsmGOTO(len4_1);  }
+      if (*s == 0xF4) { val &= 0x07; len = 4; fsmGOTO(len4_2);  }
+      fsmGOTO(invalid);
     }
+
+    // fsmSTATE(null) {  // Modified UTF-8 encodes NULL (U+0000) to C0 80
+    //   val = 0;
+    //   s++; if (s == e || *s != 0x80) fsmGOTO(invalid);
+    //   fsmGOTO(end);
+    // }
+
+    fsmSTATE(len4_0) {
+      s++; if (s == e || *s < 0x90 || 0xBF < *s) fsmGOTO(invalid);
+      fsmGOTO(len4);
+    }
+
+    fsmSTATE(len4_1) {
+      s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
+      fsmGOTO(len4);
+    }
+
+    fsmSTATE(len4_2) {
+      s++; if (s == e || *s < 0x80 || 0x8F < *s) fsmGOTO(invalid);
+      fsmGOTO(len4);
+    }
+
+    fsmSTATE(len4) {
+      val = (val << 6) | (*s & 0x3F);
+      fsmGOTO(len3_1);
+    }
+
+    fsmSTATE(len3_0) {
+      s++; if (s == e || *s < 0xA0 || 0xBF < *s) fsmGOTO(invalid);
+      fsmGOTO(len3);
+    }
+
+    fsmSTATE(len3_1) {
+      s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
+      fsmGOTO(len3);
+    }
+
+    fsmSTATE(len3_2) {
+      s++; if (s == e || *s < 0x80 || 0x9F < *s) fsmGOTO(invalid);
+      fsmGOTO(len3);
+    }
+
+    fsmSTATE(len3) {
+      val = (val << 6) | (*s & 0x3F);
+      fsmGOTO(len2_0);
+    }
+
+    fsmSTATE(len2_0) {
+      s++; if (s == e || *s < 0x80 || 0xBF < *s) fsmGOTO(invalid);
+      val = (val << 6) | (*s & 0x3F);
+      fsmGOTO(end);
+    }
+
+    // Try rewinding one byte, but consume at least one.
+    fsmSTATE(invalid) {
+      size_t adv = s - (const unsigned char*)start;
+      len = (adv <= 1 ? 1 : adv);
+      val = 0xFFFD;
+    }
+
+    fsmSTATE(end)   { }
   }
   return len;
 }
