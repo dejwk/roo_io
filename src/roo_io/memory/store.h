@@ -246,6 +246,16 @@ inline void StoreInteger<kBigEndian, uint8_t>(uint8_t v, byte* target) {
 }
 
 template <>
+inline void StoreInteger<kLittleEndian, uint8_t>(uint8_t v, byte* target) {
+  StoreU8(v, target);
+}
+
+template <>
+inline void StoreInteger<kBigEndian, int8_t>(int8_t v, byte* target) {
+  StoreS8(v, target);
+}
+
+template <>
 inline void StoreInteger<kLittleEndian, int8_t>(int8_t v, byte* target) {
   StoreS8(v, target);
 }
