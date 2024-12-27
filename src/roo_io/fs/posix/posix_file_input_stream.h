@@ -4,8 +4,8 @@
 #include <sys/errno.h>
 #include <sys/stat.h>
 
-#include "roo_io/fs/filesystem.h"
 #include "roo_io/core/multipass_input_stream.h"
+#include "roo_io/fs/filesystem.h"
 
 namespace roo_io {
 
@@ -13,8 +13,10 @@ class PosixFileInputStream : public MultipassInputStream {
  public:
   PosixFileInputStream(Status error) : file_(nullptr), status_(error) {}
 
-  PosixFileInputStream(FILE* file)
-      : file_(file), status_(file_ != nullptr ? kOk : kClosed) {}
+  PosixFileInputStream(std::shared_ptr<MountImpl> mount, FILE* file)
+      : mount_(std::move(mount)),
+        file_(file),
+        status_(file_ != nullptr ? kOk : kClosed) {}
 
   ~PosixFileInputStream() {
     if (file_ != nullptr) ::fclose(file_);
@@ -40,6 +42,7 @@ class PosixFileInputStream : public MultipassInputStream {
       status_ = kEndOfStream;
     } else {
       status_ = kUnknownIOError;
+      mount_.reset();
     }
     return 0;
   }
@@ -58,6 +61,7 @@ class PosixFileInputStream : public MultipassInputStream {
         break;
       default:
         status_ = kUnknownIOError;
+        mount_.reset();
         break;
     }
   }
@@ -73,9 +77,11 @@ class PosixFileInputStream : public MultipassInputStream {
       case EINVAL:
       case EOVERFLOW:
         status_ = kSeekError;
+        mount_.reset();
         break;
       default:
         status_ = kUnknownIOError;
+        mount_.reset();
         break;
     }
   }
@@ -87,6 +93,7 @@ class PosixFileInputStream : public MultipassInputStream {
     struct stat st;
     if (::fstat(fileno(file_), &st) != 0) {
       status_ = kUnknownIOError;
+      mount_.reset();
       return 0;
     }
     return st.st_size;
@@ -97,6 +104,7 @@ class PosixFileInputStream : public MultipassInputStream {
   }
 
   void close() override {
+    mount_.reset();
     if (status_ != kOk && status_ != kEndOfStream) return;
     if (::fclose(file_) == 0) {
       status_ = kClosed;
@@ -115,6 +123,7 @@ class PosixFileInputStream : public MultipassInputStream {
   Status status() const override { return status_; }
 
  private:
+  std::shared_ptr<MountImpl> mount_;
   FILE* file_;
   mutable Status status_;
 };

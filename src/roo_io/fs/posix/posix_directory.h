@@ -12,10 +12,12 @@ namespace roo_io {
 
 class PosixDirectoryImpl : public DirectoryImpl {
  public:
-  PosixDirectoryImpl(const char* path, DIR* dir, Status status)
-      : path_(path), dir_(dir), status_(status) {}
+  PosixDirectoryImpl(std::shared_ptr<MountImpl> mount, const char* path,
+                     DIR* dir, Status status)
+      : mount_(std::move(mount)), path_(path), dir_(dir), status_(status) {}
 
   bool close() override {
+    mount_.reset();
     if (dir_ == nullptr) return true;
     int result = ::closedir(dir_);
     if (status_ == kOk || status_ == kEndOfStream) {
@@ -54,6 +56,7 @@ class PosixDirectoryImpl : public DirectoryImpl {
   }
 
  private:
+  std::shared_ptr<MountImpl> mount_;
   DIR* dir_;
   Status status_;
   std::string path_;

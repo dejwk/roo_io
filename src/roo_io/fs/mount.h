@@ -2,11 +2,11 @@
 
 #include <memory>
 
+#include "roo_io/core/multipass_input_stream.h"
+#include "roo_io/core/output_stream.h"
 #include "roo_io/fs/directory.h"
 #include "roo_io/fs/mount_impl.h"
 #include "roo_io/fs/stat.h"
-#include "roo_io/core/multipass_input_stream.h"
-#include "roo_io/core/output_stream.h"
 
 namespace roo_io {
 
@@ -190,7 +190,7 @@ class Mount {
   //   is not healhty.
   Directory opendir(const char* path) {
     return status_ != kOk ? Directory(status_)
-                          : Directory(mount_->opendir(path));
+                          : Directory(mount_->opendir(mount_, path));
   }
 
   // Opens the specified file for reading.
@@ -210,7 +210,7 @@ class Mount {
   // * a copy of mount.status() (e.g. kNotMounted, kNoMedia, etc.) if the mount
   //   is not healhty.
   std::unique_ptr<MultipassInputStream> fopen(const char* path) {
-    return status_ != kOk ? InputError(status_) : mount_->fopen(path);
+    return status_ != kOk ? InputError(status_) : mount_->fopen(mount_, path);
   }
 
   // Opens the specified file for writing or appending to.
@@ -237,7 +237,7 @@ class Mount {
                                               FileUpdatePolicy update_policy) {
     return status_ != kOk ? OutputError(status_)
            : read_only_   ? OutputError(kReadOnlyFilesystem)
-                          : mount_->fopenForWrite(path, update_policy);
+                          : mount_->fopenForWrite(mount_, path, update_policy);
   }
 
   // Returns true if the mount is known to be read-only. (When returns false,

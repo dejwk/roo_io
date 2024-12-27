@@ -140,9 +140,75 @@ TYPED_TEST_P(FsMountTest, ReadWriteDisabledReadOnly) {
   EXPECT_EQ(kNotMounted, disabled.mkdir("/bar"));
 }
 
+TYPED_TEST_P(FsMountTest, DirectoryKeepsMountAlive) {
+  ASSERT_EQ(kOk, CreateTextFile(this->fake(), "/dir/foo.txt", "Foo"));
+  ASSERT_EQ(kOk, CreateTextFile(this->fake(), "/dir/bar.txt", "Bar"));
+  Filesystem& fs = this->fs();
+  Mount m = fs.mount();
+  ASSERT_TRUE(fs.isMounted());
+
+  auto dir = m.opendir("/dir");
+  ASSERT_EQ(kOk, dir.status());
+  m = Mount();
+  ASSERT_TRUE(fs.isMounted());
+  ASSERT_TRUE(dir.isOpen());
+  ASSERT_TRUE(dir.read());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  ASSERT_TRUE(dir.read());
+  EXPECT_STREQ("bar.txt", dir.entry().name());
+  ASSERT_FALSE(dir.read());
+  ASSERT_TRUE(fs.isMounted());
+  dir.rewind();
+  ASSERT_TRUE(dir.read());
+  EXPECT_STREQ("foo.txt", dir.entry().name());
+  ASSERT_TRUE(fs.isMounted());
+  dir.close();
+  EXPECT_FALSE(dir.isOpen());
+  EXPECT_EQ(kClosed, dir.status());
+  ASSERT_FALSE(fs.isMounted());
+}
+
+TYPED_TEST_P(FsMountTest, InputStreamKeepsMountAlive) {
+  ASSERT_EQ(kOk, CreateTextFile(this->fake(), "/foo.txt", "Foo"));
+  Filesystem& fs = this->fs();
+  Mount m = fs.mount();
+  ASSERT_TRUE(fs.isMounted());
+
+  auto in = m.fopen("/foo.txt");
+  ASSERT_EQ(kOk, in->status());
+  m = Mount();
+  ASSERT_TRUE(fs.isMounted());
+  char buf[4];
+  EXPECT_EQ(3, in->readFully((byte*)buf, 4));
+  EXPECT_THAT(std::vector<char>(buf, buf + 3),
+              testing::ElementsAre('F', 'o', 'o'));
+  EXPECT_TRUE(fs.isMounted());
+  in->close();
+  EXPECT_FALSE(fs.isMounted());
+}
+
+TYPED_TEST_P(FsMountTest, OutputStreamKeepsMountAlive) {
+  Filesystem& fs = this->fs();
+  Mount m = fs.mount();
+  ASSERT_TRUE(fs.isMounted());
+
+  auto out = m.fopenForWrite("/foo.txt", kTruncateIfExists);
+  ASSERT_EQ(kOk, out->status());
+  m = Mount();
+  ASSERT_TRUE(fs.isMounted());
+  ASSERT_EQ(4, out->writeFully((const byte*)"foo", 4));
+  ASSERT_EQ(kOk, out->status());
+  EXPECT_TRUE(fs.isMounted());
+  out->close();
+  EXPECT_FALSE(fs.isMounted());
+}
+
 REGISTER_TYPED_TEST_SUITE_P(FsMountTest, LazyMountEagerUnmount,
                             LazyMountLazyUnmount, UnmountPolicySwitched,
                             ForcedUnmount, ReadWriteReadOnlyReadWrite,
-                            ReadWriteDisabledReadOnly);
+                            ReadWriteDisabledReadOnly,
+                            InputStreamKeepsMountAlive,
+                            OutputStreamKeepsMountAlive,
+                            DirectoryKeepsMountAlive);
 
 }  // namespace roo_io

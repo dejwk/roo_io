@@ -5,8 +5,11 @@ namespace fakefs {
 
 class FakeDirectory : public DirectoryImpl {
  public:
-  FakeDirectory(std::string path, DirIterator itr)
-      : path_(std::move(path)), itr_(std::move(itr)) {}
+  FakeDirectory(std::shared_ptr<MountImpl> mount, std::string path,
+                DirIterator itr)
+      : mount_(std::move(mount)),
+        path_(std::move(path)),
+        itr_(std::move(itr)) {}
 
   const char* path() const override { return path_.c_str(); }
 
@@ -17,6 +20,7 @@ class FakeDirectory : public DirectoryImpl {
   }
 
   bool close() override {
+    mount_.reset();
     itr_.close();
     return true;
   }
@@ -35,6 +39,7 @@ class FakeDirectory : public DirectoryImpl {
   }
 
  private:
+  std::shared_ptr<MountImpl> mount_;
   std::string path_;
   DirIterator itr_;
   std::string entry_path_;
@@ -42,11 +47,15 @@ class FakeDirectory : public DirectoryImpl {
 
 class FakeInputStream : public MultipassInputStream {
  public:
-  FakeInputStream(FileStream f) : f_(std::move(f)) {}
+  FakeInputStream(std::shared_ptr<MountImpl> mount, FileStream f)
+      : mount_(std::move(mount)), f_(std::move(f)) {}
 
   bool isOpen() const override { return f_.isOpen(); }
 
-  void close() override { f_.close(); }
+  void close() override {
+    mount_.reset();
+    f_.close();
+  }
 
   size_t read(byte* result, size_t count) override {
     return f_.read(result, count);
@@ -63,22 +72,28 @@ class FakeInputStream : public MultipassInputStream {
   void seek(uint64_t position) override { f_.seek(position); }
 
  private:
+  std::shared_ptr<MountImpl> mount_;
   FileStream f_;
 };
 
 class FakeOutputStream : public OutputStream {
  public:
-  FakeOutputStream(FileStream f) : f_(std::move(f)) {}
+  FakeOutputStream(std::shared_ptr<MountImpl> mount, FileStream f)
+      : mount_(std::move(mount)), f_(std::move(f)) {}
 
   size_t write(const byte* buf, size_t count) override {
     return f_.write(buf, count);
   }
 
-  void close() override { f_.close(); }
+  void close() override {
+    mount_.reset();
+    f_.close();
+  }
 
   Status status() const override { return f_.status(); }
 
  private:
+  std::shared_ptr<MountImpl> mount_;
   FileStream f_;
 };
 
@@ -124,27 +139,30 @@ class FakeMount : public MountImpl {
     return fs_.rmdir(path);
   }
 
-  std::unique_ptr<DirectoryImpl> opendir(const char* path) override {
+  std::unique_ptr<DirectoryImpl> opendir(std::shared_ptr<MountImpl> mount,
+                                         const char* path) override {
     if (!active_) return DirectoryError(kNotMounted);
     DirIterator itr;
     Status status = fs_.opendir(path, itr);
     if (status != kOk) return DirectoryError(status);
     return std::unique_ptr<DirectoryImpl>(
-        new FakeDirectory(path, std::move(itr)));
+        new FakeDirectory(std::move(mount), path, std::move(itr)));
   }
 
-  std::unique_ptr<MultipassInputStream> fopen(const char* path) override {
+  std::unique_ptr<MultipassInputStream> fopen(std::shared_ptr<MountImpl> mount,
+                                              const char* path) override {
     if (!active_) return InputError(kNotMounted);
     FileStream f = fs_.open(path, FakeFs::kRead);
     if (!f.isOpen()) {
       return InputError(f.status());
     }
     return std::unique_ptr<MultipassInputStream>(
-        new FakeInputStream(std::move(f)));
+        new FakeInputStream(std::move(mount), std::move(f)));
   }
 
   std::unique_ptr<OutputStream> fopenForWrite(
-      const char* path, FileUpdatePolicy update_policy) override {
+      std::shared_ptr<MountImpl> mount, const char* path,
+      FileUpdatePolicy update_policy) override {
     int flags = FakeFs::kWrite;
     switch (update_policy) {
       case kAppendIfExists: {
@@ -164,7 +182,8 @@ class FakeMount : public MountImpl {
     if (!f.isOpen()) {
       return OutputError(f.status());
     }
-    return std::unique_ptr<OutputStream>(new FakeOutputStream(std::move(f)));
+    return std::unique_ptr<OutputStream>(
+        new FakeOutputStream(std::move(mount), std::move(f)));
   }
 
   bool active() const override { return active_; }

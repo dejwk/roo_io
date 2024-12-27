@@ -45,12 +45,15 @@ class MountImpl {
 
   virtual Status rmdir(const char* path) = 0;
 
-  virtual std::unique_ptr<DirectoryImpl> opendir(const char* path) = 0;
+  virtual std::unique_ptr<DirectoryImpl> opendir(
+      std::shared_ptr<MountImpl> mount, const char* path) = 0;
 
-  virtual std::unique_ptr<MultipassInputStream> fopen(const char* path) = 0;
+  virtual std::unique_ptr<MultipassInputStream> fopen(
+      std::shared_ptr<MountImpl> mount, const char* path) = 0;
 
   virtual std::unique_ptr<OutputStream> fopenForWrite(
-      const char* path, FileUpdatePolicy update_policy) = 0;
+      std::shared_ptr<MountImpl> mount, const char* path,
+      FileUpdatePolicy update_policy) = 0;
 
   virtual bool active() const = 0;
 

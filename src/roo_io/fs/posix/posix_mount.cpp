@@ -184,7 +184,8 @@ Status PosixMountImpl::rmdir(const char* path) {
   }
 }
 
-std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
+std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(
+    std::shared_ptr<MountImpl> mount, const char* path) {
   if (path == nullptr || path[0] != '/') {
     return DirectoryError(kInvalidPath);
   }
@@ -195,7 +196,7 @@ std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
   DIR* dir = ::opendir(full_path.get());
   if (dir != nullptr) {
     return std::unique_ptr<DirectoryImpl>(
-        new PosixDirectoryImpl(path, dir, kOk));
+        new PosixDirectoryImpl(std::move(mount), path, dir, kOk));
   }
   switch (errno) {
     case ENAMETOOLONG:
@@ -211,7 +212,8 @@ std::unique_ptr<DirectoryImpl> PosixMountImpl::opendir(const char* path) {
   }
 }
 
-std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(const char* path) {
+std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(
+    std::shared_ptr<MountImpl> mount, const char* path) {
   if (path == nullptr || path[0] != '/') {
     return InputError(kInvalidPath);
   }
@@ -220,7 +222,8 @@ std::unique_ptr<MultipassInputStream> PosixMountImpl::fopen(const char* path) {
   if (full_path.get() == nullptr) return InputError(kOutOfMemory);
   FILE* f = ::fopen(full_path.get(), "r");
   if (f != nullptr) {
-    return std::unique_ptr<MultipassInputStream>(new PosixFileInputStream(f));
+    return std::unique_ptr<MultipassInputStream>(
+        new PosixFileInputStream(std::move(mount), f));
   }
   switch (errno) {
     case ENAMETOOLONG:
@@ -251,7 +254,8 @@ const char* Policy2Mode(FileUpdatePolicy policy) {
 }  // namespace
 
 std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
-    const char* path, FileUpdatePolicy update_policy) {
+    std::shared_ptr<MountImpl> mount, const char* path,
+    FileUpdatePolicy update_policy) {
   if (path == nullptr || path[0] != '/') {
     return OutputError(kInvalidPath);
   }
@@ -263,7 +267,8 @@ std::unique_ptr<OutputStream> PosixMountImpl::fopenForWrite(
   if (full_path.get() == nullptr) return OutputError(kOutOfMemory);
   FILE* f = ::fopen(full_path.get(), Policy2Mode(update_policy));
   if (f != nullptr) {
-    return std::unique_ptr<OutputStream>(new PosixFileOutputStream(f));
+    return std::unique_ptr<OutputStream>(
+        new PosixFileOutputStream(std::move(mount), f));
   }
   switch (errno) {
     case ENAMETOOLONG:
