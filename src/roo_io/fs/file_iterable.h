@@ -14,7 +14,7 @@ class FileIterable {
   class FileIterator {
    public:
     FileIterator(Filesystem& fs, const char* path)
-        : mount_(fs.mount()), input_(mount_.fopen(path)), itr_(*input_) {
+        : input_(fs.mount().fopen(path)), itr_(*input_) {
       if (!itr_.ok()) {
         LOG(ERROR) << "Failed to open file " << path << ": "
                    << StatusAsString(itr_.status());
@@ -30,7 +30,6 @@ class FileIterable {
     Status status() const { return itr_.status(); }
 
    private:
-    Mount mount_;
     std::unique_ptr<MultipassInputStream> input_;
     BufferedInputStreamIterator itr_;
   };
