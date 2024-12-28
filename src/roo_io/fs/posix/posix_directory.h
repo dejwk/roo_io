@@ -13,18 +13,9 @@ namespace roo_io {
 class PosixDirectoryImpl : public DirectoryImpl {
  public:
   PosixDirectoryImpl(std::shared_ptr<MountImpl> mount, const char* path,
-                     DIR* dir, Status status)
-      : mount_(std::move(mount)), path_(path), dir_(dir), status_(status) {}
+                     DIR* dir, Status status);
 
-  bool close() override {
-    mount_.reset();
-    if (dir_ == nullptr) return true;
-    int result = ::closedir(dir_);
-    if (status_ == kOk || status_ == kEndOfStream) {
-      status_ = (result == 0 ? kClosed : kUnknownIOError);
-    }
-    return result == 0;
-  }
+  bool close() override;
 
   const char* path() const override { return path_.c_str(); }
 
@@ -32,28 +23,9 @@ class PosixDirectoryImpl : public DirectoryImpl {
 
   Status status() const override { return status_; }
 
-  void rewind() override {
-    if (status_ != kOk && status_ != kEndOfStream) return;
-    ::rewinddir(dir_);
-    status_ = kOk;
-    next_ = nullptr;
-  }
+  void rewind() override;
 
-  bool read(Directory::Entry& entry) override {
-    if (status_ != kOk) return false;
-    next_ = ::readdir(dir_);
-    if (next_ == nullptr) {
-      status_ = kEndOfStream;
-      return false;
-    }
-    file_ = path_;
-    if (file_.empty() || file_.back() != '/') {
-      file_ += '/';
-    }
-    file_.append(next_->d_name);
-    setEntry(entry, file_.c_str(), path_.size() + 1, next_->d_type == DT_DIR);
-    return true;
-  }
+  bool read(Directory::Entry& entry) override;
 
  private:
   std::shared_ptr<MountImpl> mount_;

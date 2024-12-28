@@ -11,57 +11,15 @@ namespace roo_io {
 
 class PosixFileOutputStream : public OutputStream {
  public:
-  PosixFileOutputStream(Status error)
-      : file_(nullptr), size_(-1), status_(error) {}
+  PosixFileOutputStream(Status error);
 
-  PosixFileOutputStream(std::shared_ptr<MountImpl> mount, FILE* file)
-      : mount_(std::move(mount)),
-        file_(file),
-        size_(-1),
-        status_(file_ != nullptr ? kOk : kClosed) {}
+  PosixFileOutputStream(std::shared_ptr<MountImpl> mount, FILE* file);
 
-  ~PosixFileOutputStream() { ::fclose(file_); }
+  ~PosixFileOutputStream();
 
-  size_t write(const byte* buf, size_t count) override {
-    if (status_ != kOk) return 0;
-    size_t result = ::fwrite(buf, 1, count, file_);
-    if (result == count) return result;
-    if (ferror(file_)) {
-      mount_.reset();
-      switch (errno) {
-        case ENOMEM: {
-          status_ = kOutOfMemory;
-          break;
-        }
-        case ENOSPC: {
-          status_ = kNoSpaceLeftOnDevice;
-          break;
-        }
-        default:
-          status_ = kUnknownIOError;
-          break;
-      }
-    } else {
-      status_ = kUnknownIOError;
-    }
-    return result;
-  }
+  size_t write(const byte* buf, size_t count) override;
 
-  void close() override {
-    mount_.reset();
-    if (status_ != kOk && status_ != kEndOfStream) return;
-    if (::fclose(file_) == 0) {
-      status_ = kClosed;
-      return;
-    }
-    switch (errno) {
-      case ENOSPC:
-        status_ = kNoSpaceLeftOnDevice;
-        break;
-      default:
-        status_ = kUnknownIOError;
-    }
-  }
+  void close() override;
 
   Status status() const override { return status_; }
 
