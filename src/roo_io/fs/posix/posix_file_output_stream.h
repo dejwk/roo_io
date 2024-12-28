@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdio.h>
-#include <sys/errno.h>
 #include <sys/stat.h>
 
 #include "roo_io/core/output_stream.h"

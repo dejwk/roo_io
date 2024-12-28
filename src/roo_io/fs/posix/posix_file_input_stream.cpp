@@ -1,6 +1,8 @@
 
 #include "roo_io/fs/posix/posix_file_input_stream.h"
 
+#include <sys/stat.h>
+
 namespace roo_io {
 
 PosixFileInputStream::PosixFileInputStream(Status error)

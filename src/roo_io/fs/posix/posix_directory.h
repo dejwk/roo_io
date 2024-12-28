@@ -29,11 +29,11 @@ class PosixDirectoryImpl : public DirectoryImpl {
 
  private:
   std::shared_ptr<MountImpl> mount_;
+  std::string path_;
   DIR* dir_;
   Status status_;
-  std::string path_;
-  std::string file_;
   struct dirent* next_;
+  std::string file_;
 };
 
 }  // namespace roo_io
