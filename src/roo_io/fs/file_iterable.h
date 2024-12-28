@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include "roo_io/core/buffered_input_stream_iterator.h"
+#include "roo_io/core/buffered_multipass_input_stream_iterator.h"
 #include "roo_io/fs/filesystem.h"
 #include "roo_logging.h"
 
@@ -29,9 +29,17 @@ class FileIterable {
 
     Status status() const { return itr_.status(); }
 
+    uint64_t size() { return itr_.size(); }
+
+    uint64_t position() { return itr_.position(); }
+
+    void rewind() { itr_.rewind(); }
+
+    void seek(uint64_t position) { itr_.seek(position); }
+
    private:
     std::unique_ptr<MultipassInputStream> input_;
-    BufferedInputStreamIterator itr_;
+    BufferedMultipassInputStreamIterator itr_;
   };
 
   FileIterable(Filesystem& fs, const char* path)
