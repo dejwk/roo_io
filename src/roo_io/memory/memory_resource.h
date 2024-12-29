@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 
-#include "roo_io/iterator/memory_input_iterator.h"
-#include "roo_io/resource/resource.h"
+#include "roo_io/memory/memory_input_stream.h"
+#include "roo_io/core/resource.h"
 
 namespace roo_io {
 
@@ -14,9 +14,9 @@ class MemoryResource : public MultipassResource {
   MemoryResource(PtrType begin, PtrType end)
       : fs_(fs), path_(std::move(path)) {}
 
-  std::unique_ptr<roo_io::RandomAccessInputStream> open() const override {
-    return std::unique_ptr<roo_io::RandomAccessInputStream>(
-        new SafeMemoryIterator<PtrType>(begin_, end_));
+  std::unique_ptr<roo_io::MultipassInputStream> open() const override {
+    return std::unique_ptr<roo_io::MultipassInputStream>(
+        new MemoryInputStream<PtrType>(begin_, end_));
   }
 
  private:
