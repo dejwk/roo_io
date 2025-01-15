@@ -52,35 +52,6 @@ namespace u8c {
 // size_t u8strlen(const char *s);
 size_t u8next_(const char *start, const char* end, char32_t& ch);
 
-// int u8encode_(int ch, char *s);
-
-// #define u8decode u8next
-
-// static inline int u8codepoint(char *s) {int c; (void)u8next_(s, &c); return c;}
-
-// #define u8next(...) u8next_(u8_exp(u8_1(__VA_ARGS__,NULL)), \
-//                             u8_exp(u8_2(__VA_ARGS__,NULL,NULL)))
-
-// #define u8encode(...) u8encode_(u8_exp(u8_1(__VA_ARGS__,0)), \
-//                                 u8_exp(u8_2(__VA_ARGS__,NULL,NULL)))
-
-// #define u8strchr(a,b)    strstr(a,b)
-// #define u8strcpy(a,b)    strcpy(a,b) 
-// #define u8strcat(a,b)    strcat(a,b)
-// #define u8strstr(a,b)    strstr(a,b)
-// #define u8strcmp(a,b)    strcmp(a,b)
-// #define u8strncmp(a,b,n) strncmp(a,b,n)
-
-// char *u8strncpy(char *dest, const char *src, size_t n);
-// char *u8strncat(char *dest, const char *src, size_t n);
-
-// int u8stricmp(char *s, char *t);
-
-// int u8fold(int cp);
-
-// /* **** DO NOT USE!! IT'S HERE FOR DEVELOPMENTE PURPOSE ONLY */
-// int u8next_FAST(const char *txt, int *ch);
-
 }  // namespace u8c
 
 #endif
