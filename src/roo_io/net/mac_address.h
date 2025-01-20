@@ -39,7 +39,7 @@ class MacAddress {
   void writeTo(byte* buf) const;
 
 #if (defined UINT8_MAX && __cplusplus >= 201703L)
-  void writeTo(uint8_t* buf) { writeTo((byte*)buf); }
+  void writeTo(uint8_t* buf) const { writeTo((byte*)buf); }
 #endif
 
   static MacAddress FromU64(uint64_t addr);
