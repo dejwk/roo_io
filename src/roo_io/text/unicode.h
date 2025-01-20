@@ -23,13 +23,13 @@ class Utf8Decoder {
 
   // Creates a decoder that will represent the specified byte array as Unicode
   // code points.
-  Utf8Decoder(const byte data[])
-      : Utf8Decoder(data, sizeof(data) / sizeof(byte)) {}
+  template <size_t N>
+  Utf8Decoder(const byte data[N]) : Utf8Decoder(data, N) {}
 
   // Creates a decoder that will represent the specified byte array as Unicode
   // code points.
-  Utf8Decoder(const char data[])
-      : Utf8Decoder((const byte *)data, sizeof(data) / sizeof(byte)) {}
+  template <size_t N>
+  Utf8Decoder(const char data[N]) : Utf8Decoder((const byte *)data, N) {}
 
   // Convenience constructor that reads the input from a specifed string.
   Utf8Decoder(string_view s) : Utf8Decoder((const byte *)s.data(), s.size()) {}
