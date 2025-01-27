@@ -1,13 +1,9 @@
 #pragma once
 
-#include <cstddef>
+#include "roo_backport/byte.h"
 
 namespace roo_io {
 
-#if __cplusplus >= 201703L
-using byte = std::byte;
-#else
-using byte = unsigned char;
-#endif
+using byte = roo::byte;
 
 }
