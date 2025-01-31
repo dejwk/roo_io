@@ -70,3 +70,14 @@ void WriteMacAddress(OutputIterator& itr, const MacAddress& addr) {
 roo_logging::Stream& operator<<(roo_logging::Stream& s, const MacAddress& addr);
 
 }  // namespace roo_io
+
+namespace std {
+
+template<>
+struct hash<roo_io::MacAddress> {
+  size_t operator()(const roo_io::MacAddress& addr) const {
+    return std::hash<uint64_t>()(addr.asU64());
+  }
+};
+
+}
