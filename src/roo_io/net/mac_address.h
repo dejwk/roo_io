@@ -42,7 +42,13 @@ class MacAddress {
   void writeTo(uint8_t* buf) const { writeTo((byte*)buf); }
 #endif
 
-  static MacAddress FromU64(uint64_t addr);
+  // Writes the address to buf, in the format "XX-XX-XX-XX-XX-XX".
+  // Buf must be 18+.
+  void writeStringTo(char* buf) const;
+
+  bool assignFromU64(uint64_t addr);
+
+  bool parseFrom(const char* rep);
 
  private:
   byte addr_[6];
