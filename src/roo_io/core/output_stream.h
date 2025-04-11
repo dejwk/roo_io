@@ -37,6 +37,10 @@ class OutputStream {
   // called.
   virtual size_t write(const byte* buf, size_t count) = 0;
 
+  virtual size_t tryWrite(const byte* buf, size_t count) {
+    return write(buf, count);
+  }
+
   // Attempts to write `count` bytes from the `buffer`. Updates `status()`.
   // Returns the number of bytes written, which must be `count` on success (i.e.
   // when `status()` returns `kOk`), and possibly zero on error.

@@ -13,9 +13,12 @@ class InputStream {
  public:
   virtual ~InputStream() { close(); }
 
-  virtual bool isOpen() const = 0;
+  virtual bool isOpen() const {
+    Status s = status();
+    return s == kOk || s == kEndOfStream;
+  }
 
-  virtual void close() {};
+  virtual void close() {}
 
   // Attempts to read up to `count` bytes, but at least one byte, into `result`,
   // and updates `status()`. Returns the number of bytes read, which must be
@@ -36,6 +39,10 @@ class InputStream {
   // This method may read fewer than count bytes, even if more are available in
   // the stream. If that's not what you want, see `readFully()`.
   virtual size_t read(byte* result, size_t count) = 0;
+
+  virtual size_t tryRead(byte* result, size_t count) {
+    return read(result, count);
+  }
 
   // Attempts to read `count` bytes into `result`, and updates `status()`.
   // Blocks if necessary.
@@ -65,7 +72,17 @@ class InputStream {
   //
   // In case of error, updates the status accordingly.
   //
-  virtual void skip(uint64_t count) = 0;
+  virtual void skip(uint64_t count) {
+    byte buf[64];
+    while (count >= 64) {
+      if (status() != kOk) return;
+      count -= read(buf, 64);
+    }
+    while (count > 0) {
+      if (status() != kOk) return;
+      count -= read(buf, count);
+    }
+  }
 
   // Returns the status of the most recent I/O operation.
   virtual Status status() const = 0;
