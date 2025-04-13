@@ -18,13 +18,19 @@ class StreamingRetransmitter {
                          unsigned int sendbuf_log2, unsigned int recvbuf_log2);
 
   size_t tryWrite(const roo::byte* buf, size_t count);
-
   size_t tryRead(roo::byte* buf, size_t count);
+
+  // Returns -1 if no data available to read immediately.
+  int peek();
 
   void flush();
 
   bool sendLoop();
   void recvLoop() { receiver_.tryReceive(); }
+
+  // The lower bound of bytes that are guaranteed to be writable without
+  // blocking.
+  size_t availableForWrite();
 
  private:
   class RingBuffer {

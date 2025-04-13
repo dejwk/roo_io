@@ -92,12 +92,33 @@ size_t StreamingRetransmitter::tryRead(roo::byte* buf, size_t count) {
   return total_read;
 }
 
+int StreamingRetransmitter::peek() {
+  if (current_in_buffer_ == nullptr) {
+    if (in_ring_.empty()) return -1;
+    current_in_buffer_ =
+        &(in_buffers_.get())[in_ring_.offset_for(in_ring_.start_pos())];
+    current_in_buffer_pos_ = 0;
+  }
+  if (current_in_buffer_->empty()) {
+    // Not received yet.
+    return -1;
+  }
+  CHECK_GT(current_in_buffer_->size(), current_in_buffer_pos_);
+  return current_in_buffer_->data()[current_in_buffer_pos_];
+}
+
 void StreamingRetransmitter::flush() {
   if (current_out_buffer_ != nullptr) {
     current_out_buffer_->finish();
     --available_tokens_;
     current_out_buffer_ = nullptr;
   }
+}
+
+size_t StreamingRetransmitter::availableForWrite() {
+  // In the extreme case, if flush is issued after every write, we might only
+  // fit one byte per slot.
+  return out_ring_.slotsFree();
 }
 
 bool StreamingRetransmitter::sendLoop() {
