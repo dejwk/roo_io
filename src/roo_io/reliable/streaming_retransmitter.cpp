@@ -2,6 +2,20 @@
 
 namespace roo_io {
 
+namespace {
+
+// Values are significant; must be 0-15, not change. They are used in the
+// communication protocol.
+enum PacketType { kDataPacket = 0, kAckPacket = 1, kFlowControlPacket = 2 };
+
+PacketType GetPacketType(uint16_t header) { return (PacketType)(header >> 12); }
+
+uint16_t FormatPacketHeader(uint16_t in, PacketType type) {
+  return in | (type << 12);
+}
+
+}  // namespace
+
 StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
                                                roo_io::PacketReceiver& receiver,
                                                unsigned int sendbuf_log2,
@@ -119,18 +133,28 @@ size_t StreamingRetransmitter::availableForWrite() {
   return out_ring_.slotsFree();
 }
 
+void StreamingRetransmitter::OutBuffer::reset(uint32_t seq_id) {
+  uint16_t header = FormatPacketHeader(seq_id & 0x0FFF, kDataPacket);
+  roo_io::StoreBeU16(header, payload_);
+  size_ = 0;
+  acked_ = false;
+  flushed_ = false;
+  finished_ = false;
+}
+
 bool StreamingRetransmitter::sendLoop() {
   // Send ack first, if needed.
   if (needs_ack_) {
     roo::byte buf[2];
-    uint16_t payload = (unack_seq_ & 0x0FFF) | 0x1000;
+    uint16_t payload = FormatPacketHeader(unack_seq_ & 0x0FFF, kAckPacket);
     roo_io::StoreBeU16(payload, buf);
     sender_.send(buf, 2);
     needs_ack_ = false;
   }
   if (needs_token_send_) {
     roo::byte buf[2];
-    uint16_t payload = (in_ring_.slotsFree() & 0x0FFF) | 0x2000;
+    uint16_t payload =
+        FormatPacketHeader(in_ring_.slotsFree() & 0x0FFF, kFlowControlPacket);
     roo_io::StoreBeU16(payload, buf);
     sender_.send(buf, 2);
     needs_token_send_ = false;
@@ -166,54 +190,62 @@ bool StreamingRetransmitter::sendLoop() {
 
 void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
   uint16_t header = roo_io::LoadBeU16(buf);
-  if ((header & 0xF000) == 0x1000) {
-    // Ack received. Remove all buffers up to the acked position.
-    uint16_t truncated_seq_id = (header & 0x0FFF);
-    uint32_t seq_id = out_ring_.restorePosHighBits(truncated_seq_id, 12);
-    while ((int32_t)(seq_id - out_ring_.start_pos()) > 0) {
-      out_ring_.pop();
-    }
-    return;
-  }
-  if ((header & 0xF000) == 0x2000) {
-    // Update to available slots received.
-    uint16_t tokens = (header & 0x0FFF);
-    available_tokens_ = tokens;
-    return;
-  }
-  if ((header & 0xF000) != 0) {
-  }
-  uint16_t truncated_seq_id = (header & 0x0FFF);
-  uint32_t seq_id = in_ring_.restorePosHighBits(truncated_seq_id, 12);
-  if (!in_ring_.contains(seq_id)) {
-    if ((int32_t)(seq_id - in_ring_.start_pos()) < 0) {
-      // Retransmit of a package that we have acked before. (Maybe the ack was
-      // lost.) Ignoring, but re-triggering the ack.
-      needs_ack_ = true;
+  switch (GetPacketType(header)) {
+    case kAckPacket: {
+      // Ack received. Remove all buffers up to the acked position.
+      uint16_t truncated_seq_id = (header & 0x0FFF);
+      uint32_t seq_id = out_ring_.restorePosHighBits(truncated_seq_id, 12);
+      while ((int32_t)(seq_id - out_ring_.start_pos()) > 0) {
+        out_ring_.pop();
+      }
       return;
     }
-    // See if we can extend the buf to add the new packet.
-    size_t advance = seq_id - in_ring_.end_pos() + 1;
-    if (advance > in_ring_.slotsFree()) {
+    case kFlowControlPacket: {
+      // Update to available slots received.
+      uint16_t tokens = (header & 0x0FFF);
+      available_tokens_ = tokens;
       return;
     }
-    in_ring_.push(advance);
-    needs_token_send_ = true;
-    CHECK(in_ring_.contains(seq_id))
-        << seq_id << ", " << in_ring_.start_pos() << "--" << in_ring_.end_pos();
-  } else {
-  }
-  InBuffer& buffer = getInBuffer(seq_id);
-  if (!buffer.empty()) {
-    return;
-  }
-  buffer.set(buf + 2, len - 2);
-  if (seq_id == unack_seq_) {
-    // Update the unack seq.
-    needs_ack_ = true;
-    do {
-      ++unack_seq_;
-    } while (in_ring_.contains(unack_seq_) && !getInBuffer(unack_seq_).empty());
+    case kDataPacket: {
+      uint16_t truncated_seq_id = (header & 0x0FFF);
+      uint32_t seq_id = in_ring_.restorePosHighBits(truncated_seq_id, 12);
+      if (!in_ring_.contains(seq_id)) {
+        if ((int32_t)(seq_id - in_ring_.start_pos()) < 0) {
+          // Retransmit of a package that we have acked before. (Maybe the ack
+          // was lost.) Ignoring, but re-triggering the ack.
+          needs_ack_ = true;
+          return;
+        }
+        // See if we can extend the buf to add the new packet.
+        size_t advance = seq_id - in_ring_.end_pos() + 1;
+        if (advance > in_ring_.slotsFree()) {
+          return;
+        }
+        in_ring_.push(advance);
+        needs_token_send_ = true;
+        CHECK(in_ring_.contains(seq_id))
+            << seq_id << ", " << in_ring_.start_pos() << "--"
+            << in_ring_.end_pos();
+      } else {
+      }
+      InBuffer& buffer = getInBuffer(seq_id);
+      if (!buffer.empty()) {
+        return;
+      }
+      buffer.set(buf + 2, len - 2);
+      if (seq_id == unack_seq_) {
+        // Update the unack seq.
+        needs_ack_ = true;
+        do {
+          ++unack_seq_;
+        } while (in_ring_.contains(unack_seq_) &&
+                 !getInBuffer(unack_seq_).empty());
+      }
+      return;
+    }
+    default: {
+      // Unrecognized packet type; ignoreing.
+    }
   }
 }
 

@@ -103,14 +103,7 @@ class StreamingRetransmitter {
    public:
     OutBuffer() : size_(0), acked_(false), finished_(false) {}
 
-    void reset(uint32_t seq_id) {
-      uint16_t header = seq_id & 0x0FFF;
-      roo_io::StoreBeU16(header, payload_);
-      size_ = 0;
-      acked_ = false;
-      flushed_ = false;
-      finished_ = false;
-    }
+    void reset(uint32_t seq_id);
 
     bool flushed() const { return flushed_; }
     bool finished() const { return finished_; }
