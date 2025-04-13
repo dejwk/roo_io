@@ -109,9 +109,7 @@ int StreamingRetransmitter::peek() {
 
 void StreamingRetransmitter::flush() {
   if (current_out_buffer_ != nullptr) {
-    current_out_buffer_->finish();
-    --available_tokens_;
-    current_out_buffer_ = nullptr;
+    current_out_buffer_->flush();
   }
 }
 
@@ -151,10 +149,14 @@ bool StreamingRetransmitter::sendLoop() {
       ++next_to_send_;
       continue;
     }
-    if (!buf.finished()) {
+    if (!buf.flushed()) {
       return false;
     }
     // Found an outgoing packet to send.
+    if (!buf.finished()) {
+      buf.finish();
+      --available_tokens_;
+    }
     sender_.send(buf.data(), buf.size());
     ++next_to_send_;
     return true;

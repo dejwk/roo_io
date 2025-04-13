@@ -108,18 +108,21 @@ class StreamingRetransmitter {
       roo_io::StoreBeU16(header, payload_);
       size_ = 0;
       acked_ = false;
+      flushed_ = false;
       finished_ = false;
     }
 
+    bool flushed() const { return flushed_; }
     bool finished() const { return finished_; }
     bool acked() const { return acked_; }
 
     size_t write(const byte* buf, size_t count) {
-      CHECK(!finished_);
+      if (finished_) return 0;
       size_t capacity = 248 - size_;
       CHECK_GT(capacity, 0);
       if (count >= capacity) {
         count = capacity;
+        flushed_ = true;
         finished_ = true;
       }
       memcpy(payload_ + size_ + 2, buf, count);
@@ -127,6 +130,7 @@ class StreamingRetransmitter {
       return count;
     }
 
+    void flush() { flushed_ = true; }
     void finish() { finished_ = true; }
 
     void ack() { acked_ = true; }
@@ -137,6 +141,11 @@ class StreamingRetransmitter {
    private:
     uint8_t size_;
     bool acked_;
+    // Indicates that flush has been requested for this buffer, and therefore,
+    // the send loop should transmit it even if it has some more space left.
+    bool flushed_;
+    // Indicates that no more writes are permitted for this buffer, either
+    // because it is already full, or because it has already been transmitted.
     bool finished_;
     // Leave two front bytes for the header (incl. seq number).
     roo::byte payload_[250];
