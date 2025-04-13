@@ -9,6 +9,10 @@ namespace roo_io {
 
 // Virtualizes access to files, memory, or other sources. Represents an 'open'
 // resource with a 'file pointer'.
+//
+// Note: if you want to use a stream as an iterator, use
+// BufferedInputStreamIterator (to avoid the overhead of calling virtual
+// functions per byte).
 class InputStream {
  public:
   virtual ~InputStream() { close(); }
@@ -18,6 +22,10 @@ class InputStream {
     return s == kOk || s == kEndOfStream;
   }
 
+  // Closes this stream. If status was 'kOk' or 'kEndOfStream', sets it to
+  // 'kClosed'.
+  //
+  // After calling this method, read operations will always return zero.
   virtual void close() {}
 
   // Attempts to read up to `count` bytes, but at least one byte, into `result`,
@@ -40,6 +48,16 @@ class InputStream {
   // the stream. If that's not what you want, see `readFully()`.
   virtual size_t read(byte* result, size_t count) = 0;
 
+  // Attempts to read up to `count` bytes, into `result`, as long as it is
+  // possible without blocking indefinitely, and updates `status()`. Returns the
+  // number of bytes read.
+  //
+  // Similar to read(), except that it can return zero on success, in case there
+  // are no more bytes available to read without blocking.
+  //
+  // The implementation has some leeway in deciding what constitutes
+  // unacceptable blocking, as long as it is guaranteed that callers can always
+  // make progress by calling tryRead() repeatedly, and never calling read().
   virtual size_t tryRead(byte* result, size_t count) {
     return read(result, count);
   }

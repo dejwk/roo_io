@@ -8,6 +8,10 @@
 namespace roo_io {
 
 // Virtualizes access to files, memory, or other sources that can be written to.
+//
+// Note: if you want to use a stream as an iterator, use
+// BufferedOutputStreamIterator (to avoid the overhead of calling virtual
+// functions per byte).
 class OutputStream {
  public:
   virtual ~OutputStream() { close(); }
@@ -20,10 +24,10 @@ class OutputStream {
   // failure encountered.
   virtual void close() { flush(); }
 
-  // Attempts to write up to `count` bytes from the `buffer`. Updates
-  // `status()`. Returns the number of bytes written, which must be greater than
-  // zero on success (i.e. when `status()` returns `kOk`), and possibly zero on
-  // error.
+  // Attempts to write up to `count` bytes, but at least one byte, to the
+  // `buffer`. Updates `status()`. Returns the number of bytes written, which
+  // must be greater than zero on success (i.e. when `status()` returns `kOk`),
+  // and possibly zero on error.
   //
   // If the status is not `kOk` before the call, the call has no effect and
   // returns zero.
@@ -37,6 +41,16 @@ class OutputStream {
   // called.
   virtual size_t write(const byte* buf, size_t count) = 0;
 
+  // Attempts to write up to `count` bytes, to the `buffer`, as long as it is
+  // possible without blocking indefinitely, and updates `status()`. Returns the
+  // number of bytes written.
+  //
+  // Similar to write(), except that it can return zero on success, in case
+  // no more bytes can be written without blocking.
+  //
+  // The implementation has some leeway in deciding what constitutes
+  // unacceptable blocking, as long as it is guaranteed that callers can always
+  // make progress by calling tryWrite() repeatedly, and never calling write().
   virtual size_t tryWrite(const byte* buf, size_t count) {
     return write(buf, count);
   }

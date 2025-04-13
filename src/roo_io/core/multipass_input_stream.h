@@ -8,6 +8,10 @@ namespace roo_io {
 
 // Virtualizes access to files, memory, or other sources. Represents an 'open'
 // resource with a 'file pointer'.
+//
+// Note: if you want to use a stream as an iterator, use
+// BufferedMultipassInputStreamIterator (to avoid the overhead of calling
+// virtual functions per byte).
 class MultipassInputStream : public InputStream {
  public:
   // Returns the total number of bytes comprising the stream, counting from the
