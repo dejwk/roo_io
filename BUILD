@@ -3,6 +3,7 @@ cc_library(
     srcs = glob(
         [
             "src/**/*.cpp",
+            "src/**/*.c",
             "src/**/*.h",
         ],
         exclude = ["test/**"],
@@ -13,6 +14,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//lib/roo_backport",
+        "//lib/roo_collections",
         "//lib/roo_logging",
         "//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
         "//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
