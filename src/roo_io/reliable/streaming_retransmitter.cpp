@@ -6,7 +6,7 @@ namespace {
 
 // Values are significant; must be 0-15, not change. They are used in the
 // communication protocol.
-enum PacketType { kDataPacket = 0, kAckPacket = 1, kFlowControlPacket = 2 };
+enum PacketType { kDataPacket = 0, kDataAckPacket = 1, kFlowControlPacket = 2 };
 
 PacketType GetPacketType(uint16_t header) { return (PacketType)(header >> 12); }
 
@@ -146,7 +146,7 @@ bool StreamingRetransmitter::sendLoop() {
   // Send ack first, if needed.
   if (needs_ack_) {
     roo::byte buf[2];
-    uint16_t payload = FormatPacketHeader(unack_seq_ & 0x0FFF, kAckPacket);
+    uint16_t payload = FormatPacketHeader(unack_seq_ & 0x0FFF, kDataAckPacket);
     roo_io::StoreBeU16(payload, buf);
     sender_.send(buf, 2);
     needs_ack_ = false;
@@ -192,7 +192,7 @@ bool StreamingRetransmitter::sendLoop() {
 void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
   uint16_t header = roo_io::LoadBeU16(buf);
   switch (GetPacketType(header)) {
-    case kAckPacket: {
+    case kDataAckPacket: {
       // Ack received. Remove all buffers up to the acked position.
       uint16_t truncated_seq_id = (header & 0x0FFF);
       uint32_t seq_id = out_ring_.restorePosHighBits(truncated_seq_id, 12);
