@@ -186,6 +186,14 @@ void StreamingRetransmitter::OutBuffer::reset(uint32_t seq_id) {
   finished_ = false;
 }
 
+void StreamingRetransmitter::reset() {
+  receiver_connected_ = false;
+  sender_connected_ = false;
+  my_stream_id_ = 0;
+  peer_stream_id_ = 0;
+  while (my_stream_id_ == 0) my_stream_id_ = rand();
+}
+
 bool StreamingRetransmitter::sendLoop() {
   if (!sender_connected_) {
     needs_handshake_ack_ = true;
@@ -295,7 +303,7 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
         if (!in_ring_.empty()) {
           return;
         }
-        if (connection_cb_ != nullptr) {
+        if (peer_stream_id_ != 0 && connection_cb_ != nullptr) {
           connection_cb_();
         }
         in_ring_.reset(header & 0x0FFF);

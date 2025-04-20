@@ -40,6 +40,8 @@ class StreamingRetransmitter {
   uint32_t packets_delivered() const { return packets_delivered_; }
   uint32_t packets_received() const { return packets_received_; }
 
+  void reset();
+
  private:
   class RingBuffer {
    public:
