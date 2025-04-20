@@ -212,6 +212,12 @@ class StreamingRetransmitter {
 
   bool needs_token_send_;
 
+  // Random-generated; used in connect packets.
+  uint32_t my_stream_id_;
+
+  // As received from the peer in their connect packets.
+  uint32_t peer_stream_id_;
+
   // Indicates whether the peer acknowledged receipt of our stream ID and seq,
   // so that we can start sending messages to it.
   bool sender_connected_;

@@ -4,6 +4,9 @@ namespace roo_io {
 
 namespace {
 
+// Values are significant; must be 0-15, not change. They are used in the
+// communication protocol.
+//
 // Packet formats:
 // * data packet: 12 bits of header is the packet seq num; the rest is payload.
 // * ack packet: 12 bits of header is seq num just after all that the receiver
@@ -66,6 +69,8 @@ StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
       needs_ack_(false),
       unack_seq_(0),
       needs_token_send_(false),
+      my_stream_id_(0),
+      peer_stream_id_(0),
       sender_connected_(false),
       receiver_connected_(false),
       needs_handshake_ack_(false),
@@ -79,6 +84,7 @@ StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
   CHECK_LE(sendbuf_log2, recvbuf_log2);
   receiver.setReceiverFn(
       [this](const roo::byte* buf, size_t len) { packetReceived(buf, len); });
+  while (my_stream_id_ == 0) my_stream_id_ = rand();
 }
 
 size_t StreamingRetransmitter::tryWrite(const roo::byte* buf, size_t count) {
@@ -189,13 +195,18 @@ bool StreamingRetransmitter::sendLoop() {
         now + Backoff(successive_handshake_retries_++);
   }
   if (needs_handshake_ack_) {
-    if (successive_handshake_retries_ > 1) {
-      sender_connected_ = true;
-      receiver_connected_ = true;
-      needs_handshake_ack_ = false;
-    }
+    roo::byte buf[11];
+    uint16_t header =
+        FormatPacketHeader(out_ring_.start_pos() & 0x0FFF, kHandshakePacket);
+    roo_io::StoreBeU16(header, buf);
+    roo_io::StoreBeU32(my_stream_id_, buf + 2);
+    roo_io::StoreBeU32(peer_stream_id_, buf + 6);
+    roo_io::StoreU8(sender_connected_ ? 0x0 : 0xFF, buf + 10);
+    sender_.send(buf, 11);
+    needs_handshake_ack_ = false;
   }
   if (receiver_connected_) {
+    // Send ack first, if needed.
     if (needs_ack_) {
       roo::byte buf[2];
       uint16_t payload =
@@ -265,6 +276,39 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
       // Update to available slots received.
       uint16_t tokens = (header & 0x0FFF);
       available_tokens_ = tokens;
+      return;
+    }
+    case kHandshakePacket: {
+      if (len != 11) {
+        // Malformed packet.
+        return;
+      }
+      uint16_t peer_seq_num = header & 0x0FFF;
+      uint32_t peer_stream_id = roo_io::LoadBeU32(buf + 2);
+      uint32_t ack_stream_id = roo_io::LoadBeU32(buf + 6);
+      uint8_t want_ack = roo_io::LoadU8(buf + 10);
+      if (!receiver_connected_ || peer_stream_id != peer_stream_id_) {
+        // Interpret as a new request.
+        if (receiver_connected_) {
+          receiver_connected_ = false;
+        }
+        if (!in_ring_.empty()) {
+          return;
+        }
+        if (connection_cb_ != nullptr) {
+          connection_cb_();
+        }
+        in_ring_.reset(header & 0x0FFF);
+        receiver_connected_ = true;
+        peer_stream_id_ = peer_stream_id;
+        unack_seq_ = peer_seq_num;
+      } else {
+        // Need to re-ack.
+      }
+      if (ack_stream_id == my_stream_id_) {
+        sender_connected_ = true;
+      }
+      needs_handshake_ack_ = (want_ack != 0);
       return;
     }
     case kDataPacket: {
