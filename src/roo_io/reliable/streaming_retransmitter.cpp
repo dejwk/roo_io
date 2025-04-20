@@ -6,7 +6,7 @@ namespace {
 
 // Values are significant; must be 0-15, not change. They are used in the
 // communication protocol.
-enum PacketType { kDataPacket = 0, kDataAckPacket = 1, kFlowControlPacket = 2 };
+enum PacketType { kDataPacket = 0, kDataAckPacket = 1, kFlowControlPacket = 3 };
 
 PacketType GetPacketType(uint16_t header) { return (PacketType)(header >> 12); }
 
@@ -28,7 +28,6 @@ StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
       out_ring_(sendbuf_log2, 0),
       next_to_send_(out_ring_.start_pos()),
       available_tokens_(sendbuf_capacity_),
-
       recvbuf_capacity_(1 << recvbuf_log2),
       in_buffers_(new InBuffer[1 << recvbuf_log2]),
       current_in_buffer_(nullptr),
@@ -36,7 +35,10 @@ StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
       in_ring_(recvbuf_log2, 0),
       needs_ack_(false),
       unack_seq_(0),
-      needs_token_send_(false) {
+      needs_token_send_(false),
+      packets_sent_(0),
+      packets_delivered_(0),
+      packets_received_(0) {
   CHECK_LE(sendbuf_log2, 12);
   CHECK_LE(sendbuf_log2, recvbuf_log2);
   receiver.setReceiverFn(
@@ -184,6 +186,7 @@ bool StreamingRetransmitter::sendLoop() {
     }
     sender_.send(buf.data(), buf.size());
     ++next_to_send_;
+    ++packets_sent_;
     return true;
   }
   return false;
@@ -199,6 +202,7 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
       while ((int32_t)(seq_id - out_ring_.start_pos()) > 0 &&
              !out_ring_.empty()) {
         out_ring_.pop();
+        ++packets_delivered_;
       }
       return;
     }
@@ -239,6 +243,7 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
         needs_ack_ = true;
         do {
           ++unack_seq_;
+          ++packets_received_;
         } while (in_ring_.contains(unack_seq_) &&
                  !getInBuffer(unack_seq_).empty());
       }

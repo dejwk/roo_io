@@ -32,10 +32,14 @@ class StreamingRetransmitter {
   // blocking.
   size_t availableForWrite();
 
+  uint32_t packets_sent() const { return packets_sent_; }
+  uint32_t packets_delivered() const { return packets_delivered_; }
+  uint32_t packets_received() const { return packets_received_; }
+
  private:
   class RingBuffer {
    public:
-    RingBuffer(int capacity_log2, int initial_pos = 0)
+    RingBuffer(int capacity_log2, uint32_t initial_pos = 0)
         : capacity_log2_(capacity_log2),
           start_pos_(initial_pos),
           end_pos_(initial_pos) {
@@ -46,8 +50,8 @@ class StreamingRetransmitter {
 
     uint32_t slotsFree() const { return capacity() - slotsUsed(); }
 
-    uint32_t end_pos() const { return end_pos_; }
     uint32_t start_pos() const { return start_pos_; }
+    uint32_t end_pos() const { return end_pos_; }
 
     uint32_t push() {
       CHECK(slotsFree() > 0);
@@ -197,6 +201,10 @@ class StreamingRetransmitter {
   uint32_t unack_seq_;
 
   bool needs_token_send_;
+
+  uint32_t packets_sent_;
+  uint32_t packets_delivered_;
+  uint32_t packets_received_;
 };
 
 }  // namespace roo_io
