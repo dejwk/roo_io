@@ -50,10 +50,10 @@ size_t StreamingRetransmitter::tryWrite(const roo::byte* buf, size_t count) {
     if (current_out_buffer_ == nullptr) {
       if (available_tokens_ == 0) {
         // No more tokens.
-        return 0;
+        break;
       }
       if (out_ring_.slotsFree() == 0) {
-        return 0;
+        break;
       }
       uint32_t pos = out_ring_.push();
       current_out_buffer_ = &(out_buffers_.get())[out_ring_.offset_for(pos)];
@@ -118,7 +118,7 @@ int StreamingRetransmitter::peek() {
     return -1;
   }
   CHECK_GT(current_in_buffer_->size(), current_in_buffer_pos_);
-  return current_in_buffer_->data()[current_in_buffer_pos_];
+  return (int)current_in_buffer_->data()[current_in_buffer_pos_];
 }
 
 void StreamingRetransmitter::flush() {
@@ -166,6 +166,7 @@ bool StreamingRetransmitter::sendLoop() {
   // Skip all acked;
   if (!out_ring_.contains(next_to_send_)) {
     next_to_send_ = out_ring_.start_pos();
+    return true;
   }
   while (out_ring_.contains(next_to_send_)) {
     OutBuffer& buf = getOutBuffer(next_to_send_);
@@ -195,7 +196,8 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
       // Ack received. Remove all buffers up to the acked position.
       uint16_t truncated_seq_id = (header & 0x0FFF);
       uint32_t seq_id = out_ring_.restorePosHighBits(truncated_seq_id, 12);
-      while ((int32_t)(seq_id - out_ring_.start_pos()) > 0) {
+      while ((int32_t)(seq_id - out_ring_.start_pos()) > 0 &&
+             !out_ring_.empty()) {
         out_ring_.pop();
       }
       return;
@@ -226,7 +228,6 @@ void StreamingRetransmitter::packetReceived(const roo::byte* buf, size_t len) {
         CHECK(in_ring_.contains(seq_id))
             << seq_id << ", " << in_ring_.start_pos() << "--"
             << in_ring_.end_pos();
-      } else {
       }
       InBuffer& buffer = getInBuffer(seq_id);
       if (!buffer.empty()) {
