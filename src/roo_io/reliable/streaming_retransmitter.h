@@ -13,9 +13,13 @@ namespace roo_io {
 // packet-based transport. Used as a building block of ReliableSerial.
 class StreamingRetransmitter {
  public:
+  // Can be supplied to be notified when the peer reconnects.
+  using ConnectionCb = std::function<void()>;
+
   StreamingRetransmitter(roo_io::PacketSender& sender,
                          roo_io::PacketReceiver& receiver,
-                         unsigned int sendbuf_log2, unsigned int recvbuf_log2);
+                         unsigned int sendbuf_log2, unsigned int recvbuf_log2,
+                         ConnectionCb connection_cb = nullptr);
 
   size_t tryWrite(const roo::byte* buf, size_t count);
   size_t tryRead(roo::byte* buf, size_t count);
@@ -69,6 +73,12 @@ class StreamingRetransmitter {
     }
 
     bool empty() const { return slotsUsed() == 0; }
+
+    void reset(uint32_t pos) {
+      CHECK_EQ(start_pos_, end_pos_);
+      start_pos_ = pos;
+      end_pos_ = pos;
+    }
 
     // Need to handle wrap-around. But since capacity_log2_ <= 30, on overload,
     // the diffs are going to still be negative.
@@ -210,6 +220,15 @@ class StreamingRetransmitter {
   // receive messages from it.
   bool receiver_connected_;
 
+  // Indicates whether we're expected to send the handshake ack message.
+  bool needs_handshake_ack_;
+
+  // Used in the handshake backoff protocol.
+  uint32_t successive_handshake_retries_;
+
+  roo_time::Uptime next_scheduled_handshake_update_;
+
+  ConnectionCb connection_cb_;
   uint32_t packets_sent_;
   uint32_t packets_delivered_;
   uint32_t packets_received_;

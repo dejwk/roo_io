@@ -4,14 +4,43 @@ namespace roo_io {
 
 namespace {
 
-// Values are significant; must be 0-15, not change. They are used in the
-// communication protocol.
-enum PacketType { kDataPacket = 0, kDataAckPacket = 1, kFlowControlPacket = 3 };
-
+// Packet formats:
+// * data packet: 12 bits of header is the packet seq num; the rest is payload.
+// * ack packet: 12 bits of header is seq num just after all that the receiver
+//   has already seen;
+// * flow control packet: 12 bits of header is the maximum number of packets
+//   that the receiver still has place to buffer;
+// * connect packet:
+//   - 12 bits of header is the first seq num that the sender is going to use,
+//   - if two next bytes are present, they contain the ack of the connect seq
+//     number sent by the peer.
+//
+// Handshake protocol:
+// * a peer does not send anything until it sends a handshake packet and
+//   receives an ack to it;
+// * a peer does not accept anything until it first received a handshake packet.
+enum PacketType {
+  kDataPacket = 0,
+  kDataAckPacket = 1,
+  kHandshakePacket = 2,
+  kFlowControlPacket = 3,
+};
 PacketType GetPacketType(uint16_t header) { return (PacketType)(header >> 12); }
 
 uint16_t FormatPacketHeader(uint16_t in, PacketType type) {
   return in | (type << 12);
+}
+
+roo_time::Interval Backoff(int retry_count) {
+  float min_delay_us = 10.0f;      // 10us
+  float max_delay_us = 100000.0f;  // 100ms
+  float delay = pow(1.33, retry_count) * min_delay_us;
+  if (delay > max_delay_us) {
+    delay = max_delay_us;
+  }
+  // Randomize by +=20%, to make unrelated retries spread more evenly in time.
+  delay += (float)delay * ((float)rand() / RAND_MAX - 0.5f) * 0.4f;
+  return roo_time::Micros((uint64_t)delay);
 }
 
 }  // namespace
@@ -19,7 +48,8 @@ uint16_t FormatPacketHeader(uint16_t in, PacketType type) {
 StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
                                                roo_io::PacketReceiver& receiver,
                                                unsigned int sendbuf_log2,
-                                               unsigned int recvbuf_log2)
+                                               unsigned int recvbuf_log2,
+                                               ConnectionCb connection_cb)
     : sender_(sender),
       receiver_(receiver),
       sendbuf_capacity_(1 << sendbuf_log2),
@@ -36,8 +66,12 @@ StreamingRetransmitter::StreamingRetransmitter(roo_io::PacketSender& sender,
       needs_ack_(false),
       unack_seq_(0),
       needs_token_send_(false),
-      sender_connected_(true),
-      receiver_connected_(true),
+      sender_connected_(false),
+      receiver_connected_(false),
+      needs_handshake_ack_(false),
+      successive_handshake_retries_(0),
+      next_scheduled_handshake_update_(roo_time::Uptime::Start()),
+      connection_cb_(std::move(connection_cb)),
       packets_sent_(0),
       packets_delivered_(0),
       packets_received_(0) {
@@ -147,6 +181,20 @@ void StreamingRetransmitter::OutBuffer::reset(uint32_t seq_id) {
 }
 
 bool StreamingRetransmitter::sendLoop() {
+  if (!sender_connected_) {
+    needs_handshake_ack_ = true;
+    roo_time::Uptime now = roo_time::Uptime::Now();
+    if (now < next_scheduled_handshake_update_) return false;
+    next_scheduled_handshake_update_ =
+        now + Backoff(successive_handshake_retries_++);
+  }
+  if (needs_handshake_ack_) {
+    if (successive_handshake_retries_ > 1) {
+      sender_connected_ = true;
+      receiver_connected_ = true;
+      needs_handshake_ack_ = false;
+    }
+  }
   if (receiver_connected_) {
     if (needs_ack_) {
       roo::byte buf[2];
