@@ -202,6 +202,14 @@ class StreamingRetransmitter {
 
   bool needs_token_send_;
 
+  // Indicates whether the peer acknowledged receipt of our stream ID and seq,
+  // so that we can start sending messages to it.
+  bool sender_connected_;
+
+  // Indicates whether we received the peer's stream ID and seq, allowing us to
+  // receive messages from it.
+  bool receiver_connected_;
+
   uint32_t packets_sent_;
   uint32_t packets_delivered_;
   uint32_t packets_received_;
