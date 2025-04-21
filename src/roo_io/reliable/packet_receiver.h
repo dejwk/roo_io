@@ -32,8 +32,8 @@ class PacketReceiver {
   PacketReceiver(InputStream& in, ReceiverFn receiver_fn = nullptr);
 
   // Must be called when there might be new data to read from the input
-  // stream.
-  void tryReceive();
+  // stream. Returns true if a packet was received; false otherwise.
+  bool tryReceive();
 
   // Sets the new receiver callback, overwriting the previous one (if any).
   void setReceiverFn(ReceiverFn receiver_fn);

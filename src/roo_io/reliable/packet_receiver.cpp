@@ -18,64 +18,64 @@ void PacketReceiver::setReceiverFn(ReceiverFn receiver_fn) {
   receiver_fn_ = std::move(receiver_fn);
 }
 
-void PacketReceiver::tryReceive() {
-  while (true) {
-    size_t len = in_.tryRead(tmp_.get(), 256);
-    if (len == 0) return;
-    byte* data = &tmp_[0];
-    while (len > 0) {
-      // Find the possible packet delimiter (zero byte).
-      const byte* delim = std::find(data, data + len, byte{0});
-      size_t increment = delim - data;
-      bool finished = (increment < len);
-      if (finished) {
-        ++increment;
-        if (pos_ + increment <= 256) {
-          if (pos_ == 0) {
-            processPacket(data, increment);
-          } else {
-            memcpy(&buf_[pos_], data, increment);
-            processPacket(buf_.get(), pos_ + increment);
-          }
-        }
-        pos_ = 0;
-      } else {
-        if (pos_ + increment < 256) {
-          memcpy(&buf_[pos_], data, increment);
-          pos_ += increment;
+bool PacketReceiver::tryReceive() {
+  size_t len = in_.tryRead(tmp_.get(), 256);
+  bool received = false;
+  byte* data = &tmp_[0];
+  while (len > 0) {
+    // Find the possible packet delimiter (zero byte).
+    const byte* delim = std::find(data, data + len, byte{0});
+    size_t increment = delim - data;
+    bool finished = (increment < len);
+    if (finished) {
+      ++increment;
+      if (pos_ + increment <= 256) {
+        if (pos_ == 0) {
+          processPacket(data, increment);
         } else {
-          pos_ = 256;
+          memcpy(&buf_[pos_], data, increment);
+          processPacket(buf_.get(), pos_ + increment);
         }
+        received = true;
       }
-      data += increment;
-      len -= increment;
-
-      // Alternative implementation:
-      // if (pos_ + increment < 256) {
-      //   // Fits within the 'max packet' size.
-      //   memcpy(&buf_[pos_], data, increment);
-      //   if (finished) {
-      //     buf_[pos_ + increment] = 0;
-      //     processPacket(pos_ + increment + 1);
-      //     pos_ = 0;
-      //     // Skip the zero byte itself.
-      //     increment++;
-      //   } else {
-      //     pos_ += increment;
-      //   }
-      // } else {
-      //   // Ignore all bytes up to the next packet.
-      //   if (finished) {
-      //     pos_ = 0;
-      //     increment++;
-      //   } else {
-      //     pos_ = 256;
-      //   }
-      // }
-      // data += increment;
-      // len -= increment;
+      pos_ = 0;
+    } else {
+      if (pos_ + increment < 256) {
+        memcpy(&buf_[pos_], data, increment);
+        pos_ += increment;
+      } else {
+        pos_ = 256;
+      }
     }
+    data += increment;
+    len -= increment;
+
+    // Alternative implementation:
+    // if (pos_ + increment < 256) {
+    //   // Fits within the 'max packet' size.
+    //   memcpy(&buf_[pos_], data, increment);
+    //   if (finished) {
+    //     buf_[pos_ + increment] = 0;
+    //     processPacket(pos_ + increment + 1);
+    //     pos_ = 0;
+    //     // Skip the zero byte itself.
+    //     increment++;
+    //   } else {
+    //     pos_ += increment;
+    //   }
+    // } else {
+    //   // Ignore all bytes up to the next packet.
+    //   if (finished) {
+    //     pos_ = 0;
+    //     increment++;
+    //   } else {
+    //     pos_ = 256;
+    //   }
+    // }
+    // data += increment;
+    // len -= increment;
   }
+  return received;
 }
 
 void PacketReceiver::processPacket(byte* buf, size_t size) {
