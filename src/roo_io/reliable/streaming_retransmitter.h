@@ -29,8 +29,12 @@ class StreamingRetransmitter {
 
   void flush();
 
-  bool sendLoop();
-  void recvLoop() { receiver_.tryReceive(); }
+  bool conn();
+  bool recv() { return receiver_.tryReceive(); }
+  void ack();
+  bool send();
+
+  bool loop();
 
   // The lower bound of bytes that are guaranteed to be writable without
   // blocking.

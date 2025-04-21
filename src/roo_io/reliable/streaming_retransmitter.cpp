@@ -194,7 +194,15 @@ void StreamingRetransmitter::reset() {
   while (my_stream_id_ == 0) my_stream_id_ = rand();
 }
 
-bool StreamingRetransmitter::sendLoop() {
+bool StreamingRetransmitter::loop() {
+  if (!conn()) return false;
+  if (recv()) {
+    ack();
+  }
+  return send();
+}
+
+bool StreamingRetransmitter::conn() {
   if (!sender_connected_) {
     needs_handshake_ack_ = true;
     roo_time::Uptime now = roo_time::Uptime::Now();
@@ -213,55 +221,56 @@ bool StreamingRetransmitter::sendLoop() {
     sender_.send(buf, 11);
     needs_handshake_ack_ = false;
   }
-  if (receiver_connected_) {
-    // Send ack first, if needed.
-    if (needs_ack_) {
-      roo::byte buf[2];
-      uint16_t payload =
-          FormatPacketHeader(unack_seq_ & 0x0FFF, kDataAckPacket);
-      roo_io::StoreBeU16(payload, buf);
-      sender_.send(buf, 2);
-      needs_ack_ = false;
-    }
-    if (needs_token_send_) {
-      roo::byte buf[2];
-      uint16_t payload =
-          FormatPacketHeader(in_ring_.slotsFree() & 0x0FFF, kFlowControlPacket);
-      roo_io::StoreBeU16(payload, buf);
-      sender_.send(buf, 2);
-      needs_token_send_ = false;
-    }
+  return true;
+}
+
+void StreamingRetransmitter::ack() {
+  if (!receiver_connected_) return;
+  // Send ack first, if needed.
+  if (needs_ack_) {
+    roo::byte buf[2];
+    uint16_t payload = FormatPacketHeader(unack_seq_ & 0x0FFF, kDataAckPacket);
+    roo_io::StoreBeU16(payload, buf);
+    sender_.send(buf, 2);
+    needs_ack_ = false;
   }
-  if (sender_connected_) {
-    if (out_ring_.empty()) {
-      // Nothing to send.
+  if (needs_token_send_) {
+    roo::byte buf[2];
+    uint16_t payload =
+        FormatPacketHeader(in_ring_.slotsFree() & 0x0FFF, kFlowControlPacket);
+    roo_io::StoreBeU16(payload, buf);
+    sender_.send(buf, 2);
+    needs_token_send_ = false;
+  }
+}
+
+bool StreamingRetransmitter::send() {
+  if (!sender_connected_) return false;
+  if (out_ring_.empty()) {
+    // Nothing to send.
+    return false;
+  }
+  // Skip all acked;
+  while (out_ring_.contains(next_to_send_)) {
+    OutBuffer& buf = getOutBuffer(next_to_send_);
+    if (buf.acked()) {
+      ++next_to_send_;
+      continue;
+    }
+    if (!buf.flushed()) {
       return false;
     }
-    // Skip all acked;
-    if (!out_ring_.contains(next_to_send_)) {
-      next_to_send_ = out_ring_.start_pos();
-      return true;
+    // Found an outgoing packet to send.
+    if (!buf.finished()) {
+      buf.finish();
+      --available_tokens_;
     }
-    while (out_ring_.contains(next_to_send_)) {
-      OutBuffer& buf = getOutBuffer(next_to_send_);
-      if (buf.acked()) {
-        ++next_to_send_;
-        continue;
-      }
-      if (!buf.flushed()) {
-        return false;
-      }
-      // Found an outgoing packet to send.
-      if (!buf.finished()) {
-        buf.finish();
-        --available_tokens_;
-      }
-      sender_.send(buf.data(), buf.size());
-      ++next_to_send_;
-      ++packets_sent_;
-      return true;
-    }
+    sender_.send(buf.data(), buf.size());
+    ++next_to_send_;
+    ++packets_sent_;
+    return true;
   }
+  next_to_send_ = out_ring_.start_pos();
   return false;
 }
 
