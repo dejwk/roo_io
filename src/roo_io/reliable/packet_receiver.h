@@ -38,6 +38,13 @@ class PacketReceiver {
   // Sets the new receiver callback, overwriting the previous one (if any).
   void setReceiverFn(ReceiverFn receiver_fn);
 
+  // Returns the total amount of bytes received, including bytes rejected due to
+  // communication errors.
+  size_t bytes_received() const { return bytes_received_; }
+
+  // Returns the total amount of bytes correctly retrieved.
+  size_t bytes_accepted() const { return bytes_accepted_; }
+
  private:
   void processPacket(byte* buf, size_t size);
 
@@ -46,6 +53,9 @@ class PacketReceiver {
   std::unique_ptr<byte[]> tmp_;
   size_t pos_;
   ReceiverFn receiver_fn_;
+
+  size_t bytes_received_;
+  size_t bytes_accepted_;
 };
 
 }  // namespace roo_io

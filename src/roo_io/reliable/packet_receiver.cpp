@@ -12,7 +12,9 @@ PacketReceiver::PacketReceiver(InputStream& in, ReceiverFn receiver_fn)
       buf_(new byte[256]),
       tmp_(new byte[256]),
       pos_(0),
-      receiver_fn_(std::move(receiver_fn)) {}
+      receiver_fn_(std::move(receiver_fn)),
+      bytes_received_(0),
+      bytes_accepted_(0) {}
 
 void PacketReceiver::setReceiverFn(ReceiverFn receiver_fn) {
   receiver_fn_ = std::move(receiver_fn);
@@ -20,6 +22,7 @@ void PacketReceiver::setReceiverFn(ReceiverFn receiver_fn) {
 
 bool PacketReceiver::tryReceive() {
   size_t len = in_.tryRead(tmp_.get(), 256);
+  bytes_received_ += len;
   bool received = false;
   byte* data = &tmp_[0];
   while (len > 0) {
@@ -87,6 +90,7 @@ void PacketReceiver::processPacket(byte* buf, size_t size) {
       // Invalid checksum. Dropping packet.
       return;
     }
+    bytes_accepted_ += size;
     if (receiver_fn_ != nullptr) receiver_fn_(&buf[1], size - 6);
   } else {
     // Invalid payload (COBS decoding failed). Dropping packet.
