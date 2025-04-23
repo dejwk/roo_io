@@ -6,6 +6,7 @@
 #include "roo_io/memory/store.h"
 #include "roo_io/reliable/packet_receiver.h"
 #include "roo_io/reliable/packet_sender.h"
+#include "roo_logging.h"
 
 namespace roo_io {
 
@@ -15,6 +16,53 @@ class StreamingRetransmitter {
  public:
   // Can be supplied to be notified when the peer reconnects.
   using ConnectionCb = std::function<void()>;
+
+  class SeqNum {
+   public:
+    SeqNum(uint16_t seq) : seq_(seq) {}
+
+    bool operator==(SeqNum other) const { return seq_ == other.seq_; }
+
+    bool operator!=(SeqNum other) const { return seq_ != other.seq_; }
+
+    bool operator<(SeqNum other) const {
+      return (int16_t)(seq_ - other.seq_) < 0;
+    }
+
+    bool operator<=(SeqNum other) const {
+      return (int16_t)(seq_ - other.seq_) <= 0;
+    }
+
+    bool operator>(SeqNum other) const {
+      return (int16_t)(seq_ - other.seq_) > 0;
+    }
+
+    bool operator>=(SeqNum other) const {
+      return (int16_t)(seq_ - other.seq_) >= 0;
+    }
+
+    SeqNum& operator++() {
+      ++seq_;
+      return *this;
+    }
+
+    SeqNum operator++(int) { return SeqNum(seq_++); }
+
+    SeqNum& operator+=(int increment) {
+      seq_ += increment;
+      return *this;
+    }
+
+    int operator-(SeqNum other) const { return (int16_t)(seq_ - other.seq_); }
+
+    SeqNum operator+(int other) const { return SeqNum(seq_ + other); }
+    SeqNum operator-(int other) const { return SeqNum(seq_ - other); }
+
+    uint16_t raw() const { return seq_; }
+
+   private:
+    uint16_t seq_;
+  };
 
   StreamingRetransmitter(roo_io::PacketSender& sender,
                          roo_io::PacketReceiver& receiver,
@@ -26,6 +74,8 @@ class StreamingRetransmitter {
 
   // Returns -1 if no data available to read immediately.
   int peek();
+
+  size_t availableForRead();
 
   void flush();
 
@@ -46,84 +96,79 @@ class StreamingRetransmitter {
 
   void reset();
 
+  size_t receiver_bytes_received() const { return receiver_.bytes_received(); }
+  size_t receiver_bytes_accepted() const { return receiver_.bytes_accepted(); }
+
  private:
   class RingBuffer {
    public:
-    RingBuffer(int capacity_log2, uint32_t initial_pos = 0)
+    RingBuffer(int capacity_log2, uint16_t initial_seq = 0)
         : capacity_log2_(capacity_log2),
-          start_pos_(initial_pos),
-          end_pos_(initial_pos) {
+          begin_(initial_seq),
+          end_(initial_seq) {
       CHECK_LE(capacity_log2, 30);
     }
 
-    uint32_t slotsUsed() const { return end_pos_ - start_pos_; }
+    uint16_t slotsUsed() const { return end_ - begin_; }
 
-    uint32_t slotsFree() const { return capacity() - slotsUsed(); }
+    uint16_t slotsFree() const { return capacity() - slotsUsed(); }
 
-    uint32_t start_pos() const { return start_pos_; }
-    uint32_t end_pos() const { return end_pos_; }
+    SeqNum begin() const { return begin_; }
+    SeqNum end() const { return end_; }
 
-    uint32_t push() {
+    SeqNum push() {
       CHECK(slotsFree() > 0);
-      return end_pos_++;
+      return end_++;
     }
 
-    void push(uint32_t count) {
-      CHECK(slotsFree() >= count);
-      end_pos_ += count;
-    }
-
-    uint32_t pop() {
+    SeqNum pop() {
       CHECK(slotsUsed() > 0);
-      return start_pos_++;
+      return begin_++;
     }
 
     bool empty() const { return slotsUsed() == 0; }
 
-    void reset(uint32_t pos) {
-      CHECK_EQ(start_pos_, end_pos_);
-      start_pos_ = pos;
-      end_pos_ = pos;
+    void reset(SeqNum seq) {
+      CHECK_EQ(begin_, end_);
+      begin_ = seq;
+      end_ = seq;
     }
 
     // Need to handle wrap-around. But since capacity_log2_ <= 30, on overload,
     // the diffs are going to still be negative.
-    bool contains(uint32_t pos) const {
-      return ((int32_t)(pos - start_pos_)) >= 0 &&
-             ((int32_t)(end_pos_ - pos)) > 0;
+    bool contains(SeqNum seq) const { return begin_ <= seq && seq < end_; }
+
+    uint16_t offset_for(SeqNum seq) const {
+      DCHECK(contains(seq));
+      return seq.raw() & (capacity() - 1);
     }
 
-    uint32_t offset_for(uint32_t pos) const {
-      CHECK(contains(pos));
-      return pos & (capacity() - 1);
-    }
-
-    // Restores high bits of pos, extending it to uint32_t, by assuming that
+    // Restores high bits of seq, extending it to uint16_t, by assuming that
     // truncated_pos must be 'close' to the range. Specifically, we make sure to
     // pick high bits so that the result is within 1 << (pos_bits/2) from
-    // start_pos.
-    uint32_t restorePosHighBits(uint32_t truncated_pos, int pos_bits) {
+    // begin.
+    SeqNum restorePosHighBits(uint16_t truncated_pos, int pos_bits) {
       DCHECK_GE(pos_bits, capacity_log2_ + 2);
-      uint32_t left = start_pos() - (1 << (pos_bits - 1));
-      return left + ((truncated_pos - left) % (1 << pos_bits));
+      uint16_t left = begin_.raw() - (1 << (pos_bits - 1));
+      return left + (((uint16_t)(truncated_pos - left)) % (1 << pos_bits));
     }
 
-   private:
-    uint32_t capacity() const { return 1 << capacity_log2_; }
+    uint16_t capacity() const { return 1 << capacity_log2_; }
 
-    uint32_t offset_start() const { return start_pos_ & (capacity() - 1); }
-    uint32_t offset_end() const { return end_pos_ & (capacity() - 1); }
+   private:
+    uint16_t offset_start() const { return begin_.raw() & (capacity() - 1); }
+    uint16_t offset_end() const { return end_.raw() & (capacity() - 1); }
 
     int capacity_log2_;
-    uint32_t start_pos_;
-    uint32_t end_pos_;
+    SeqNum begin_;
+    SeqNum end_;
   };
 
   class OutBuffer {
    public:
     OutBuffer() : size_(0), acked_(false), finished_(false) {}
 
-    void reset(uint32_t seq_id);
+    void reset(SeqNum seq_id);
 
     bool flushed() const { return flushed_; }
     bool finished() const { return finished_; }
@@ -137,6 +182,7 @@ class StreamingRetransmitter {
         count = capacity;
         flushed_ = true;
         finished_ = true;
+        expiration_ = roo_time::Uptime::Start();
       }
       memcpy(payload_ + size_ + 2, buf, count);
       size_ += count;
@@ -144,12 +190,33 @@ class StreamingRetransmitter {
     }
 
     void flush() { flushed_ = true; }
-    void finish() { finished_ = true; }
+
+    void finish() {
+      finished_ = true;
+      expiration_ = roo_time::Uptime::Start();
+    }
 
     void ack() { acked_ = true; }
 
     const roo::byte* data() const { return payload_; }
     const uint8_t size() const { return size_ + 2; }
+
+    roo_time::Uptime expiration() const { return expiration_; }
+
+    void markSent(roo_time::Uptime now) {
+      if (send_counter_ < 255) ++send_counter_;
+      expiration_ = now + roo_time::Millis(10);
+    }
+
+    // Updates the timeout of the (already sent) packet to be retransmitted
+    // immediately.
+    void rush() {
+      expiration_ = roo_time::Uptime::Start();
+      CHECK_GT(send_counter_, 0);
+    }
+
+    // How many times the packet has been already sent.
+    uint8_t send_counter() const { return send_counter_; }
 
    private:
     uint8_t size_;
@@ -162,6 +229,11 @@ class StreamingRetransmitter {
     bool finished_;
     // Leave two front bytes for the header (incl. seq number).
     roo::byte payload_[250];
+
+    // Set when sent, to indicate when the packet is due for retransmission.
+    roo_time::Uptime expiration_;
+
+    uint8_t send_counter_;
   };
 
   class InBuffer {
@@ -186,12 +258,12 @@ class StreamingRetransmitter {
     roo::byte payload_[248];
   };
 
-  OutBuffer& getOutBuffer(uint32_t id) {
-    return out_buffers_[out_ring_.offset_for(id)];
+  OutBuffer& getOutBuffer(SeqNum seq) {
+    return out_buffers_[out_ring_.offset_for(seq)];
   }
 
-  InBuffer& getInBuffer(uint32_t id) {
-    return in_buffers_[in_ring_.offset_for(id)];
+  InBuffer& getInBuffer(SeqNum seq) {
+    return in_buffers_[in_ring_.offset_for(seq)];
   }
 
   void packetReceived(const roo::byte* buf, size_t len);
@@ -199,24 +271,34 @@ class StreamingRetransmitter {
   roo_io::PacketSender& sender_;
   roo_io::PacketReceiver& receiver_;
 
-  int sendbuf_capacity_;
   std::unique_ptr<OutBuffer[]> out_buffers_;
   OutBuffer* current_out_buffer_;
   RingBuffer out_ring_;
-  uint32_t next_to_send_;
-  int available_tokens_;
 
-  int recvbuf_capacity_;
+  // Pointer used to cycle through packets to send, so that we generally send
+  // packets in order before trying any retransmissions.
+  SeqNum next_to_send_;
+
+  // Ceiling beyond which the receiver currently isn't able to process data.
+  // Used in flow control. Updated by the receiver by means of
+  // kFlowControlPacket.
+  SeqNum recv_himark_;
+
   std::unique_ptr<InBuffer[]> in_buffers_;
   InBuffer* current_in_buffer_;
   uint8_t current_in_buffer_pos_;
   RingBuffer in_ring_;
 
+  // Whether we need to send kDataAckPacket.
   bool needs_ack_;
-  // Newest unacked seq ID.
-  uint32_t unack_seq_;
 
-  bool needs_token_send_;
+  // Newest unacked seq ID.
+  uint16_t unack_seq_;
+
+  // Indicates that some receive buffers have been read and freed, increasing
+  // the receiver's capacity. Shortly after this flag is set, the receiver will
+  // send an update 'kFlowControlPacket' to the sender.
+  bool updated_recv_himark_;
 
   // Random-generated; used in connect packets.
   uint32_t my_stream_id_;
@@ -247,3 +329,9 @@ class StreamingRetransmitter {
 };
 
 }  // namespace roo_io
+
+inline roo_logging::Stream& operator<<(
+    roo_logging::Stream& os, roo_io::StreamingRetransmitter::SeqNum seq) {
+  os << seq.raw();
+  return os;
+}
