@@ -59,7 +59,7 @@ bool PacketReceiver::tryReceive() {
     //   memcpy(&buf_[pos_], data, increment);
     //   if (finished) {
     //     buf_[pos_ + increment] = 0;
-    //     processPacket(pos_ + increment + 1);
+    //     processPacket(buf_.get(), pos_ + increment + 1);
     //     pos_ = 0;
     //     // Skip the zero byte itself.
     //     increment++;
