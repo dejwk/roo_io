@@ -1,0 +1,104 @@
+#pragma once
+
+#include "roo_io/reliable/bidi_streaming/internal/thread_safe/compile_guard.h"
+#ifdef ROO_USE_THREADS
+
+#include "roo_io/reliable/bidi_streaming/internal/thread_safe/outgoing_data_ready_notification.h"
+#include "roo_io/reliable/bidi_streaming/internal/transmitter.h"
+#include "roo_io/status.h"
+
+namespace roo_io {
+namespace internal {
+
+class ThreadSafeTransmitter {
+ public:
+  ThreadSafeTransmitter(
+      unsigned int sendbuf_log2,
+      internal::OutgoingDataReadyNotification& outgoing_data_ready);
+
+  void reset();
+
+  void init(uint32_t my_stream_id, SeqNum new_start);
+
+  uint32_t packets_sent() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return transmitter_.packets_sent();
+  }
+
+  uint32_t packets_delivered() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return transmitter_.packets_delivered();
+  }
+
+  size_t write(const roo::byte* buf, size_t count, uint32_t my_stream_id,
+               Status& stream_status);
+
+  size_t tryWrite(const roo::byte* buf, size_t count, uint32_t my_stream_id,
+                  Status& stream_status);
+
+  size_t availableForWrite(uint32_t my_stream_id, Status& stream_status) const;
+
+  void flush(uint32_t my_stream_id, Status& stream_status);
+
+  bool hasPendingData(uint32_t my_stream_id, Status& stream_status) const;
+
+  // Closes the stream and blocks until all the data has been confirmed by the
+  // recipient.
+  void close(uint32_t my_stream_id, Status& stream_status);
+
+  void setConnected() {
+    std::lock_guard<std::mutex> guard(mutex_);
+    transmitter_.setConnected();
+    outgoing_data_ready_.notify();
+  }
+
+  Transmitter::State state() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return transmitter_.state();
+  }
+
+  size_t send(roo::byte* buf, long& next_send_micros);
+
+  SeqNum front() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return transmitter_.front();
+  }
+
+  void ack(uint16_t seq_id, const roo::byte* ack_bitmap, size_t ack_bitmap_len);
+
+  void updateRecvHimark(uint16_t recv_himark) {
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (transmitter_.updateRecvHimark(recv_himark)) {
+      has_space_.notify_all();
+    }
+  }
+
+ private:
+  // Checks the state of the underlying receiver, and whether its stream ID
+  // matches my_stream_id. If there is no match, it means that the connection
+  // has been interrupted. This method sets
+  // status accordingly, to either kOk (if match), or kConnectionError (if
+  // mismatch). It returns true when status is kOk; false otherwise.
+  //
+  // Must be called with mutex_ held.
+  bool checkConnectionStatus(uint32_t my_stream_id, Status& status) const;
+
+  internal::Transmitter transmitter_;
+
+  mutable std::mutex mutex_;
+
+  // Notifies the application writer thread that the output stream might have
+  // some space for writing new data.
+  std::condition_variable has_space_;
+
+  // Notifies the application writer thread that the send buffer has been
+  // entirely acked (all data has been delivered).
+  std::condition_variable all_acked_;
+
+  internal::OutgoingDataReadyNotification& outgoing_data_ready_;
+};
+
+}  // namespace internal
+}  // namespace roo_io
+
+#endif  // ROO_USE_THREADS

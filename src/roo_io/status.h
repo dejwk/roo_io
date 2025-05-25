@@ -62,6 +62,9 @@ enum Status {
 
   // Mount failed because the media is absent.
   kNoMedia,
+
+  // Remote connection has been abruptly terminated.
+  kConnectionError,
 };
 
 const char* StatusAsString(Status status);

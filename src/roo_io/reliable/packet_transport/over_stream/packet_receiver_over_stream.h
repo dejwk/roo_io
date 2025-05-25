@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "roo_io/core/input_stream.h"
+#include "roo_io/reliable/packet_transport/packet_receiver.h"
 
 namespace roo_io {
 
@@ -18,25 +19,19 @@ namespace roo_io {
 // The underlying implementation uses 32-bit hashes to verify integrity, and
 // uses COBS encoding to make sure that the receiver can recognize packet
 // boundaries even in case of data loss or corruption.
-class PacketReceiver {
+class PacketReceiverOverStream : public PacketReceiver {
  public:
-  // Callback type to be called when a packet arrives.
-  using ReceiverFn = std::function<void(const byte*, size_t)>;
-
   // Creates a packet receiver that reads data from the underlying input stream
   // (assumed unreliable), and invoking the specified callback `receiver_fn`
   // when a valid packet is received.
   //
   // The receiver_fn can be left unspecified, and supplied later by calling
   // `setReceiverFn`.
-  PacketReceiver(InputStream& in, ReceiverFn receiver_fn = nullptr);
+  PacketReceiverOverStream(InputStream& in, ReceiverFn receiver_fn = nullptr);
 
-  // Must be called when there might be new data to read from the input
-  // stream. Returns true if a packet was received; false otherwise.
-  bool tryReceive();
+  bool tryReceive() override;
 
-  // Sets the new receiver callback, overwriting the previous one (if any).
-  void setReceiverFn(ReceiverFn receiver_fn);
+  void setReceiverFn(ReceiverFn receiver_fn) override;
 
   // Returns the total amount of bytes received, including bytes rejected due to
   // communication errors.

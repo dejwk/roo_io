@@ -1,4 +1,4 @@
-#include "roo_io/reliable/packet_receiver.h"
+#include "roo_io/reliable/packet_transport/over_stream/packet_receiver_over_stream.h"
 
 #include "roo_collections/hash.h"
 #include "roo_io/memory/load.h"
@@ -7,7 +7,8 @@
 
 namespace roo_io {
 
-PacketReceiver::PacketReceiver(InputStream& in, ReceiverFn receiver_fn)
+PacketReceiverOverStream::PacketReceiverOverStream(InputStream& in,
+                                                   ReceiverFn receiver_fn)
     : in_(in),
       buf_(new byte[256]),
       tmp_(new byte[256]),
@@ -16,11 +17,11 @@ PacketReceiver::PacketReceiver(InputStream& in, ReceiverFn receiver_fn)
       bytes_received_(0),
       bytes_accepted_(0) {}
 
-void PacketReceiver::setReceiverFn(ReceiverFn receiver_fn) {
+void PacketReceiverOverStream::setReceiverFn(ReceiverFn receiver_fn) {
   receiver_fn_ = std::move(receiver_fn);
 }
 
-bool PacketReceiver::tryReceive() {
+bool PacketReceiverOverStream::tryReceive() {
   size_t len = in_.tryRead(tmp_.get(), 256);
   bytes_received_ += len;
   bool received = false;
@@ -81,8 +82,12 @@ bool PacketReceiver::tryReceive() {
   return received;
 }
 
-void PacketReceiver::processPacket(byte* buf, size_t size) {
-  if (cobs_decode_tinyframe(buf, size) == COBS_RET_SUCCESS) {
+void PacketReceiverOverStream::processPacket(byte* buf, size_t size) {
+  if (cobs_decode_tinyframe(buf, size) != COBS_RET_SUCCESS) {
+    // Invalid payload (COBS decoding failed). Dropping packet.
+    return;
+  }
+  {
     // Verify the checksum.
     uint32_t computed_hash = roo_collections::murmur3_32(&buf[1], size - 6, 0);
     uint32_t received_hash = roo_io::LoadBeU32(&buf[size - 5]);
@@ -91,10 +96,8 @@ void PacketReceiver::processPacket(byte* buf, size_t size) {
       return;
     }
     bytes_accepted_ += size;
-    if (receiver_fn_ != nullptr) receiver_fn_(&buf[1], size - 6);
-  } else {
-    // Invalid payload (COBS decoding failed). Dropping packet.
   }
+  if (receiver_fn_ != nullptr) receiver_fn_(&buf[1], size - 6);
 }
 
 }  // namespace roo_io
