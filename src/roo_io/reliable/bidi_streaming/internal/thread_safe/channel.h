@@ -21,15 +21,9 @@
 #include "roo_io/reliable/packet_transport/packet_sender.h"
 #include "roo_logging.h"
 
-#ifdef ESP32
-#define ROO_USE_THREADS
-#endif
-
-#ifdef ROO_USE_THREADS
 #include <condition_variable>
 #include <mutex>
 #include <thread>
-#endif
 
 namespace roo_io {
 
