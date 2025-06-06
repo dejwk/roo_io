@@ -22,6 +22,7 @@ Receiver::Receiver(unsigned int recvbuf_log2)
       packets_received_(0) {}
 
 void Receiver::setConnected(SeqNum peer_seq_num) {
+  CHECK(in_ring_.empty());
   in_ring_.reset(peer_seq_num);
   unack_seq_ = peer_seq_num.raw();
   state_ = kConnected;
@@ -121,6 +122,9 @@ void Receiver::reset() {
 }
 
 void Receiver::init(uint32_t my_stream_id) {
+  while (!in_ring_.empty()) {
+    in_ring_.pop();
+  }
   my_stream_id_ = my_stream_id;
   peer_closed_ = false;
   self_closed_ = false;

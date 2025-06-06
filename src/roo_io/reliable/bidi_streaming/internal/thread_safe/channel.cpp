@@ -189,6 +189,7 @@ void Channel::handleHandshakePacket(uint16_t peer_seq_num,
   switch (receiver_.state()) {
     case internal::Receiver::kConnecting: {
       peer_stream_id_ = peer_stream_id;
+      CHECK(receiver_.empty());
       receiver_.setConnected(peer_seq_num);
 
       if (ack_stream_id == my_stream_id_) {
