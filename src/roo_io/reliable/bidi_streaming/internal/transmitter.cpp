@@ -59,9 +59,7 @@ bool Transmitter::flush() {
   return false;
 }
 
-bool Transmitter::hasPendingData() const {
-  return !out_ring_.empty();
-}
+bool Transmitter::hasPendingData() const { return !out_ring_.empty(); }
 
 void Transmitter::addEosPacket() {
   SeqNum pos = out_ring_.push();
@@ -85,6 +83,13 @@ void Transmitter::close() {
     addEosPacket();
   }
   end_of_stream_ = true;
+}
+
+void Transmitter::setBroken() {
+  while (!out_ring_.empty()) {
+    out_ring_.pop();
+  }
+  state_ = kBroken;
 }
 
 size_t Transmitter::availableForWrite() const {

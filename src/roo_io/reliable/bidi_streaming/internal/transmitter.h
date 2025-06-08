@@ -51,7 +51,7 @@ class Transmitter {
   void close();
 
   void setConnected() { state_ = kConnected; }
-  void setBroken() { state_ = kBroken; }
+  void setBroken();
 
   State state() const { return state_; }
 

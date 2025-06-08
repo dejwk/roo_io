@@ -149,7 +149,8 @@ size_t Channel::conn(roo::byte* buf, long& next_send_micros) {
   std::lock_guard<std::mutex> guard(handshake_mutex_);
 #endif
   auto transmitter_state = transmitter_.state();
-  if (transmitter_state == internal::Transmitter::kIdle) {
+  if (transmitter_state == internal::Transmitter::kIdle ||
+      transmitter_state == internal::Transmitter::kBroken) {
     // Ignore handshake requests until we're connecting.
     return 0;
   }
@@ -209,16 +210,21 @@ void Channel::handleHandshakePacket(uint16_t peer_seq_num,
           ((ack_stream_id != my_stream_id_ &&
             transmitter_.state() == internal::Transmitter::kConnected))) {
         // The peer opened a new stream.
-        my_stream_id_ = 0;
         if (!receiver_.done()) {
           // LOG(WARNING) << "Disconnection detected: " << peer_stream_id_ << ", "
           //              << peer_stream_id;
           // Ignore until all in-flight packets have been delivered.
-          transmitter_.setBroken();
+          if (transmitter_.state() == internal::Transmitter::kConnected) {
+            transmitter_.setBroken();
+          } else {
+            transmitter_.reset();
+            my_stream_id_ = 0;
+          }
           receiver_.setBroken();
           break;
         }
         transmitter_.reset();
+        my_stream_id_ = 0;
         receiver_.reset();
         break;
       }

@@ -55,6 +55,7 @@ class ThreadSafeTransmitter {
   void setBroken() {
     std::lock_guard<std::mutex> guard(mutex_);
     transmitter_.setBroken();
+    all_acked_.notify_all();
     has_space_.notify_all();
   }
 
