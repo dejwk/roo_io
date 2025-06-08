@@ -101,7 +101,7 @@ uint32_t Channel::connect() {
   peer_stream_id_ = 0;
   // The stream ID is a random number, but it can't be zero.
   while (my_stream_id_ == 0) my_stream_id_ = rand();
-  transmitter_.init(my_stream_id_, 0);
+  transmitter_.init(my_stream_id_, rand() % 0x0FFF);
   receiver_.init(my_stream_id_);
   needs_handshake_ack_ = false;
   successive_handshake_retries_ = 0;
