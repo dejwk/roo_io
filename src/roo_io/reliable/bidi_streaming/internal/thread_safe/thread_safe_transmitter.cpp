@@ -80,6 +80,7 @@ void ThreadSafeTransmitter::close(uint32_t my_stream_id,
   outgoing_data_ready_.notify();
   while (transmitter_.hasPendingData()) {
     all_acked_.wait(guard);
+    if (!checkConnectionStatus(my_stream_id, stream_status)) return;
   }
 }
 
@@ -105,11 +106,13 @@ size_t ThreadSafeTransmitter::send(roo::byte* buf, long& next_send_micros) {
 void ThreadSafeTransmitter::reset() {
   std::lock_guard<std::mutex> guard(mutex_);
   transmitter_.reset();
+  all_acked_.notify_all();
 }
 
 void ThreadSafeTransmitter::init(uint32_t my_stream_id, SeqNum new_start) {
   std::lock_guard<std::mutex> guard(mutex_);
   transmitter_.init(my_stream_id, new_start);
+  all_acked_.notify_all();
 }
 
 void ThreadSafeTransmitter::ack(uint16_t seq_id, const roo::byte* ack_bitmap,

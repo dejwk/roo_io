@@ -22,6 +22,7 @@ size_t Transmitter::tryWrite(const roo::byte* buf, size_t count,
   *outgoing_data_ready = false;
   if (count == 0) return 0;
   if (end_of_stream_) return 0;
+  if (state_ == kIdle) return 0;
   size_t total_written = 0;
   do {
     CHECK_GE(recv_himark_, out_ring_.end());
@@ -71,7 +72,9 @@ void Transmitter::addEosPacket() {
 }
 
 void Transmitter::close() {
-  if (end_of_stream_) return;
+  if (end_of_stream_ || state_ == kIdle) {
+    return;
+  }
   flush();
   if (out_ring_.slotsFree() == 0) {
     has_pending_eof_ = true;
@@ -91,7 +94,6 @@ size_t Transmitter::availableForWrite() const {
 size_t Transmitter::send(roo::byte* buf, long& next_send_micros) {
   const internal::OutBuffer* buf_to_send = getBufferToSend(next_send_micros);
   if (buf_to_send == nullptr) return 0;
-
   const roo::byte* data = buf_to_send->data();
   size_t size = buf_to_send->size();
   memcpy(buf, data, size);

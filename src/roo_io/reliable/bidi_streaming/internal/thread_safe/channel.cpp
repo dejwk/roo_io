@@ -205,15 +205,16 @@ void Channel::handleHandshakePacket(uint16_t peer_seq_num,
         if (!receiver_.empty()) break;
         my_stream_id_ = 0;
         receiver_.reset();
-        // The peer uses a new stream ID, so we can be pretty sure they won't
-        // recognize our stream ID.
+      }
+      if (peer_stream_id == 0 &&
+          transmitter_.state() == internal::Transmitter::kConnected) {
         transmitter_.reset();
       } else {
-        needs_handshake_ack_ = want_ack;
         if (ack_stream_id == my_stream_id_) {
           transmitter_.setConnected();
         }
       }
+      needs_handshake_ack_ = want_ack;
       break;
     }
     case internal::Receiver::kIdle: {
