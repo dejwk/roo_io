@@ -89,7 +89,7 @@ inline byte BufferedInputStreamIterator::Rep::read() {
   if (len == 0) {
     offset_ = 0;
     length_ = 0;
-    status_ = kEndOfStream;
+    status_ = input_->status();
     return byte{0};
   }
   offset_ = 1;
