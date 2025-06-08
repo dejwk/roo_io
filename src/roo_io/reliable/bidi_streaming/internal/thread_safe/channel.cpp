@@ -9,8 +9,8 @@ namespace roo_io {
 namespace {
 
 roo_time::Interval Backoff(int retry_count) {
-  float min_delay_us = 100.0f;     // 100us
-  float max_delay_us = 100000.0f;  // 100ms
+  float min_delay_us = 1000.0f;       // 1ms
+  float max_delay_us = 100000000.0f;  // 100ms
   float delay = pow(1.33, retry_count) * min_delay_us;
   if (delay > max_delay_us) {
     delay = max_delay_us;
@@ -90,7 +90,13 @@ size_t Channel::availableForWrite(uint32_t my_stream_id,
   return transmitter_.availableForWrite(my_stream_id, stream_status);
 }
 
+uint32_t Channel::my_stream_id() const {
+  std::lock_guard<std::mutex> guard(handshake_mutex_);
+  return my_stream_id_;
+}
+
 uint32_t Channel::connect() {
+  std::lock_guard<std::mutex> guard(handshake_mutex_);
   my_stream_id_ = 0;
   peer_stream_id_ = 0;
   // The stream ID is a random number, but it can't be zero.
@@ -199,25 +205,33 @@ void Channel::handleHandshakePacket(uint16_t peer_seq_num,
       break;
     }
     case internal::Receiver::kConnected: {
-      if (peer_stream_id_ != peer_stream_id) {
+      if ((peer_stream_id_ != peer_stream_id) ||
+          ((ack_stream_id != my_stream_id_ &&
+            transmitter_.state() == internal::Transmitter::kConnected))) {
         // The peer opened a new stream.
-        // Ignore until all in-flight packets have been delivered.
-        if (!receiver_.empty()) break;
         my_stream_id_ = 0;
-        receiver_.reset();
-      }
-      if (peer_stream_id == 0 &&
-          transmitter_.state() == internal::Transmitter::kConnected) {
-        transmitter_.reset();
-      } else {
-        if (ack_stream_id == my_stream_id_) {
-          transmitter_.setConnected();
+        if (!receiver_.done()) {
+          // LOG(WARNING) << "Disconnection detected: " << peer_stream_id_ << ", "
+          //              << peer_stream_id;
+          // Ignore until all in-flight packets have been delivered.
+          transmitter_.setBroken();
+          receiver_.setBroken();
+          break;
         }
+        transmitter_.reset();
+        receiver_.reset();
+        break;
+      }
+      if (ack_stream_id == my_stream_id_) {
+        CHECK(my_stream_id_ != 0);
+        transmitter_.setConnected();
       }
       needs_handshake_ack_ = want_ack;
       break;
     }
-    case internal::Receiver::kIdle: {
+    case internal::Receiver::kIdle:
+    case internal::Receiver::kBroken: {
+      // We're idle; ignoring handshake;
       break;
     }
     default: {

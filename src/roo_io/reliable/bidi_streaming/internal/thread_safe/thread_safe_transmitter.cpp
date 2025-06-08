@@ -13,7 +13,9 @@ ThreadSafeTransmitter::ThreadSafeTransmitter(
 
 bool ThreadSafeTransmitter::checkConnectionStatus(uint32_t my_stream_id,
                                                   Status& status) const {
-  if (my_stream_id != transmitter_.my_stream_id()) {
+  if (transmitter_.state() == Transmitter::kBroken ||
+      (transmitter_.state() != Transmitter::kIdle &&
+       my_stream_id != transmitter_.my_stream_id())) {
     status = kConnectionError;
     return false;
   }

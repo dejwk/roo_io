@@ -19,6 +19,7 @@ class ThreadSafeReceiver {
 
   void setConnected(SeqNum peer_seq_num);
   void setIdle();
+  void setBroken();
 
   size_t read(roo::byte* buf, size_t count, uint32_t my_stream_id,
               Status& stream_status);
@@ -44,6 +45,11 @@ class ThreadSafeReceiver {
   bool empty() const {
     std::lock_guard<std::mutex> guard(mutex_);
     return receiver_.empty();
+  }
+
+  bool done() const {
+    std::lock_guard<std::mutex> guard(mutex_);
+    return receiver_.done();
   }
 
   uint32_t packets_received() const {

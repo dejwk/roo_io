@@ -28,9 +28,19 @@ void ThreadSafeReceiver::setIdle() {
   has_data_.notify_all();
 }
 
+void ThreadSafeReceiver::setBroken() {
+  std::lock_guard<std::mutex> guard(mutex_);
+  receiver_.setBroken();
+  has_data_.notify_all();
+}
+
 bool ThreadSafeReceiver::checkConnectionStatus(uint32_t my_stream_id,
                                                Status& status) const {
   if (my_stream_id != receiver_.my_stream_id()) {
+    status = kConnectionError;
+    return false;
+  }
+  if (receiver_.state() == Receiver::kIdle) {
     status = kConnectionError;
     return false;
   }
@@ -92,12 +102,17 @@ void ThreadSafeReceiver::markInputClosed(uint32_t my_stream_id,
                                          Status& stream_status) {
   std::lock_guard<std::mutex> guard(mutex_);
   if (!checkConnectionStatus(my_stream_id, stream_status)) return;
-  receiver_.markInputClosed();
+  bool outgoing_data_ready = false;
+  receiver_.markInputClosed(outgoing_data_ready);
+  if (outgoing_data_ready) {
+    outgoing_data_ready_.notify();
+  }
 }
 
 void ThreadSafeReceiver::reset() {
   std::lock_guard<std::mutex> guard(mutex_);
   receiver_.reset();
+  has_data_.notify_all();
 }
 
 void ThreadSafeReceiver::init(uint32_t my_stream_id) {
@@ -105,6 +120,7 @@ void ThreadSafeReceiver::init(uint32_t my_stream_id) {
   receiver_.init(my_stream_id);
   // Need to init the handshake.
   outgoing_data_ready_.notify();
+  has_data_.notify_all();
 }
 
 size_t ThreadSafeReceiver::ack(roo::byte* buf) {

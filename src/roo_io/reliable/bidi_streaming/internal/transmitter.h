@@ -23,6 +23,9 @@ class Transmitter {
     // Indicates that the peer acknowledged receipt of our stream ID and seq, so
     // that we can be sending messages to it.
     kConnected = 2,
+
+    // Indicates that peer has abruptly terminated a previously valid connection.
+    kBroken = 3,
   };
 
   Transmitter(unsigned int sendbuf_log2);
@@ -48,6 +51,7 @@ class Transmitter {
   void close();
 
   void setConnected() { state_ = kConnected; }
+  void setBroken() { state_ = kBroken; }
 
   State state() const { return state_; }
 

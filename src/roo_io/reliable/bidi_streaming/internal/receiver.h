@@ -21,6 +21,9 @@ class Receiver {
     // Indicates that we received the peer's stream ID and seq, allowing us
     // to receive messages from it.
     kConnected = 2,
+
+    // Indicates that peer has abruptly terminated a previously valid connection.
+    kBroken = 3,
   };
 
   Receiver(unsigned int recvbuf_log2);
@@ -28,8 +31,11 @@ class Receiver {
   State state() const { return state_; }
   bool eos() const { return end_of_stream_; }
 
+  bool done() const;
+
   void setConnected(SeqNum peer_seq_num);
   void setIdle();
+  void setBroken();
 
   size_t tryRead(roo::byte* buf, size_t count, bool& outgoing_data_ready);
 
@@ -39,7 +45,7 @@ class Receiver {
   void reset();
   void init(uint32_t my_stream_id);
 
-  void markInputClosed() { self_closed_ = true; }
+  void markInputClosed(bool& outgoing_data_ready);
 
   size_t ack(roo::byte* buf);
   size_t updateRecvHimark(roo::byte* buf, long& next_send_micros);

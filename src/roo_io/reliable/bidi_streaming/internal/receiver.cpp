@@ -35,6 +35,17 @@ void Receiver::setIdle() {
   end_of_stream_ = false;
 }
 
+void Receiver::setBroken() {
+  state_ = kBroken;
+  peer_closed_ = true;
+  self_closed_ = false;
+  end_of_stream_ = false;
+}
+
+bool Receiver::done() const {
+  return empty() && (end_of_stream_ || self_closed_ || peer_closed_);
+}
+
 size_t Receiver::tryRead(roo::byte* buf, size_t count,
                          bool& outgoing_data_ready) {
   size_t total_read = 0;
@@ -42,7 +53,12 @@ size_t Receiver::tryRead(roo::byte* buf, size_t count,
   if (state_ == kConnecting || state_ == kIdle) return 0;
   do {
     if (current_in_buffer_ == nullptr) {
-      if (in_ring_.empty()) break;
+      if (in_ring_.empty()) {
+        if (state_ == kBroken) {
+          setIdle();
+        }
+        break;
+      }
       current_in_buffer_ = &getInBuffer(in_ring_.begin());
       current_in_buffer_pos_ = 0;
     }
@@ -75,6 +91,16 @@ size_t Receiver::tryRead(roo::byte* buf, size_t count,
     }
   } while (count > 0);
   return total_read;
+}
+
+void Receiver::markInputClosed(bool& outgoing_data_ready) {
+  self_closed_ = true;
+  if (in_ring_.empty()) return;
+  recv_himark_update_expiration_ = roo_time::Uptime::Start();
+  outgoing_data_ready = true;
+  do {
+    in_ring_.pop();
+  } while (!in_ring_.empty());
 }
 
 int Receiver::peek() {

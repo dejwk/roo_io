@@ -52,6 +52,12 @@ class ThreadSafeTransmitter {
     outgoing_data_ready_.notify();
   }
 
+  void setBroken() {
+    std::lock_guard<std::mutex> guard(mutex_);
+    transmitter_.setBroken();
+    has_space_.notify_all();
+  }
+
   Transmitter::State state() const {
     std::lock_guard<std::mutex> guard(mutex_);
     return transmitter_.state();

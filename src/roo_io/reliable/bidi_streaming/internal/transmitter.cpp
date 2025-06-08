@@ -22,7 +22,7 @@ size_t Transmitter::tryWrite(const roo::byte* buf, size_t count,
   *outgoing_data_ready = false;
   if (count == 0) return 0;
   if (end_of_stream_) return 0;
-  if (state_ == kIdle) return 0;
+  if (state_ == kIdle || state_ == kBroken) return 0;
   size_t total_written = 0;
   do {
     CHECK_GE(recv_himark_, out_ring_.end());
@@ -72,6 +72,9 @@ void Transmitter::addEosPacket() {
 }
 
 void Transmitter::close() {
+  if (state_ == kBroken) {
+    state_ = kIdle;
+  }
   if (end_of_stream_ || state_ == kIdle) {
     return;
   }
@@ -85,7 +88,9 @@ void Transmitter::close() {
 }
 
 size_t Transmitter::availableForWrite() const {
-  if (end_of_stream_) return 0;
+  if (end_of_stream_ || state_ == kIdle || state_ == kBroken) {
+    return 0;
+  }
   // In the extreme case, if flush is issued after every write, we might only
   // fit one byte per slot.
   return out_ring_.slotsFree();
@@ -203,6 +208,12 @@ bool Transmitter::ack(uint16_t seq_id, const roo::byte* ack_bitmap,
       addEosPacket();
       has_pending_eof_ = false;
     }
+  }
+  if (out_ring_.empty()) {
+    if (end_of_stream_) {
+      reset();
+    }
+    return false;
   }
   // Process the skip-ack notifications.
   size_t offset = 0;

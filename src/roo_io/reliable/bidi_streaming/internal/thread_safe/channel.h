@@ -40,7 +40,7 @@ class Channel {
 
   void begin();
 
-  uint32_t my_stream_id() const { return my_stream_id_; }
+  uint32_t my_stream_id() const;
 
   size_t write(const roo::byte* buf, size_t count, uint32_t my_stream_id,
                Status& stream_status);
