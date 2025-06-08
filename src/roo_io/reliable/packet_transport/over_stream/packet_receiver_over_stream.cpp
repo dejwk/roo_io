@@ -95,7 +95,7 @@ void PacketReceiverOverStream::processPacket(byte* buf, size_t size) {
       // Invalid checksum. Dropping packet.
       return;
     }
-    bytes_accepted_ += (size - 2);  // Exclude the header and checksum.
+    bytes_accepted_ += size;
   }
   if (receiver_fn_ != nullptr) receiver_fn_(&buf[1], size - 6);
 }
