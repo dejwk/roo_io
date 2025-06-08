@@ -50,6 +50,8 @@ const char* StatusAsString(Status status) {
       return "access denied";
     case kNoMedia:
       return "no media";
+    case kConnectionError:
+      return "connection error";
     default:
       return "unknown error";
   }
