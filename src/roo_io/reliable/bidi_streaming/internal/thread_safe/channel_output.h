@@ -10,8 +10,10 @@ namespace roo_io {
 
 class ChannelOutput : public roo_io::OutputStream {
  public:
+  ChannelOutput() : channel_(nullptr), my_stream_id_(0), status_(kClosed) {}
+
   ChannelOutput(Channel& channel, uint32_t my_stream_id)
-      : channel_(channel), my_stream_id_(my_stream_id), status_(kOk) {}
+      : channel_(&channel), my_stream_id_(my_stream_id), status_(kOk) {}
 
   size_t write(const roo::byte* buf, size_t count) override;
 
@@ -26,7 +28,7 @@ class ChannelOutput : public roo_io::OutputStream {
   roo_io::Status status() const override { return status_; }
 
  private:
-  Channel& channel_;
+  Channel* channel_;
   uint32_t my_stream_id_;
   roo_io::Status status_;
 };

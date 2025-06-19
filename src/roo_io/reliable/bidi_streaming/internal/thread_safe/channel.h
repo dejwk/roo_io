@@ -4,6 +4,10 @@
 #include "roo_io/reliable/bidi_streaming/internal/thread_safe/compile_guard.h"
 #ifdef ROO_USE_THREADS
 
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+
 #include "roo_io/core/input_stream.h"
 #include "roo_io/core/output_stream.h"
 #include "roo_io/memory/load.h"
@@ -20,10 +24,6 @@
 #include "roo_io/reliable/packet_transport/packet_receiver.h"
 #include "roo_io/reliable/packet_transport/packet_sender.h"
 #include "roo_logging.h"
-
-#include <condition_variable>
-#include <mutex>
-#include <thread>
 
 namespace roo_io {
 
@@ -64,6 +64,10 @@ class Channel {
   void close(uint32_t my_stream_id, Status& stream_status);
 
   void closeInput(uint32_t my_stream_id, Status& stream_status);
+
+  // Registers callback to be invoked when new data is available for reading.
+  void onReceive(internal::ThreadSafeReceiver::RecvCb recv_cb,
+                 uint32_t my_stream_id, Status& stream_status);
 
   bool loop();
 

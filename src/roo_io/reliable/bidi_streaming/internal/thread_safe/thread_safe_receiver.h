@@ -12,6 +12,9 @@ namespace internal {
 
 class ThreadSafeReceiver {
  public:
+  // Can be supplied to be notified when new data is available for read.
+  using RecvCb = std::function<void()>;
+
   ThreadSafeReceiver(unsigned int recvbuf_log2,
                      OutgoingDataReadyNotification& notification);
 
@@ -32,6 +35,8 @@ class ThreadSafeReceiver {
   size_t availableForRead(uint32_t my_stream_id, Status& stream_status) const;
 
   void markInputClosed(uint32_t my_stream_id, Status& stream_status);
+
+  void onReceive(RecvCb recv_cb, uint32_t my_stream_id, Status& stream_status);
 
   void reset();
   void init(uint32_t my_stream_id);
@@ -74,6 +79,12 @@ class ThreadSafeReceiver {
   mutable std::mutex mutex_;
   std::condition_variable has_data_;
   OutgoingDataReadyNotification& outgoing_data_ready_;
+
+  RecvCb recv_cb_;
+
+  // Captured my_stream_id when registered recv_cb_, so that we can re-confirm
+  // that it is current before invoking the callback.
+  uint32_t recv_cb_stream_id_;
 };
 
 }  // namespace internal

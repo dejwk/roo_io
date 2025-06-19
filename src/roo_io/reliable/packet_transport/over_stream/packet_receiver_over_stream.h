@@ -7,7 +7,7 @@
 
 namespace roo_io {
 
-// Receives packets sent by PacketSenter. Implements data integrity (ensures
+// Receives packets sent by PacketSender. Implements data integrity (ensures
 // data correctness) over a potentially unreliable underlying stream, such as
 // UART/Serial.
 //

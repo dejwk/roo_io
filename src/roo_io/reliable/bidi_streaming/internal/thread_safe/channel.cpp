@@ -85,6 +85,11 @@ void Channel::closeInput(uint32_t my_stream_id, Status& stream_status) {
   receiver_.markInputClosed(my_stream_id, stream_status);
 }
 
+void Channel::onReceive(internal::ThreadSafeReceiver::RecvCb recv_cb,
+                        uint32_t my_stream_id, Status& stream_status) {
+  receiver_.onReceive(recv_cb, my_stream_id, stream_status);
+}
+
 size_t Channel::availableForWrite(uint32_t my_stream_id,
                                   Status& stream_status) const {
   return transmitter_.availableForWrite(my_stream_id, stream_status);
@@ -211,7 +216,8 @@ void Channel::handleHandshakePacket(uint16_t peer_seq_num,
             transmitter_.state() == internal::Transmitter::kConnected))) {
         // The peer opened a new stream.
         if (!receiver_.done()) {
-          // LOG(WARNING) << "Disconnection detected: " << peer_stream_id_ << ", "
+          // LOG(WARNING) << "Disconnection detected: " << peer_stream_id_ << ",
+          // "
           //              << peer_stream_id;
           // Ignore until all in-flight packets have been delivered.
           if (transmitter_.state() == internal::Transmitter::kConnected) {

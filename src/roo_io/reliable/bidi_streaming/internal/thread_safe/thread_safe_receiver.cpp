@@ -9,7 +9,10 @@ namespace internal {
 ThreadSafeReceiver::ThreadSafeReceiver(
     unsigned int recvbuf_log2,
     internal::OutgoingDataReadyNotification& outgoing_data_ready)
-    : receiver_(recvbuf_log2), outgoing_data_ready_(outgoing_data_ready) {}
+    : receiver_(recvbuf_log2),
+      outgoing_data_ready_(outgoing_data_ready),
+      recv_cb_(nullptr),
+      recv_cb_stream_id_(0) {}
 
 Receiver::State ThreadSafeReceiver::state() const {
   std::lock_guard<std::mutex> guard(mutex_);
@@ -109,10 +112,19 @@ void ThreadSafeReceiver::markInputClosed(uint32_t my_stream_id,
   }
 }
 
+void ThreadSafeReceiver::onReceive(RecvCb recv_cb, uint32_t my_stream_id,
+                                   Status& stream_status) {
+  if (!checkConnectionStatus(my_stream_id, stream_status)) return;
+  recv_cb_ = recv_cb;
+  recv_cb_stream_id_ = my_stream_id;
+}
+
 void ThreadSafeReceiver::reset() {
   std::lock_guard<std::mutex> guard(mutex_);
   receiver_.reset();
   has_data_.notify_all();
+  recv_cb_ = nullptr;
+  recv_cb_stream_id_ = 0;
 }
 
 void ThreadSafeReceiver::init(uint32_t my_stream_id) {
@@ -137,12 +149,23 @@ size_t ThreadSafeReceiver::updateRecvHimark(roo::byte* buf,
 bool ThreadSafeReceiver::handleDataPacket(uint16_t seq_id,
                                           const roo::byte* payload, size_t len,
                                           bool is_final) {
-  std::lock_guard<std::mutex> guard(mutex_);
   bool has_new_data_to_read = false;
-  bool has_ack_to_send = receiver_.handleDataPacket(
-      seq_id, payload, len, is_final, has_new_data_to_read);
-  if (has_new_data_to_read) {
-    has_data_.notify_all();
+  bool has_ack_to_send;
+  RecvCb recv_cb_to_call = nullptr;
+  {
+    std::lock_guard<std::mutex> guard(mutex_);
+    has_ack_to_send = receiver_.handleDataPacket(seq_id, payload, len, is_final,
+                                                 has_new_data_to_read);
+    if (has_new_data_to_read) {
+      has_data_.notify_all();
+    }
+    if (has_new_data_to_read &&
+        recv_cb_stream_id_ == receiver_.my_stream_id()) {
+      recv_cb_to_call = recv_cb_;
+    }
+  }
+  if (recv_cb_to_call != nullptr) {
+    recv_cb_to_call();
   }
   return has_ack_to_send;
 }
