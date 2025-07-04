@@ -1,6 +1,7 @@
 #include "roo_io/reliable/bidi_streaming/internal/transmitter.h"
 
 #include "roo_backport.h"
+#include "roo_backport/byte.h"
 
 namespace roo_io {
 namespace internal {

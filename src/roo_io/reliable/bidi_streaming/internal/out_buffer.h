@@ -1,6 +1,7 @@
 #pragma once
 
 #include "roo_backport.h"
+#include "roo_backport/byte.h"
 #include "roo_io/reliable/bidi_streaming/internal/seq_num.h"
 #include "roo_logging.h"
 

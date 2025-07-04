@@ -1,5 +1,7 @@
 #include "roo_io/base/byte.h"
 
+#include <cstddef>
+
 namespace roo_io {
 
 // Encodes the input as Base64. The size of the output must be at least ceil(4 *
