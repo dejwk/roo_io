@@ -73,7 +73,7 @@ uint64_t MacAddress::asU64() const {
 }
 
 bool MacAddress::assignFromU64(uint64_t addr) {
-  if (addr & 0xFFFF000000000000LL != 0) return false;
+  if ((addr & 0xFFFF000000000000LL) != 0) return false;
   *this = MacAddress(addr >> 40, addr >> 32, addr >> 24, addr >> 16, addr >> 8,
                      addr >> 0);
   return true;
