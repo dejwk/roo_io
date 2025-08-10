@@ -2,8 +2,9 @@
 
 #include <vector>
 
+#include "roo_backport.h"
+#include "roo_backport/string_view.h"
 #include "roo_io/base/byte.h"
-#include "roo_io/base/string_view.h"
 #include "roo_io/core/input_iterator.h"
 #include "roo_io/data/read.h"
 #include "roo_io/third_party/u8c.h"
@@ -32,7 +33,7 @@ class Utf8Decoder {
   Utf8Decoder(const char data[N]) : Utf8Decoder((const byte *)data, N) {}
 
   // Convenience constructor that reads the input from a specifed string.
-  Utf8Decoder(string_view s) : Utf8Decoder((const byte *)s.data(), s.size()) {}
+  Utf8Decoder(roo::string_view s) : Utf8Decoder((const byte *)s.data(), s.size()) {}
 
 #if __cplusplus >= 202002L
   // Convenience constructor that reads the input from a specifed string.
@@ -54,13 +55,13 @@ class Utf8Decoder {
 };
 
 template <typename OutputItr>
-void DecodeUtfString(string_view s, OutputItr itr) {
+void DecodeUtfString(roo::string_view s, OutputItr itr) {
   Utf8Decoder decoder(s);
   char32_t ch;
   while (decoder.next(ch)) *itr++ = ch;
 }
 
-inline std::vector<char32_t> DecodeUtfStringToVector(string_view s) {
+inline std::vector<char32_t> DecodeUtfStringToVector(roo::string_view s) {
   std::vector<char32_t> result;
   DecodeUtfString(s, std::back_inserter(result));
   return result;

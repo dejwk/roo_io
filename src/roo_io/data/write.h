@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include "roo_io/base/string_view.h"
+#include "roo_backport.h"
+#include "roo_backport/string_view.h"
 #include "roo_io/core/output_iterator.h"
 #include "roo_io/data/byte_order.h"
 
@@ -175,7 +176,7 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
 // Write a string view, using a portable string representation (varint length
 // followed by the character array). Works for std::string.
 template <typename OutputIterator>
-void WriteString(OutputIterator& itr, string_view data) {
+void WriteString(OutputIterator& itr, roo::string_view data) {
   WriteVarU64(itr, data.size());
   if (!data.empty()) {
     WriteByteArray(itr, (const byte*)data.data(), data.size());
@@ -188,7 +189,7 @@ void WriteString(OutputIterator& itr, string_view data) {
 // a C string.
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, const char* data) {
-  WriteString(itr, string_view(data));
+  WriteString(itr, roo::string_view(data));
 }
 
 // Helper to write numbers to output iterators, templated on a byte order.

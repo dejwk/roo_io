@@ -2,6 +2,9 @@
 
 #include "gtest/gtest.h"
 
+#include "roo_backport.h"
+#include "roo_backport/string_view.h"
+
 namespace roo_io {
 
 TEST(StringPrintf, Examples) {
@@ -11,7 +14,7 @@ TEST(StringPrintf, Examples) {
             StringPrintf("0x%02X 0x%02X 0x%02X", 0x3F, 0x0C, 0x00));
   EXPECT_EQ(" 12.3°C", StringPrintf("%5.1f°C", 12.31));
 
-  std::string_view s{"Hello this is longer then needed!"};
+  roo::string_view s{"Hello this is longer then needed!"};
   auto sub = s.substr(0, 5);
   EXPECT_EQ("Hello", StringPrintf("%.*s", sub.length(), sub.data()));
 

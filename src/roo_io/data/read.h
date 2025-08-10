@@ -2,7 +2,8 @@
 
 #include <type_traits>
 
-#include "roo_io/base/string_view.h"
+#include "roo_backport.h"
+#include "roo_backport/string_view.h"
 #include "roo_io/core/input_iterator.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/memory/memory_input_iterator.h"
@@ -386,17 +387,17 @@ template <typename InputIterator,
           typename std::enable_if<
               internal::MemoryIteratorTraits<InputIterator>::is_memory,
               bool>::type = true>
-string_view ReadStringView(InputIterator& in, size_t max_size = SIZE_MAX) {
+roo::string_view ReadStringView(InputIterator& in, size_t max_size = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
   if (in.status() != kOk) return "";
   typename InputIterator::PtrType start = in.ptr();
   if (len <= max_size) {
     // Common case.
     in.skip(len);
-    return string_view((const char*)start, in.ptr() - start);
+    return roo::string_view((const char*)start, in.ptr() - start);
   }
   in.skip(max_size);
-  string_view result((const char*)start, in.ptr() - start);
+  roo::string_view result((const char*)start, in.ptr() - start);
   in.skip(len - max_size);
   return result;
 }
