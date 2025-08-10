@@ -276,7 +276,7 @@ struct HostNativeWriter {
 
 }  // namespace roo_io
 
-#if defined(ARDUINO)
+#if defined(ARDUINO) || defined(String_class_h)
 
 #include "Arduino.h"
 
