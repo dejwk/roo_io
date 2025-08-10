@@ -10,7 +10,7 @@ cc_library(
     visibility = ["//visibility:public"],
     includes = ["."],
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
     ],
 )
 

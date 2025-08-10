@@ -13,7 +13,7 @@ cc_library(
     linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
     ],
 )
 
@@ -25,7 +25,7 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
         ":fakefs"
     ],
 )
@@ -38,7 +38,7 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
         ":fakefs"
     ],
 )

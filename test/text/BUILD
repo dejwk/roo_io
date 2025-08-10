@@ -6,7 +6,7 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
     ],
 )
 
@@ -17,6 +17,6 @@ cc_test(
     ],
     linkstatic = 1,
     deps = [
-        "//lib/roo_io:testing",
+        "//:testing",
     ],
 )
