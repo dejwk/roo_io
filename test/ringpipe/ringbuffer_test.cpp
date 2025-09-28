@@ -1,4 +1,4 @@
-#include "roo_io/pipe/ringbuffer.h"
+#include "roo_io/ringpipe/ringbuffer.h"
 
 #include "gtest/gtest.h"
 

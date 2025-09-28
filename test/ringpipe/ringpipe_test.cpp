@@ -1,4 +1,4 @@
-#include "roo_io/pipe/pipe.h"
+#include "roo_io/ringpipe/ringpipe.h"
 
 #include "roo_threads/thread.h"
 
@@ -7,7 +7,7 @@
 namespace roo_io {
 
 TEST(PipeTest, BasicWriteRead) {
-  Pipe pipe(4);
+  RingPipe pipe(4);
   byte data[] = {byte{1}, byte{2}, byte{3}};
   size_t written = pipe.write(data, 3);
   EXPECT_EQ(written, 3);
@@ -25,7 +25,7 @@ TEST(PipeTest, BasicWriteRead) {
 }
 
 TEST(PipeTest, WriteMoreThanCapacity) {
-  Pipe pipe(2);
+  RingPipe pipe(2);
   byte data[] = {byte{1}, byte{2}, byte{3}};
   size_t written = pipe.write(data, 3);
   EXPECT_EQ(written, 2);
@@ -34,7 +34,7 @@ TEST(PipeTest, WriteMoreThanCapacity) {
 }
 
 TEST(PipeTest, CloseUnblocksRead) {
-  Pipe pipe(2);
+  RingPipe pipe(2);
   byte data[] = {byte{1}, byte{2}};
   size_t written = pipe.write(data, 2);
   EXPECT_EQ(written, 2);
@@ -55,7 +55,7 @@ TEST(PipeTest, CloseUnblocksRead) {
 }
 
 TEST(PipeTest, CloseAwakesReadAsync) {
-  Pipe pipe(2);
+  RingPipe pipe(2);
   byte out[2];
 
   roo::thread reader([&pipe, &out]() {
@@ -74,7 +74,7 @@ TEST(PipeTest, CloseAwakesReadAsync) {
 }
 
 TEST(PipeTest, ClosingInputPreventsFurtherWrites) {
-  Pipe pipe(2);
+  RingPipe pipe(2);
   pipe.closeInput();
   EXPECT_EQ(pipe.inputStatus(), kClosed);
 

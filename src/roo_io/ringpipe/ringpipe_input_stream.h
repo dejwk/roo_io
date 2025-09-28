@@ -1,14 +1,14 @@
 #pragma once
 
 #include "roo_io/core/input_stream.h"
-#include "roo_io/pipe/pipe.h"
+#include "roo_io/ringpipe/ringpipe.h"
 
 namespace roo_io {
 
-// An InputStream that reads from a Pipe.
-class PipeInputStream : public InputStream {
+// An InputStream that reads from a RingPipe.
+class RingPipeInputStream : public InputStream {
  public:
-  explicit PipeInputStream(Pipe& pipe) : pipe_(pipe) {}
+  explicit RingPipeInputStream(RingPipe& pipe) : pipe_(pipe) {}
 
   size_t read(byte* data, size_t len) override { return pipe_.read(data, len); }
 
@@ -23,7 +23,7 @@ class PipeInputStream : public InputStream {
   void close() override { pipe_.closeInput(); }
 
  private:
-  Pipe& pipe_;
+  RingPipe& pipe_;
 };
 
 }  // namespace roo_io

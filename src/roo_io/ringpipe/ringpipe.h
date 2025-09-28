@@ -1,6 +1,6 @@
 #pragma once
 
-#include "roo_io/pipe/ringbuffer.h"
+#include "roo_io/ringpipe/ringbuffer.h"
 #include "roo_io/status.h"
 #include "roo_threads/condition_variable.h"
 #include "roo_threads/mutex.h"
@@ -8,10 +8,10 @@
 namespace roo_io {
 
 // A thread-safe pipe backed by a fixed-size in-memory buffer.
-class Pipe {
+class RingPipe {
  public:
   // Constructs a pipe with the given capacity.
-  Pipe(size_t capacity);
+  RingPipe(size_t capacity);
 
   // Writes up to 'len' bytes, but at least one byte, to the pipe. Blocks if
   // necessary until space is available. Returns the count of bytes written.

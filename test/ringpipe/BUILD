@@ -12,9 +12,9 @@ cc_test(
 )
 
 cc_test(
-    name = "pipe_test",
+    name = "ringpipe_test",
     srcs = [
-        "pipe_test.cpp",
+        "ringpipe_test.cpp",
     ],
     linkstatic = 1,
     deps = [
