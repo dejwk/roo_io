@@ -19,6 +19,11 @@ class RingBuffer {
   bool full() const { return used_ == capacity_; }
   bool empty() const { return used_ == 0; }
 
+  void clear() {
+    head_ = 0;
+    used_ = 0;
+  }
+
   // Writes up to 'len' bytes, but no more than the current value of free(), to
   // the ringbuffer. Returns the count of bytes written.
   size_t write(const byte* data, size_t len) {

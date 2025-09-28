@@ -65,6 +65,9 @@ enum Status {
 
   // Remote connection has been abruptly terminated.
   kConnectionError,
+
+  // Write failed because the receiver has closed the connection.
+  kBrokenPipe,
 };
 
 const char* StatusAsString(Status status);

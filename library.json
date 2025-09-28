@@ -24,7 +24,8 @@
         "examples/**/*.ino"
     ],
     "dependencies": {
-        "dejwk/roo_backport": ">0",
-        "dejwk/roo_logging": ">0"
+        "dejwk/roo_backport": ">=1.1.0",
+        "dejwk/roo_logging": ">=1.2.0",
+        "dejwk/roo_threads": ">=1.1.2"
     }
 }
