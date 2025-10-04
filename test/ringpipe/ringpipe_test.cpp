@@ -154,10 +154,61 @@ TEST(RingPipe, StreamsDataTransfer) {
   writer.join();
   EXPECT_EQ(total_read, data_size);
   for (size_t i = 0; i < data_size; ++i) {
-    EXPECT_EQ(in[i], byte{i & 0xFF});
+    EXPECT_EQ(in[i], byte(i & 0xFF));
   }
   delete[] data;
   delete[] in;
+}
+
+std::unique_ptr<roo::byte[]> make_large_buffer(size_t size) {
+  std::unique_ptr<roo::byte[]> buf(new roo::byte[size]);
+  for (size_t i = 0; i < size; i++) {
+    buf[i] = roo::byte(rand() % 256);
+  }
+  return buf;
+}
+
+TEST(LinkTransport, LargeRandomStream) {
+  const size_t kPayloadSize = 1000000;
+  auto payload = make_large_buffer(kPayloadSize);
+  RingPipe pipe(128);
+
+  roo::thread::attributes server_attrs;
+  server_attrs.set_name("receiver");
+  roo::thread server(server_attrs, [&]() {
+    roo_io::RingPipeInputStream in(pipe);
+    size_t byte_idx = 0;
+    while (byte_idx < kPayloadSize) {
+      EXPECT_EQ(in.status(), roo_io::kOk);
+      roo::byte buf[1000];
+      size_t count = rand() % 1000 + 1;
+      size_t n = in.read(buf, count);
+      ASSERT_GT(n, 0);
+      for (size_t i = 0; i < n; i++) {
+        EXPECT_EQ(buf[i], payload[byte_idx + i]);
+      }
+      byte_idx += n;
+      LOG(INFO) << "Received " << byte_idx << " bytes";
+    }
+  });
+
+  roo_io::RingPipeOutputStream out(pipe);
+  EXPECT_EQ(out.status(), roo_io::kOk);
+  size_t byte_idx = 0;
+  while (byte_idx < kPayloadSize) {
+    size_t count = rand() % 1000 + 1;
+    if (count > kPayloadSize - byte_idx) {
+      count = kPayloadSize - byte_idx;
+    }
+    size_t n = out.write(&payload[byte_idx], count);
+    ASSERT_GT(n, 0);
+    byte_idx += n;
+    LOG(INFO) << "Sent " << byte_idx << " bytes";
+  }
+  out.close();
+  EXPECT_EQ(out.status(), roo_io::kClosed);
+
+  server.join();
 }
 
 }  // namespace roo_io
