@@ -7,7 +7,7 @@ namespace roo_io {
 
 class DirectoryImpl {
  public:
-  ~DirectoryImpl() = default;
+  virtual ~DirectoryImpl() = default;
 
   virtual const char* path() const = 0;
   // virtual const char* name() const = 0;
