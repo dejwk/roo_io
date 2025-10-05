@@ -226,7 +226,7 @@ TEST(PatternFill3, LongMisaligned) {
 
 TEST(PatternFill3, LongMisalignedEq) {
   FillerTester tester(50);
-  byte pattern[] = {byte{0x12}, byte{0x12}};
+  byte pattern[] = {byte{0x12}, byte{0x12}, byte{0x12}};
   tester.patternFill3(3, 12, pattern);
 }
 
@@ -242,7 +242,7 @@ TEST(PatternFill3, VeryLongMisaligned) {
 
 TEST(PatternFill3, VeryLongMisalignedEq) {
   FillerTester tester(80);
-  byte pattern[] = {byte{0x12}, byte{0x12}};
+  byte pattern[] = {byte{0x12}, byte{0x12}, byte{0x12}};
   tester.patternFill3(3, 19, pattern);
 }
 
@@ -298,7 +298,7 @@ TEST(PatternFill4, LongMisaligned3) {
 
 TEST(PatternFill4, LongMisalignedEq) {
   FillerTester tester(60);
-  byte pattern[] = {byte{0x12}, byte{0x12}};
+  byte pattern[] = {byte{0x12}, byte{0x12}, byte{0x12}, byte{0x12}};
   tester.patternFill4(3, 12, pattern);
 }
 
@@ -314,7 +314,7 @@ TEST(PatternFill4, VeryLongMisaligned) {
 
 TEST(PatternFill4, VeryLongMisalignedEq) {
   FillerTester tester(100);
-  byte pattern[] = {byte{0x12}, byte{0x12}};
+  byte pattern[] = {byte{0x12}, byte{0x12}, byte{0x12}, byte{0x12}};
   tester.patternFill4(5, 19, pattern);
 }
 
