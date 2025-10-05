@@ -188,7 +188,6 @@ TEST(LinkTransport, LargeRandomStream) {
         EXPECT_EQ(buf[i], payload[byte_idx + i]);
       }
       byte_idx += n;
-      LOG(INFO) << "Received " << byte_idx << " bytes";
     }
   });
 
@@ -203,7 +202,6 @@ TEST(LinkTransport, LargeRandomStream) {
     size_t n = out.write(&payload[byte_idx], count);
     ASSERT_GT(n, 0);
     byte_idx += n;
-    LOG(INFO) << "Sent " << byte_idx << " bytes";
   }
   out.close();
   EXPECT_EQ(out.status(), roo_io::kClosed);
