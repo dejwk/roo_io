@@ -108,19 +108,19 @@ inline void BufferedOutputStreamIterator::Rep::write(byte v) {
 
 inline size_t BufferedOutputStreamIterator::Rep::write(const byte* buf,
                                                        size_t len) {
+  if (offset_ >= kOutputStreamIteratorBufferSize) {
+    if (status_ != kOk) return 0;
+    writeBuffer();
+  }
   if (offset_ > 0 || len < kOutputStreamIteratorBufferSize) {
     int cap = kOutputStreamIteratorBufferSize - offset_;
     if (len > cap) len = cap;
     memcpy(&buffer_[offset_], buf, len);
     offset_ += len;
-    if (offset_ >= kOutputStreamIteratorBufferSize) {
-      if (status_ != kOk) return 0;
-      writeBuffer();
-    }
     return len;
   }
   if (status_ != roo_io::kOk) return 0;
-  int result = output_->writeFully(buf, len);
+  size_t result = output_->write(buf, len);
   if (result < len) {
     status_ = output_->status();
   }
