@@ -143,7 +143,7 @@ template <typename OutputIterator>
 size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
   size_t written_total = 0;
   while (count > 0) {
-    int written_now = out.write(source, count);
+    size_t written_now = out.write(source, count);
     if (written_now == 0) break;
     source += written_now;
     written_total += written_now;
