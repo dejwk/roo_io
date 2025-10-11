@@ -18,6 +18,18 @@ size_t RingPipe::write(const byte* data, size_t len) {
   return buffer_.write(data, len);
 }
 
+size_t RingPipe::writeFully(const byte* data, size_t len) {
+  size_t written_total = 0;
+  while (len > 0) {
+    size_t written_now = write(data, len);
+    if (written_now == 0) break;
+    data += written_now;
+    written_total += written_now;
+    len -= written_now;
+  }
+  return written_total;
+}
+
 size_t RingPipe::availableForWrite() {
   roo::unique_lock<roo::mutex> lock(mutex_);
   return output_closed_ || input_closed_ ? 0 : buffer_.free();

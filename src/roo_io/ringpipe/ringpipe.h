@@ -18,6 +18,11 @@ class RingPipe {
   // If the input or output end has been closed, returns zero.
   size_t write(const byte* data, size_t len);
 
+  // Attempts to write exactly 'len' bytes to the pipe. Blocks if necessary
+  // until space is available. Returns the count of bytes written. The count
+  // may be less than 'len' if the input or output end gets closed.
+  size_t writeFully(const byte* data, size_t len);
+
   // Returns the number of bytes that can be written without blocking. If the
   // input or output end has been closed, returns zero.
   size_t availableForWrite();
