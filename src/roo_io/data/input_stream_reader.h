@@ -9,32 +9,93 @@
 
 namespace roo_io {
 
+// Convenience wrapper to efficiently read data from the underlying input
+// stream. Uses a small buffer (64 bytes) to avoid tiny reads from the
+// underlying stream. It owns the stream if constructed with a unique_ptr,
+// otherwise it just references it. In any case, once you create a reader, do
+// not use the underlying stream explicitly anymore (doing so would interfere
+// with the buffer used in this class). The stream is closed when the reader is
+// destructed or closed explicitly.
 class InputStreamReader {
  public:
-  InputStreamReader() : in_() {}
+  InputStreamReader() : is_(nullptr), owned_(false), in_() {}
 
-  InputStreamReader(InputStreamReader&& other) = default;
+  InputStreamReader(InputStreamReader&& other)
+      : is_(other.is_), owned_(other.owned_), in_(std::move(other.in_)) {
+    other.is_ = nullptr;
+    other.owned_ = false;
+    other.in_.reset();
+  }
 
-  InputStreamReader& operator=(InputStreamReader&& other) = default;
+  InputStreamReader& operator=(InputStreamReader&& other) {
+    if (this != &other) {
+      close();
+      is_ = other.is_;
+      owned_ = other.owned_;
+      in_ = std::move(other.in_);
+      other.is_ = nullptr;
+      other.owned_ = false;
+      other.in_.reset();
+    }
+    return *this;
+  }
 
   InputStreamReader(std::unique_ptr<roo_io::InputStream> is)
-      : is_(std::move(is)), in_(*is_) {}
+      : is_(is.release()), owned_(is_ != nullptr), in_(*is_) {}
 
-  ~InputStreamReader() { close(); }
+  InputStreamReader(roo_io::InputStream& is)
+      : is_(&is), owned_(false), in_(*is_) {}
+
+  ~InputStreamReader() {
+    if (is_ != nullptr) {
+      is_->close();
+    }
+    if (owned_) delete is_;
+  }
 
   void reset(std::unique_ptr<roo_io::InputStream> is) {
-    if (is_ != nullptr) is_->close();
-    is_ = std::move(is);
+    if (is_ == is.get()) {
+      owned_ = true;
+      return;
+    }
+    if (is_ != nullptr) {
+      is_->close();
+    }
+    if (owned_) {
+      delete is_;
+    }
+    is_ = is.release();
     if (is_ == nullptr) {
       in_.reset();
     } else {
+      owned_ = true;
       in_.reset(*is_);
     }
+  }
+
+  void reset(roo_io::InputStream& is) {
+    if (is_ == &is) {
+      CHECK(!owned_);
+      return;
+    }
+    if (is_ != nullptr) {
+      is_->close();
+    }
+    if (owned_) {
+      delete is_;
+    }
+    is_ = &is;
+    owned_ = false;
+    in_.reset(*is_);
   }
 
   void close() {
     if (is_ == nullptr) return;
     is_->close();
+    if (owned_) {
+      delete is_;
+      owned_ = false;
+    }
     is_ = nullptr;
     in_.reset();
   }
@@ -101,7 +162,8 @@ class InputStreamReader {
   uint64_t readVarU64() { return ReadVarU64(in_); }
 
  private:
-  std::unique_ptr<roo_io::InputStream> is_;
+  roo_io::InputStream* is_;
+  bool owned_;
   BufferedInputStreamIterator in_;
 };
 

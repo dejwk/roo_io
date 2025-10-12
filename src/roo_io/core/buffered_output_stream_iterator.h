@@ -16,6 +16,9 @@ class BufferedOutputStreamIterator {
 
   BufferedOutputStreamIterator(BufferedOutputStreamIterator&& other) = default;
 
+  BufferedOutputStreamIterator& operator=(
+      BufferedOutputStreamIterator&& other) = default;
+
   BufferedOutputStreamIterator(roo_io::OutputStream& output)
       : rep_(new Rep(output)) {}
 
@@ -70,7 +73,7 @@ class BufferedOutputStreamIterator {
   // We keep the content on the heap for the following reasons:
   // * stack space is very limited, and we need some buffer cache;
   // * underlying file structures are using heap anyway;
-  // * we want the stream object to be cheaply movable.
+  // * we want the buffered iterator to be cheaply movable.
   std::unique_ptr<Rep> rep_;
 };
 

@@ -17,10 +17,18 @@ class BufferedInputStreamIterator {
   BufferedInputStreamIterator(roo_io::InputStream& input)
       : rep_(new Rep(input)) {}
 
-  BufferedInputStreamIterator(BufferedInputStreamIterator&& other) = default;
+  BufferedInputStreamIterator(BufferedInputStreamIterator&& other)
+      : rep_(std::move(other.rep_)) {
+    other.rep_.reset(new Rep());
+  }
 
-  BufferedInputStreamIterator& operator=(BufferedInputStreamIterator&& other) =
-      default;
+  BufferedInputStreamIterator& operator=(BufferedInputStreamIterator&& other) {
+    if (this != &other) {
+      rep_ = std::move(other.rep_);
+      other.rep_.reset(new Rep());
+    }
+    return *this;
+  }
 
   byte read() { return rep_->read(); }
 
@@ -62,7 +70,7 @@ class BufferedInputStreamIterator {
   // We keep the content on the heap for the following reasons:
   // * stack space is very limited, and we need some buffer cache;
   // * underlying file structures are using heap anyway;
-  // * we want the stream object to be cheaply movable.
+  // * we want the buffered iterator to be cheaply movable.
   std::unique_ptr<Rep> rep_;
 };
 
