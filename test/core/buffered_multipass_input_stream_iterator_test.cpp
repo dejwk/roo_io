@@ -32,4 +32,31 @@ INSTANTIATE_TYPED_TEST_SUITE_P(BufferedMultipassInputStreamIterator,
                                MultipassInputIteratorTest,
                                BufferedMultipassInputStreamIteratorFixture);
 
+TEST(BufferedMultipassInputStreamIterator, DefaultConstructibleAndClosed) {
+  BufferedMultipassInputStreamIterator itr;
+  EXPECT_EQ(kClosed, itr.status());
+  itr.read();
+  EXPECT_EQ(kClosed, itr.status());
+  itr.skip(100);
+  EXPECT_EQ(kClosed, itr.status());
+  byte buf[10];
+  EXPECT_EQ(0, itr.read(buf, 10));
+  EXPECT_EQ(kClosed, itr.status());
+}
+
+TEST(BufferedMultipassInputStreamIterator, DefaultConstructibleResets) {
+  BufferedMultipassInputStreamIterator itr;
+  EXPECT_EQ(kClosed, itr.status());
+  const byte* data = (const byte*)"ABCDEFGH";
+  MemoryInputStream<const byte*> is(data, data + 8);
+  itr.reset(is);
+  EXPECT_EQ(kOk, itr.status());
+  EXPECT_EQ(byte{'A'}, itr.read());
+  EXPECT_EQ(kOk, itr.status());
+  itr.reset();
+  EXPECT_EQ(kClosed, itr.status());
+  itr.read();
+  EXPECT_EQ(kClosed, itr.status());
+}
+
 }  // namespace roo_io
