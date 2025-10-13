@@ -12,6 +12,7 @@ cc_library(
         "src",
     ],
     visibility = ["//visibility:public"],
+    defines = ["ARDUINO=10000"],
     deps = [
         "@roo_backport",
         "@roo_logging",
