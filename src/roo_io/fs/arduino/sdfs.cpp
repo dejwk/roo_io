@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "roo_io_arduino/fs/arduino_sdfs.h"
+#include "roo_io/fs/arduino/sdfs.h"
 
 #ifdef ESP32
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
@@ -21,7 +21,7 @@ namespace roo_io {
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin, decltype(::SD)& sd,
                          decltype(::SPI)& spi, uint32_t freq)
 
-    : sd_(sd), spi_(&spi), cs_pin_(cs_pin), frequency_(freq) {}
+    : cs_pin_(cs_pin), sd_(sd), spi_(&spi), frequency_(freq) {}
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
