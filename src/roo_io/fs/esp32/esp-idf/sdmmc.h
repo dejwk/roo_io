@@ -1,8 +1,10 @@
 #pragma once
 
-#if (defined(ESP32) || defined(ROO_TESTING))
-#include "sdkconfig.h"
-#if (CONFIG_IDF_TARGET_ESP32S3)
+#if (defined ESP32 && defined ARDUINO)
+
+#include "soc/soc_caps.h"
+
+#if SOC_SDMMC_HOST_SUPPORTED
 
 #include "driver/sdmmc_types.h"
 #include "hal/gpio_types.h"

@@ -1,4 +1,4 @@
-#include "roo_io/fs/esp32s3/sdmmc.h"
+#include "roo_io/fs/esp32/esp-idf/sdmmc.h"
 
 #if defined(ROO_TESTING)
 
@@ -6,9 +6,11 @@
 
 #endif
 
-#if (defined(ESP32) || defined(ROO_TESTING))
-#include "sdkconfig.h"
-#if (CONFIG_IDF_TARGET_ESP32S3)
+#if (defined ESP32 && defined ARDUINO)
+
+#include "soc/soc_caps.h"
+
+#if SOC_SDMMC_HOST_SUPPORTED
 
 #if !defined(MLOG_roo_io_fs)
 #define MLOG_roo_io_fs 0
