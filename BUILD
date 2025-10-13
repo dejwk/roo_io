@@ -34,7 +34,7 @@ cc_library(
         exclude = ["test/**"],
     ),
     defines = ["ROO_IO_TESTING"],
-    alwayslink = 1,
+    linkstatic = 1,
     includes = [
         "src",
     ],
