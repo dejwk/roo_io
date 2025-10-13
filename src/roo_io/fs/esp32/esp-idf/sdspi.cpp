@@ -25,8 +25,9 @@ SdSpiFs::SdSpiFs(uint8_t pin_cs, spi_host_device_t spi_host)
     : spi_host_(spi_host),
       pin_cs_((gpio_num_t)pin_cs),
       mount_point_("/sd"),
-      max_files_(5),
-      format_if_empty_(false),
+      max_open_files_(5),
+      format_if_mount_failed_(false),
+      read_only_(false),
       spi_frequency_(20000000) {}
 
 void SdSpiFs::setCsPin(uint8_t pin_cs) { pin_cs_ = (gpio_num_t)pin_cs; }
@@ -39,15 +40,21 @@ void SdSpiFs::setMountPoint(const char* mount_point) {
   mount_point_ = mount_point;
 }
 
-uint8_t SdSpiFs::maxFiles() const { return max_files_; }
+uint8_t SdSpiFs::maxOpenFiles() const { return max_open_files_; }
 
-void SdSpiFs::setMaxFiles(uint8_t max_files) { max_files_ = max_files; }
-
-bool SdSpiFs::formatIfEmpty() const { return format_if_empty_; }
-
-void SdSpiFs::setFormatIfEmpty(bool format_if_empty) {
-  format_if_empty_ = format_if_empty;
+void SdSpiFs::setMaxOpenFiles(uint8_t max_open_files) {
+  max_open_files_ = max_open_files;
 }
+
+bool SdSpiFs::formatIfMountFailed() const { return format_if_mount_failed_; }
+
+void SdSpiFs::setFormatIfMountFailed(bool format_if_mount_failed) {
+  format_if_mount_failed_ = format_if_mount_failed;
+}
+
+bool SdSpiFs::readOnly() const { return read_only_; }
+
+void SdSpiFs::setReadOnly(bool read_only) { read_only_ = read_only; }
 
 MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
@@ -67,8 +74,8 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   dev_config.gpio_cs = pin_cs_;
 
   esp_vfs_fat_mount_config_t mount_config = {
-      .format_if_mount_failed = format_if_empty_,
-      .max_files = max_files_,
+      .format_if_mount_failed = format_if_mount_failed_,
+      .max_files = max_open_files_,
       .allocation_unit_size = 16 * 1024};
 
   ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
@@ -89,7 +96,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   }
 
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(mount_base_path_.c_str(), false, unmount_fn)));
+      new PosixMountImpl(mount_base_path_.c_str(), read_only_, unmount_fn)));
 }
 
 void SdSpiFs::unmountImpl() {
@@ -108,7 +115,7 @@ Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
   return kMediaPresenceUnknown;
 }
 
-SdSpiFs SDSPI;
+SdSpiFs SdSpi;
 
 }  // namespace roo_io
 

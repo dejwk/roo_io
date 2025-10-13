@@ -17,17 +17,20 @@ class SdSpiFs : public Filesystem {
  public:
   SdSpiFs(uint8_t pin_cs = -1, spi_host_device_t spi_host = SPI2_HOST);
 
+  void setCsPin(uint8_t pin_cs);
+  void setSpiHost(spi_host_device_t spi_host);
+
   const char* mountPoint() const;
   void setMountPoint(const char* mount_point);
 
-  uint8_t maxFiles() const;
-  void setMaxFiles(uint8_t max_files);
+  uint8_t maxOpenFiles() const;
+  void setMaxOpenFiles(uint8_t max_open_files);
 
-  bool formatIfEmpty() const;
-  void setFormatIfEmpty(bool format_if_empty);
+  bool formatIfMountFailed() const;
+  void setFormatIfMountFailed(bool format_if_mount_failed);
 
-  void setCsPin(uint8_t pin_cs);
-  void setSpiHost(spi_host_device_t spi_host);
+  bool readOnly() const;
+  void setReadOnly(bool read_only);
 
   MediaPresence checkMediaPresence() override;
 
@@ -38,22 +41,19 @@ class SdSpiFs : public Filesystem {
 
  private:
   spi_host_device_t spi_host_;
-  //   gpio_num_t pin_sck_;
-  //   gpio_num_t pin_miso_;
-  //   gpio_num_t pin_mosi_;
   gpio_num_t pin_cs_;
+  uint32_t spi_frequency_;
 
   std::string mount_point_;
-  uint8_t max_files_;
-  bool format_if_empty_;
-
-  uint32_t spi_frequency_;
+  uint8_t max_open_files_;
+  bool format_if_mount_failed_;
+  bool read_only_;
 
   std::string mount_base_path_;
   sdmmc_card_t* card_;
 };
 
-extern SdSpiFs SDSPI;
+extern SdSpiFs SdSpi;
 
 }  // namespace roo_io
 

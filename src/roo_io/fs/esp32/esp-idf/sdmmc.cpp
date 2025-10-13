@@ -16,6 +16,9 @@
 #define MLOG_roo_io_fs 0
 #endif
 
+#include "ff.h"
+
+#include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "esp_vfs_fat.h"
 #include "roo_io/fs/posix/posix_mount.h"
@@ -32,10 +35,13 @@ SdMmcFs::SdMmcFs()
       pin_d2_((gpio_num_t)-1),
       pin_d3_((gpio_num_t)-1),
       width_(0),
+      frequency_(20000000),
       mount_point_("/sdmmc"),
       max_open_files_(5),
-      // format_if_empty_(false),
-      frequency_(20000000) {}
+      format_if_mount_failed_(false),
+      read_only_(false),
+      card_(nullptr),
+      pdrv_(0xFF) {}
 
 void SdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
   use_default_pins_ = false;
@@ -59,8 +65,8 @@ void SdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
 
 const char* SdMmcFs::mountPoint() const { return mount_point_.c_str(); }
 
-void SdMmcFs::setMountPoint(const char* mountpoint) {
-  mount_point_ = mountpoint;
+void SdMmcFs::setMountPoint(const char* mount_point) {
+  mount_point_ = mount_point;
 }
 
 uint8_t SdMmcFs::maxOpenFiles() const { return max_open_files_; }
@@ -69,11 +75,15 @@ void SdMmcFs::setMaxOpenFiles(uint8_t max_open_files) {
   max_open_files_ = max_open_files;
 }
 
-// bool SdMmcFs::formatIfEmpty() const { return format_if_empty_; }
+bool SdMmcFs::formatIfMountFailed() const { return format_if_mount_failed_; }
 
-// void SdMmcFs::setFormatIfEmpty(bool format_if_empty) {
-//   format_if_empty_ = format_if_empty;
-// }
+void SdMmcFs::setFormatIfMountFailed(bool format_if_mount_failed) {
+  format_if_mount_failed_ = format_if_mount_failed;
+}
+
+bool SdMmcFs::readOnly() const { return read_only_; }
+
+void SdMmcFs::setReadOnly(bool read_only) { read_only_ = read_only; }
 
 MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
@@ -97,7 +107,7 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
     slot_config.width = width_;
   }
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-      .format_if_mount_failed = false,
+      .format_if_mount_failed = format_if_mount_failed_,
       .max_files = max_open_files_,
       .allocation_unit_size = 16 * 1024};
 
@@ -113,9 +123,10 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
     }
     return MountImpl::MountError(kGenericMountError);
   }
+  pdrv_ = ff_diskio_get_pdrv_card(card_);
 
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(mount_base_path_.c_str(), false, unmount_fn)));
+      new PosixMountImpl(mount_base_path_.c_str(), read_only_, unmount_fn)));
 }
 
 void SdMmcFs::unmountImpl() {
@@ -127,16 +138,24 @@ void SdMmcFs::unmountImpl() {
     LOG(ERROR) << "Unmounting card failed: " << esp_err_to_name(ret);
   }
   card_ = nullptr;
+  pdrv_ = 0xFF;
   mount_base_path_.clear();
 }
 
 Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
-  return kMediaPresenceUnknown;
+  FATFS* fsinfo;
+  DWORD fre_clust;
+  char drv[3] = {(char)(48 + pdrv_), ':', 0};
+  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) {
+    return Filesystem::kMediaAbsent;
+  }
+  return (fsinfo->csize == 0) ? Filesystem::kMediaAbsent
+                              : Filesystem::kMediaPresent;
 }
 
 SdMmcFs CreateSdMmcFs() { return SdMmcFs(); }
 
-SdMmcFs SDMMC = CreateSdMmcFs();
+SdMmcFs SdMmc = CreateSdMmcFs();
 
 }  // namespace roo_io
 

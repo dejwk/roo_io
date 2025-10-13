@@ -25,8 +25,11 @@ class SdMmcFs : public Filesystem {
   uint8_t maxOpenFiles() const;
   void setMaxOpenFiles(uint8_t max_files);
 
-  // bool formatIfEmpty() const;
-  // void setFormatIfEmpty(bool format_if_empty);
+  bool formatIfMountFailed() const;
+  void setFormatIfMountFailed(bool format_if_mount_failed);
+
+  bool readOnly() const;
+  void setReadOnly(bool read_only);
 
   MediaPresence checkMediaPresence() override;
 
@@ -49,17 +52,19 @@ class SdMmcFs : public Filesystem {
   gpio_num_t pin_d3_;
   uint8_t width_;
 
+  uint32_t frequency_;
+
   std::string mount_point_;
   uint8_t max_open_files_;
-  // bool format_if_empty_;
-
-  int frequency_;
+  bool format_if_mount_failed_;
+  bool read_only_;
 
   std::string mount_base_path_;
   sdmmc_card_t* card_;
+  uint8_t pdrv_;
 };
 
-extern SdMmcFs SDMMC;
+extern SdMmcFs SdMmc;
 
 }  // namespace roo_io
 

@@ -24,15 +24,22 @@ namespace roo_io {
 // directly, you might as well use the esp-idf/sdmmc.h version.
 class ArduinoSdMmcFs : public Filesystem {
  public:
-  ArduinoSdMmcFs(uint8_t clk, uint8_t cmd, uint8_t d0,
-                 const char* mountpoint = "/sdcard",
-                 int frequency = SDMMC_FREQ_HIGHSPEED,
-                 uint8_t max_open_files = 5);
+  void setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0);
 
-  ArduinoSdMmcFs(uint8_t clk, uint8_t cmd, uint8_t d0, uint8_t d1, uint8_t d2,
-                 uint8_t d3, const char* mountpoint = "/sdcard",
-                 int frequency = SDMMC_FREQ_HIGHSPEED,
-                 uint8_t max_open_files = 5);
+  void setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0, uint8_t pin_d1,
+               uint8_t pin_d2, uint8_t pin_d3);
+
+  const char* mountPoint() const;
+  void setMountPoint(const char* mount_point);
+
+  uint8_t maxOpenFiles() const;
+  void setMaxOpenFiles(uint8_t max_open_files);
+
+  bool formatIfMountFailed() const;
+  void setFormatIfMountFailed(bool format_if_mount_failed);
+
+  bool readOnly() const;
+  void setReadOnly(bool read_only);
 
   MediaPresence checkMediaPresence() override;
 
@@ -42,21 +49,22 @@ class ArduinoSdMmcFs : public Filesystem {
   void unmountImpl() override;
 
  private:
-  uint8_t clk_;
-  uint8_t cmd_;
-  uint8_t d0_;
-  uint8_t d1_;
-  uint8_t d2_;
-  uint8_t d3_;
-  bool mode_1bit_;
+  friend ArduinoSdMmcFs CreateArduinoSdMmcFs();
 
-  std::string mountpoint_;
+  ArduinoSdMmcFs();
+
+  bool mode_1bit_;
   uint32_t frequency_;
+
+  std::string mount_point_;
   uint8_t max_open_files_;
+  bool format_if_mount_failed_;
   bool read_only_;
+
+  std::string mount_base_path_;
 };
 
-// extern ArduinoSdMmcFs SdMmc;
+extern ArduinoSdMmcFs SD_MMC;
 
 }  // namespace roo_io
 
