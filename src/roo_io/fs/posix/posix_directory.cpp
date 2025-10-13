@@ -35,8 +35,9 @@ bool PosixDirectoryImpl::read(Directory::Entry& entry) {
   if (file_.empty() || file_.back() != '/') {
     file_ += '/';
   }
+  size_t path_offset = file_.size();
   file_.append(next_->d_name);
-  setEntry(entry, file_.c_str(), path_.size() + 1, next_->d_type == DT_DIR);
+  setEntry(entry, file_.c_str(), path_offset, next_->d_type == DT_DIR);
   return true;
 }
 
