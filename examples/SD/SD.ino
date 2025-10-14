@@ -17,7 +17,7 @@ void setup() {
   // Initialize the SPI bus.
   SPI.begin(kPinSpiSck, kPinSpiMiso, kPinSpiMosi);
 
-  // Initialize the SD filesystem.
+  // Configure the SD filesystem.
   sd.setCsPin(kPinSdCs);
 }
 
