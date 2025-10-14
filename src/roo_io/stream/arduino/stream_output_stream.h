@@ -8,7 +8,7 @@
 
 namespace roo_io {
 
-// Adepter to write to an arduino stream as an OutputStream. The stream is
+// Adapter to write to an arduino stream as an OutputStream. The stream is
 // considered opened until close() is explicitly called.
 class ArduinoStreamOutputStream : public OutputStream {
  public:
