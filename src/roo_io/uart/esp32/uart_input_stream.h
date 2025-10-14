@@ -12,7 +12,7 @@ namespace roo_io {
 // otherwise the stream will fail immediately when you try to read from
 class Esp32UartInputStream : public InputStream {
  public:
-  Esp32UartInputStream(uart_port_t port) : port_(port) {}
+  Esp32UartInputStream(uart_port_t port) : port_(port), status_(kOk) {}
 
   size_t tryRead(roo::byte* buf, size_t count) override;
 
