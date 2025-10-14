@@ -3,7 +3,9 @@
 #include "roo_io/uart/esp32/uart_output_stream.h"
 
 #include "driver/uart.h"
+#ifndef ROO_TESTING
 #include "hal/uart_ll.h"
+#endif
 
 namespace roo_io {
 
@@ -54,12 +56,16 @@ void Esp32UartOutputStream::close() {
 }
 
 size_t Esp32UartOutputStream::available_for_write() const {
+#ifdef ROO_TESTING
+  return 64;  // Arbitrary large number for testing.
+#else
   uint32_t available = uart_ll_get_txfifo_len(UART_LL_GET_HW(port_));
   size_t tx_ringbuf_available = 0;
   if (uart_get_tx_buffer_free_size(port_, &tx_ringbuf_available) == ESP_OK) {
     available = tx_ringbuf_available == 0 ? available : tx_ringbuf_available;
   }
   return available;
+#endif
 }
 
 }  // namespace roo_io
