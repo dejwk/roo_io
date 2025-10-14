@@ -32,7 +32,7 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
     return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(sd_.mountpoint(), readOnly(), unmount_fn)));
+      new PosixMountImpl(mountPoint(), readOnly(), unmount_fn)));
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
