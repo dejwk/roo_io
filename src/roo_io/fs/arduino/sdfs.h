@@ -1,5 +1,14 @@
 #pragma once
 
+// Filesystem based on the Arduino SD library. On ESP32, it bypasses most of
+// the Arduino layer and uses the underlying VFS filesystem directly.
+//
+// Supports dynamic mounting, and software read-only mounting.
+//
+// On ESP32, very similar functionality is provided by the
+// roo_io::ArduinoSdSpiFs class, which uses the lower-level sd_diskio interface
+// directly, instead of going through the Arduino SD object at all.
+
 #ifdef ARDUINO
 
 #include <Arduino.h>
