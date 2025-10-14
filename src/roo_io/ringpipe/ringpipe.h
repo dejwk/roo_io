@@ -2,6 +2,7 @@
 
 #include "roo_io/ringpipe/ringbuffer.h"
 #include "roo_io/status.h"
+#include "roo_threads.h"
 #include "roo_threads/condition_variable.h"
 #include "roo_threads/mutex.h"
 
