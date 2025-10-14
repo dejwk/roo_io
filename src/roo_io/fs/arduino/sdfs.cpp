@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 
-#ifdef ESP32
+#if (defined ESP32 || defined ROO_TESTING)
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
 // completely.
 #include "roo_io/fs/posix/posix_mount.h"
@@ -16,48 +16,23 @@
 
 namespace roo_io {
 
-#ifdef ESP32
+#if (defined ESP32 || defined ROO_TESTING)
 
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin, decltype(::SD)& sd,
                          decltype(::SPI)& spi, uint32_t freq)
-
-    : cs_pin_((gpio_num_t)cs_pin),
+    : BaseEsp32VfsFilesystem(freq, "/sd"),
+      cs_pin_((gpio_num_t)cs_pin),
       sd_(sd),
-      spi_(&spi),
-      frequency_(freq),
-      mount_point_("/sd"),
-      max_open_files_(5),
-      format_if_mount_failed_(false),
-      read_only_(false) {}
-
-const char* ArduinoSdFs::mountPoint() const { return mount_point_.c_str(); }
-
-void ArduinoSdFs::setMountPoint(const char* mount_point) {
-  mount_point_ = mount_point;
-}
-
-uint8_t ArduinoSdFs::maxOpenFiles() const { return max_open_files_; }
-
-void ArduinoSdFs::setMaxOpenFiles(uint8_t max_open_files) {
-  max_open_files_ = max_open_files;
-}
-
-bool ArduinoSdFs::formatIfMountFailed() const {
-  return format_if_mount_failed_;
-}
-
-void ArduinoSdFs::setFormatIfMountFailed(bool format_if_mount_failed) {
-  format_if_mount_failed_ = format_if_mount_failed;
-}
+      spi_(&spi) {}
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
-  if (!sd_.begin(cs_pin_, *spi_, frequency_, mount_point_.c_str(),
-                 max_open_files_, format_if_mount_failed_)) {
+  if (!sd_.begin(cs_pin_, *spi_, frequency(), mountPoint(), maxOpenFiles(),
+                 formatIfMountFailed())) {
     return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(sd_.mountpoint(), read_only_, unmount_fn)));
+      new PosixMountImpl(sd_.mountpoint(), readOnly(), unmount_fn)));
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
@@ -82,7 +57,7 @@ Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
   return kMediaPresenceUnknown;
 }
 
-#endif
+#endif  // ESP32
 
 void ArduinoSdFs::unmountImpl() { sd_.end(); }
 

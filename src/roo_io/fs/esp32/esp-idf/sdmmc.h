@@ -8,30 +8,16 @@
 
 #include "driver/sdmmc_types.h"
 #include "hal/gpio_types.h"
-#include "roo_io/fs/filesystem.h"
+#include "roo_io/fs/esp32/base_vfs_filesystem.h"
 
 namespace roo_io {
 
-class SdMmcFs : public Filesystem {
+class SdMmcFs : public BaseEsp32VfsFilesystem {
  public:
   void setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0);
 
   void setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0, uint8_t pin_d1,
                uint8_t pin_d2, uint8_t pin_d3);
-
-  void setFrequency(uint32_t freq) { frequency_ = freq; }
-
-  const char* mountPoint() const;
-  void setMountPoint(const char* mount_point);
-
-  uint8_t maxOpenFiles() const;
-  void setMaxOpenFiles(uint8_t max_files);
-
-  bool formatIfMountFailed() const;
-  void setFormatIfMountFailed(bool format_if_mount_failed);
-
-  bool readOnly() const;
-  void setReadOnly(bool read_only);
 
   MediaPresence checkMediaPresence() override;
 
@@ -53,13 +39,6 @@ class SdMmcFs : public Filesystem {
   gpio_num_t pin_d2_;
   gpio_num_t pin_d3_;
   uint8_t width_;
-
-  uint32_t frequency_;
-
-  std::string mount_point_;
-  uint8_t max_open_files_;
-  bool format_if_mount_failed_;
-  bool read_only_;
 
   std::string mount_base_path_;
   sdmmc_card_t* card_;

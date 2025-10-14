@@ -13,11 +13,8 @@
 namespace roo_io {
 
 ArduinoSdMmcFs::ArduinoSdMmcFs()
-    : mode_1bit_(true),
-      mount_point_("/sdcard"),
-      max_open_files_(5),
-      format_if_mount_failed_(false),
-      frequency_(SDMMC_FREQ_HIGHSPEED) {}
+    : BaseEsp32VfsFilesystem(SDMMC_FREQ_HIGHSPEED, "/sdcard"),
+      mode_1bit_(true) {}
 
 void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
   SD_MMC.setPins(pin_clk, pin_cmd, pin_d0);
@@ -30,30 +27,6 @@ void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
   mode_1bit_ = false;
 }
 
-const char* ArduinoSdMmcFs::mountPoint() const { return mount_point_.c_str(); }
-
-void ArduinoSdMmcFs::setMountPoint(const char* mountpoint) {
-  mount_point_ = mountpoint;
-}
-
-uint8_t ArduinoSdMmcFs::maxOpenFiles() const { return max_open_files_; }
-
-void ArduinoSdMmcFs::setMaxOpenFiles(uint8_t max_open_files) {
-  max_open_files_ = max_open_files;
-}
-
-bool ArduinoSdMmcFs::formatIfMountFailed() const {
-  return format_if_mount_failed_;
-}
-
-void ArduinoSdMmcFs::setFormatIfMountFailed(bool format_if_mount_failed) {
-  format_if_mount_failed_ = format_if_mount_failed;
-}
-
-bool ArduinoSdMmcFs::readOnly() const { return read_only_; }
-
-void ArduinoSdMmcFs::setReadOnly(bool read_only) { read_only_ = read_only; }
-
 MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
     std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
@@ -62,15 +35,15 @@ MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
 #else
   mount_base_path_.clear();
 #endif
-  mount_base_path_.append(mount_point_);
+  mount_base_path_.append(mountPoint());
   bool result =
       ::SD_MMC.begin(mount_base_path_.c_str(), mode_1bit_,
-                     format_if_mount_failed_, frequency_, max_open_files_);
+                     formatIfMountFailed(), frequency(), maxOpenFiles());
   if (!result) {
     return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(mount_base_path_.c_str(), read_only_, unmount_fn)));
+      new PosixMountImpl(mount_base_path_.c_str(), readOnly(), unmount_fn)));
 }
 
 void ArduinoSdMmcFs::unmountImpl() {

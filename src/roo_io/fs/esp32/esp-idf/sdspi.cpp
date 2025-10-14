@@ -22,35 +22,9 @@
 namespace roo_io {
 
 SdSpiFs::SdSpiFs(uint8_t cs_pin, spi_host_device_t spi_host, uint32_t frequency)
-    : cs_pin_((gpio_num_t)cs_pin),
-      spi_host_(spi_host),
-      frequency_(frequency),
-      mount_point_("/sd"),
-      max_open_files_(5),
-      format_if_mount_failed_(false),
-      read_only_(false) {}
-
-const char* SdSpiFs::mountPoint() const { return mount_point_.c_str(); }
-
-void SdSpiFs::setMountPoint(const char* mount_point) {
-  mount_point_ = mount_point;
-}
-
-uint8_t SdSpiFs::maxOpenFiles() const { return max_open_files_; }
-
-void SdSpiFs::setMaxOpenFiles(uint8_t max_open_files) {
-  max_open_files_ = max_open_files;
-}
-
-bool SdSpiFs::formatIfMountFailed() const { return format_if_mount_failed_; }
-
-void SdSpiFs::setFormatIfMountFailed(bool format_if_mount_failed) {
-  format_if_mount_failed_ = format_if_mount_failed;
-}
-
-bool SdSpiFs::readOnly() const { return read_only_; }
-
-void SdSpiFs::setReadOnly(bool read_only) { read_only_ = read_only; }
+    : BaseEsp32VfsFilesystem(frequency, "/sd"),
+      cs_pin_((gpio_num_t)cs_pin),
+      spi_host_(spi_host) {}
 
 MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
@@ -59,7 +33,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
 #else
   mount_base_path_.clear();
 #endif
-  mount_base_path_.append(mount_point_);
+  mount_base_path_.append(mountPoint());
 
   esp_err_t ret;
 
@@ -70,8 +44,8 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   dev_config.gpio_cs = cs_pin_;
 
   esp_vfs_fat_mount_config_t mount_config = {
-      .format_if_mount_failed = format_if_mount_failed_,
-      .max_files = max_open_files_,
+      .format_if_mount_failed = formatIfMountFailed(),
+      .max_files = maxOpenFiles(),
       .allocation_unit_size = 16 * 1024};
 
   ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
@@ -92,7 +66,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   }
 
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-      new PosixMountImpl(mount_base_path_.c_str(), read_only_, unmount_fn)));
+      new PosixMountImpl(mount_base_path_.c_str(), readOnly(), unmount_fn)));
 }
 
 void SdSpiFs::unmountImpl() {

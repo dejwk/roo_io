@@ -2,34 +2,25 @@
 
 #ifdef ARDUINO
 
+#include <Arduino.h>
 #include <SD.h>
+
+#if (defined ESP32 || defined ROO_TESTING)
 #include <SPI.h>
 
-#include <memory>
-
+#include "roo_io/fs/esp32/base_vfs_filesystem.h"
+#else
 #include "roo_io/fs/filesystem.h"
+#endif
 
 namespace roo_io {
 
-#ifdef ESP32
+#if (defined ESP32 || defined ROO_TESTING)
 
-class ArduinoSdFs : public Filesystem {
+class ArduinoSdFs : public BaseEsp32VfsFilesystem {
  public:
   void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
   void setSPI(decltype(::SPI)& spi) { spi_ = &spi; }
-  void setFrequency(uint32_t freq) { frequency_ = freq; }
-
-  const char* mountPoint() const;
-  void setMountPoint(const char* mount_point);
-
-  uint8_t maxOpenFiles() const;
-  void setMaxOpenFiles(uint8_t max_open_files);
-
-  bool formatIfMountFailed() const;
-  void setFormatIfMountFailed(bool format_if_mount_failed);
-
-  bool readOnly() const { return read_only_; }
-  void setReadOnly(bool read_only) { read_only_ = read_only; }
 
   MediaPresence checkMediaPresence() override;
 
@@ -47,12 +38,6 @@ class ArduinoSdFs : public Filesystem {
 
   decltype(::SD)& sd_;
   decltype(::SPI)* spi_;
-  uint32_t frequency_;
-
-  std::string mount_point_;
-  uint8_t max_open_files_;
-  bool format_if_mount_failed_;
-  bool read_only_;
 };
 
 #else
@@ -81,7 +66,7 @@ class ArduinoSdFs : public Filesystem {
   bool read_only_;
 };
 
-#endif
+#endif  // ESP32
 
 extern ArduinoSdFs SD;
 
