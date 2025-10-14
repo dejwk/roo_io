@@ -15,10 +15,9 @@ namespace roo_io {
 // the same SPI bus. Otherwise, use "roo_io/fs/esp32/arduino/sdfs.h" instead.
 class SdSpiFs : public Filesystem {
  public:
-  SdSpiFs(uint8_t pin_cs = -1, spi_host_device_t spi_host = SPI2_HOST);
-
-  void setCsPin(uint8_t pin_cs);
-  void setSpiHost(spi_host_device_t spi_host);
+  void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
+  void setSpiHost(spi_host_device_t spi_host) { spi_host_ = spi_host; }
+  void setFrequency(uint32_t freq) { frequency_ = freq; }
 
   const char* mountPoint() const;
   void setMountPoint(const char* mount_point);
@@ -35,14 +34,20 @@ class SdSpiFs : public Filesystem {
   MediaPresence checkMediaPresence() override;
 
  protected:
+  friend SdSpiFs CreateSdSpiFs();
+
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
+
+  SdSpiFs(uint8_t cs_pin = -1, spi_host_device_t spi_host = SPI2_HOST,
+          uint32_t freq = 20000000);
 
   void unmountImpl() override;
 
  private:
+  gpio_num_t cs_pin_;
+
   spi_host_device_t spi_host_;
-  gpio_num_t pin_cs_;
-  uint32_t spi_frequency_;
+  uint32_t frequency_;
 
   std::string mount_point_;
   uint8_t max_open_files_;
@@ -53,7 +58,7 @@ class SdSpiFs : public Filesystem {
   sdmmc_card_t* card_;
 };
 
-extern SdSpiFs SdSpi;
+extern SdSpiFs SDSPI;
 
 }  // namespace roo_io
 

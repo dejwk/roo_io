@@ -29,6 +29,8 @@ class ArduinoSdMmcFs : public Filesystem {
   void setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0, uint8_t pin_d1,
                uint8_t pin_d2, uint8_t pin_d3);
 
+  void setFrequency(uint32_t freq) { frequency_ = freq; }
+
   const char* mountPoint() const;
   void setMountPoint(const char* mount_point);
 

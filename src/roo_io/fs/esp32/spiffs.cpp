@@ -21,7 +21,7 @@ namespace roo_io {
 SpiffsFs::SpiffsFs()
     : mount_point_("/spiffs"),
       max_open_files_(10),
-      format_if_empty_(false),
+      format_if_mount_failed_(false),
       has_partition_label_(false),
       partition_label_("") {}
 
@@ -46,10 +46,10 @@ void SpiffsFs::setMaxOpenFiles(uint8_t max_open_files) {
   max_open_files_ = max_open_files;
 }
 
-bool SpiffsFs::formatIfEmpty() const { return format_if_empty_; }
+bool SpiffsFs::formatIfMountFailed() const { return format_if_mount_failed_; }
 
-void SpiffsFs::setFormatIfEmpty(bool format_if_empty) {
-  format_if_empty_ = format_if_empty;
+void SpiffsFs::setFormatIfMountFailed(bool format_if_mount_failed) {
+  format_if_mount_failed_ = format_if_mount_failed;
 }
 
 MountImpl::MountResult SpiffsFs::mountImpl(std::function<void()> unmount_fn) {
@@ -60,13 +60,14 @@ MountImpl::MountResult SpiffsFs::mountImpl(std::function<void()> unmount_fn) {
 #endif
   mount_base_path.append(mount_point_);
 
-  esp_vfs_spiffs_conf_t conf = {.base_path = mount_base_path.c_str(),
-                                .partition_label = partitionLabel(),
-                                .max_files = max_open_files_,
-                                .format_if_mount_failed = false};
+  esp_vfs_spiffs_conf_t conf = {
+      .base_path = mount_base_path.c_str(),
+      .partition_label = partitionLabel(),
+      .max_files = max_open_files_,
+      .format_if_mount_failed = format_if_mount_failed_};
 
   esp_err_t ret = esp_vfs_spiffs_register(&conf);
-  if (ret == ESP_FAIL && format_if_empty_) {
+  if (ret == ESP_FAIL && format_if_mount_failed_) {
     if (format()) {
       ret = esp_vfs_spiffs_register(&conf);
     }
@@ -98,8 +99,8 @@ Status SpiffsFs::format() {
   esp_err_t err = esp_spiffs_format(partition_label_.c_str());
   enableCore0WDT();
   if (err) {
-    LOG(ERROR) << "Formatting SpiffsFs failed! Error: " <<
-    esp_err_to_name(err); return kUnknownIOError;
+    LOG(ERROR) << "Formatting SpiffsFs failed! Error: " << esp_err_to_name(err);
+    return kUnknownIOError;
   }
   return kOk;
 }

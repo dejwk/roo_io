@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef ESP32
+#if (defined ESP32 || defined ROO_TESTING)
 
 #include "roo_io/fs/filesystem.h"
 
@@ -17,8 +17,8 @@ class SpiffsFs : public Filesystem {
   uint8_t maxOpenFiles() const;
   void setMaxOpenFiles(uint8_t max_files);
 
-  bool formatIfEmpty() const;
-  void setFormatIfEmpty(bool format_if_empty);
+  bool formatIfMountFailed() const;
+  void setFormatIfMountFailed(bool format_if_mount_failed);
 
   MediaPresence checkMediaPresence() override;
 
@@ -36,7 +36,7 @@ class SpiffsFs : public Filesystem {
 
   std::string mount_point_;
   uint8_t max_open_files_;
-  bool format_if_empty_;
+  bool format_if_mount_failed_;
 
   bool has_partition_label_;
   std::string partition_label_;

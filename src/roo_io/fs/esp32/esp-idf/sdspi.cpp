@@ -21,18 +21,14 @@
 
 namespace roo_io {
 
-SdSpiFs::SdSpiFs(uint8_t pin_cs, spi_host_device_t spi_host)
-    : spi_host_(spi_host),
-      pin_cs_((gpio_num_t)pin_cs),
+SdSpiFs::SdSpiFs(uint8_t cs_pin, spi_host_device_t spi_host, uint32_t frequency)
+    : cs_pin_((gpio_num_t)cs_pin),
+      spi_host_(spi_host),
+      frequency_(frequency),
       mount_point_("/sd"),
       max_open_files_(5),
       format_if_mount_failed_(false),
-      read_only_(false),
-      spi_frequency_(20000000) {}
-
-void SdSpiFs::setCsPin(uint8_t pin_cs) { pin_cs_ = (gpio_num_t)pin_cs; }
-
-void SdSpiFs::setSpiHost(spi_host_device_t spi_host) { spi_host_ = spi_host; }
+      read_only_(false) {}
 
 const char* SdSpiFs::mountPoint() const { return mount_point_.c_str(); }
 
@@ -71,7 +67,7 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
 
   sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
   dev_config.host_id = spi_host_;
-  dev_config.gpio_cs = pin_cs_;
+  dev_config.gpio_cs = cs_pin_;
 
   esp_vfs_fat_mount_config_t mount_config = {
       .format_if_mount_failed = format_if_mount_failed_,
@@ -115,7 +111,9 @@ Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
   return kMediaPresenceUnknown;
 }
 
-SdSpiFs SdSpi;
+SdSpiFs CreateSdSpiFs() { return SdSpiFs(); }
+
+SdSpiFs SDSPI = CreateSdSpiFs();
 
 }  // namespace roo_io
 

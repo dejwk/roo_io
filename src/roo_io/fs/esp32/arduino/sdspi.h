@@ -15,10 +15,13 @@ namespace roo_io {
 
 // Exposes the roo_io::Filesystem interface over the native ESP32 Arduino SD
 // implementation, using the VFS API and Posix interface to the file system.
+// This is very similar to "roo_io/fs/arduino/sdfs.h", but uses the lower-level
+// sd_diskio interface directly, instead of going through the Arduino SD object.
 class ArduinoSdSpiFs : public Filesystem {
  public:
-  void setCsPin(uint8_t pin_cs);
-  void setSpi(SPIClass& spi);
+  void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
+  void setSPI(decltype(::SPI)& spi) { spi_ = &spi; }
+  void setFrequency(uint32_t freq) { frequency_ = freq; }
 
   const char* mountPoint() const;
   void setMountPoint(const char* mount_point);
@@ -29,27 +32,24 @@ class ArduinoSdSpiFs : public Filesystem {
   bool formatIfMountFailed() const;
   void setFormatIfMountFailed(bool format_if_mount_failed);
 
-  bool readOnly() const;
-  void setReadOnly(bool read_only);
+  bool readOnly() const { return read_only_; }
+  void setReadOnly(bool read_only) { read_only_ = read_only; }
 
   MediaPresence checkMediaPresence() override;
 
  protected:
+  friend ArduinoSdSpiFs CreateArduinoSdSpiFs();
+
+  ArduinoSdSpiFs(uint8_t cs_pin = SS, decltype(::SPI)& spi = ::SPI,
+                 uint32_t freq = 20000000);
+
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 
   void unmountImpl() override;
 
- private:
-  friend ArduinoSdSpiFs CreateArduinoSdSpiFs();
+  gpio_num_t cs_pin_;
 
-  ArduinoSdSpiFs();
-//   ArduinoSdSpiFs(uint8_t cs, SPIClass& spi = SPI, uint32_t frequency = 4000000,
-//                  roo::string_view mountpoint = "/sd",
-//                  uint8_t max_open_files = 5, bool read_only = false);
-
-
-  SPIClass& spi_;
-  uint8_t cs_;
+  decltype(::SPI)* spi_;
   uint32_t frequency_;
 
   std::string mount_point_;

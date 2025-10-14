@@ -10,12 +10,14 @@
 
 namespace roo_io {
 
-ArduinoSdSpiFs::ArduinoSdSpiFs()
-    : spi_(SPI),
-      cs_((uint8_t)SS),
-      frequency_(4000000),
+ArduinoSdSpiFs::ArduinoSdSpiFs(uint8_t cs_pin, decltype(::SPI)& spi,
+                               uint32_t freq)
+    : cs_pin_((gpio_num_t)cs_pin),
+      spi_(&spi),
+      frequency_(freq),
       mount_point_("/sd"),
       max_open_files_(5),
+      format_if_mount_failed_(false),
       read_only_(false),
       pdrv_(0xFF) {}
 
@@ -39,13 +41,9 @@ void ArduinoSdSpiFs::setFormatIfMountFailed(bool format_if_mount_failed) {
   format_if_mount_failed_ = format_if_mount_failed;
 }
 
-bool ArduinoSdSpiFs::readOnly() const { return read_only_; }
-
-void ArduinoSdSpiFs::setReadOnly(bool read_only) { read_only_ = read_only; }
-
 MountImpl::MountResult ArduinoSdSpiFs::mountImpl(
     std::function<void()> unmount_fn) {
-  pdrv_ = sdcard_init(cs_, &spi_, frequency_);
+  pdrv_ = sdcard_init(cs_pin_, spi_, frequency_);
   if (pdrv_ == 0xFF) {
     return MountImpl::MountError(kGenericMountError);
   }

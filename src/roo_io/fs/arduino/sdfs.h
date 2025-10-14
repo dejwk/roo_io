@@ -15,10 +15,7 @@ namespace roo_io {
 
 class ArduinoSdFs : public Filesystem {
  public:
-  MediaPresence checkMediaPresence() override;
-
-  void setCsPin(uint8_t cs_pin) { cs_pin_ = cs_pin; }
-
+  void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
   void setSPI(decltype(::SPI)& spi) { spi_ = &spi; }
   void setFrequency(uint32_t freq) { frequency_ = freq; }
 
@@ -34,6 +31,8 @@ class ArduinoSdFs : public Filesystem {
   bool readOnly() const { return read_only_; }
   void setReadOnly(bool read_only) { read_only_ = read_only; }
 
+  MediaPresence checkMediaPresence() override;
+
  protected:
   friend ArduinoSdFs CreateArduinoSdFs();
 
@@ -44,7 +43,7 @@ class ArduinoSdFs : public Filesystem {
 
   void unmountImpl() override;
 
-  uint8_t cs_pin_;
+  gpio_num_t cs_pin_;
 
   decltype(::SD)& sd_;
   decltype(::SPI)* spi_;

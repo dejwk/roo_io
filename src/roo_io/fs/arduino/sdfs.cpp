@@ -21,7 +21,7 @@ namespace roo_io {
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin, decltype(::SD)& sd,
                          decltype(::SPI)& spi, uint32_t freq)
 
-    : cs_pin_(cs_pin),
+    : cs_pin_((gpio_num_t)cs_pin),
       sd_(sd),
       spi_(&spi),
       frequency_(freq),
