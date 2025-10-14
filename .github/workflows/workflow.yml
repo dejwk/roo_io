@@ -26,9 +26,15 @@ jobs:
     - name: Build
       run: |
         ${GITHUB_WORKSPACE}/bin/bazel build //...
-        ${GITHUB_WORKSPACE}/bin/bazel build --config=asan //...
 
     - name: Test
       run: |
         ${GITHUB_WORKSPACE}/bin/bazel test //...
+
+    - name: Build with address sanitizer
+      run: |
+        ${GITHUB_WORKSPACE}/bin/bazel build --config=asan //...
+
+    - name: Test with address sanitizer
+      run: |
         ${GITHUB_WORKSPACE}/bin/bazel test --config=asan //...
