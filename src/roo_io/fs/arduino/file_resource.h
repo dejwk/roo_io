@@ -9,7 +9,7 @@
 #include "roo_io.h"
 #include "roo_io/core/resource.h"
 #include "roo_io/fs/filesystem.h"
-#include "roo_io_arduino/fs/arduino_file_input_stream.h"
+#include "roo_io/fs/arduino/file_input_stream.h"
 
 namespace roo_io {
 
