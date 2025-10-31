@@ -18,9 +18,7 @@ cc_library(
         "@roo_logging",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1/components/fatfs",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1/components/spiffs",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1/components/driver:sdspi",
+        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
         "@roo_threads",
     ],
 )
