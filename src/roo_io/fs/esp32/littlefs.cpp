@@ -6,7 +6,7 @@
 
 #endif
 
-#if (defined(ESP32) && !defined(ROO_TESTING))
+#if (defined(ESP32) || defined(ROO_TESTING))
 
 #include "esp32-hal.h"
 #include "roo_io/fs/posix/posix_mount.h"
