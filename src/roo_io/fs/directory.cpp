@@ -4,6 +4,8 @@
 
 namespace roo_io {
 
+Directory::Directory(Status status) : status_(status) {}
+
 void Directory::close() {
   if (status_ == kClosed) return;
   if (status_ != kOk && status_ != kEndOfStream) return;

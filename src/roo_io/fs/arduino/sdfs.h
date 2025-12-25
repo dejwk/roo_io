@@ -70,8 +70,11 @@ class ArduinoSdFs : public Filesystem {
   void unmountImpl() override;
 
   uint8_t cs_pin_;
-  decltype(::SD)& sd_;
 
+  decltype(::SD)& sd_;
+#if defined (ARDUINO_ARCH_RP2040)
+  decltype(::SDFS)& sdfs_;
+#endif
   bool read_only_;
 };
 

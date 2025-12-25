@@ -54,7 +54,7 @@ class Directory {
   };
 
   // Creates a directory object with the specified status (default closed).
-  Directory(Status status = kClosed) : status_(status) {}
+  Directory(Status status = kClosed);
 
   ~Directory() = default;
   Directory(Directory&& other) = default;

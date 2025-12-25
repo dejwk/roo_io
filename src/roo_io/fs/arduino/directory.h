@@ -18,7 +18,11 @@ class ArduinoDirectoryImpl : public DirectoryImpl {
 
   bool close() override;
 
+#ifdef ARDUINO_ARCH_RP2040
+  const char* path() const override { return file_.fullName(); }
+#else
   const char* path() const override { return file_.path(); }
+#endif
 
   // const char* name() const override { return file_.name(); }
 

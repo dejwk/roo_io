@@ -25,7 +25,7 @@ Status CheckParentage(FS& fs, const char* path) {
     }
     dup_path[pos] = 0;
     {
-      fs::File f = fs.open(dup_path.get());
+      fs::File f = fs.open(dup_path.get(), "r");
       if (!f) return kNotFound;
       if (!f.isDirectory()) return kNotDirectory;
     }
@@ -48,7 +48,7 @@ Stat ArduinoMountImpl::stat(const char* path) const {
   }
   if (!active_) return Stat(kNotMounted);
   if (!fs_.exists(path)) return Stat(kNotFound);
-  fs::File f = fs_.open(path);
+  fs::File f = fs_.open(path, "r");
   if (!f) return Stat(kNotFound);
   return f.isDirectory() ? Stat(Stat::kDir, 0) : Stat(Stat::kFile, f.size());
 }
@@ -60,7 +60,7 @@ Status ArduinoMountImpl::remove(const char* path) {
   if (!active_) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   {
-    fs::File f = fs_.open(path);
+    fs::File f = fs_.open(path, "r");
     if (!f) return kNotFound;
     if (f.isDirectory()) return kNotFile;
   }
@@ -101,7 +101,7 @@ Status ArduinoMountImpl::mkdir(const char* path) {
   if (read_only_) return kReadOnlyFilesystem;
   if (fs_.mkdir(path)) return kOk;
   if (fs_.exists(path)) {
-    fs::File f = fs_.open(path);
+    fs::File f = fs_.open(path, "r");
     if (f) {
       return f.isDirectory() ? kDirectoryExists : kFileExists;
     } else {
@@ -120,7 +120,7 @@ Status ArduinoMountImpl::rmdir(const char* path) {
   if (!active_) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   {
-    fs::File f = fs_.open(path);
+    fs::File f = fs_.open(path, "r");
     if (!f) return kNotFound;
     if (!f.isDirectory()) return kNotDirectory;
     if (fs_.rmdir(path)) return kOk;
@@ -185,7 +185,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
   fs::File f;
   if (update_policy == kFailIfExists) {
     if (fs_.exists(path)) {
-      f = fs_.open(path);
+      f = fs_.open(path, "r");
       return OutputError(f.isDirectory() ? kDirectoryExists : kFileExists);
     }
     f = fs_.open(path, "w");
@@ -194,7 +194,7 @@ std::unique_ptr<OutputStream> ArduinoMountImpl::fopenForWrite(
     // more specific error.
     f = fs_.open(path, update_policy == kTruncateIfExists ? "w" : "a");
     if (!f && fs_.exists(path)) {
-      f = fs_.open(path);
+      f = fs_.open(path, "r");
       if (f.isDirectory()) {
         return OutputError(kNotFile);
       }

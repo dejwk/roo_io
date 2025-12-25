@@ -40,8 +40,14 @@ bool ArduinoDirectoryImpl::read(Directory::Entry& entry) {
     status_ = kEndOfStream;
     return false;
   }
+#ifdef ARDUINO_ARCH_RP2040
+  setEntry(entry, entry_.fullName(),
+           strlen(entry_.fullName()) - strlen(entry_.name()),
+           entry_.isDirectory());
+#else
   setEntry(entry, entry_.path(), strlen(entry_.path()) - strlen(entry_.name()),
            entry_.isDirectory());
+#endif
   return true;
 }
 

@@ -42,7 +42,13 @@ Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
 #else
 
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin)
-    : sd_(::SD), cs_pin_(cs_pin), read_only_(false) {}
+    : sd_(::SD),
+#if defined(ARDUINO_ARCH_RP2040)
+      sdfs_(::SDFS),
+#endif
+      cs_pin_(cs_pin),
+      read_only_(false) {
+}
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
@@ -50,7 +56,11 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
     return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
+#if defined(ARDUINO_ARCH_RP2040)
+      new ArduinoMountImpl(sdfs_, read_only_, unmount_fn)));
+#else
       new ArduinoMountImpl(sd_, read_only_, unmount_fn)));
+#endif
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
