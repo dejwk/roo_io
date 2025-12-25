@@ -1,3 +1,6 @@
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
 
 #include "roo_io/fs/posix/posix_file_input_stream.h"
 
@@ -115,3 +118,5 @@ void PosixFileInputStream::close() {
 }
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

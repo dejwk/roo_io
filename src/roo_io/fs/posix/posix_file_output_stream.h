@@ -1,5 +1,9 @@
 #pragma once
 
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -30,3 +34,5 @@ class PosixFileOutputStream : public OutputStream {
 };
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

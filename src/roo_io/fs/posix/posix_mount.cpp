@@ -1,6 +1,8 @@
-#include "roo_io/fs/posix/posix_mount.h"
+#include "roo_io/fs/posix/config.h"
 
-#if (defined(ESP32) || defined(__linux__))
+#if ROO_IO_FS_SUPPORT_POSIX
+
+#include "roo_io/fs/posix/posix_mount.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -292,4 +294,4 @@ void PosixMountImpl::deactivate() { mount_point_ = nullptr; }
 
 }  // namespace roo_io
 
-#endif
+#endif  // ROO_IO_FS_SUPPORT_POSIX

@@ -1,5 +1,9 @@
 #pragma once
 
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 #include <memory>
 
 #include "roo_io/fs/filesystem.h"
@@ -44,3 +48,5 @@ class PosixMountImpl : public MountImpl {
 };
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

@@ -1,3 +1,7 @@
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 #include "roo_io/fs/posix/posix_file_output_stream.h"
 
 namespace roo_io {
@@ -56,3 +60,5 @@ void PosixFileOutputStream::close() {
 }
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

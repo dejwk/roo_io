@@ -1,5 +1,9 @@
 #pragma once
 
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 #include <dirent.h>
 
 #include <memory>
@@ -37,3 +41,5 @@ class PosixDirectoryImpl : public DirectoryImpl {
 };
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

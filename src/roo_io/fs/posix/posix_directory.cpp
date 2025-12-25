@@ -1,5 +1,9 @@
 #include "roo_io/fs/posix/posix_directory.h"
 
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 namespace roo_io {
 
 PosixDirectoryImpl::PosixDirectoryImpl(std::shared_ptr<MountImpl> mount,
@@ -42,3 +46,5 @@ bool PosixDirectoryImpl::read(Directory::Entry& entry) {
 }
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX

@@ -1,3 +1,7 @@
+#include "roo_io/fs/posix/config.h"
+
+#if ROO_IO_FS_SUPPORT_POSIX
+
 #pragma once
 
 #include <memory>
@@ -39,3 +43,5 @@ class PosixFileInputStream : public MultipassInputStream {
 };
 
 }  // namespace roo_io
+
+#endif  // ROO_IO_FS_SUPPORT_POSIX
