@@ -1,12 +1,12 @@
-#include "roo_io/fs/arduino/file_input_iterator.h"
-
 #include "fakefs.h"
 #include "fakefs_arduino.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "input_iterator_p.h"
 #include "multipass_input_iterator_p.h"
+#include "roo_io/fs/arduino/file_input_iterator.h"
 #include "roo_io/fs/arduino/sdfs.h"
+#include "roo_logging.h"
 
 namespace roo_io {
 
