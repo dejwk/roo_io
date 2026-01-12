@@ -1,5 +1,7 @@
 #include "roo_io/fs/fsutil.h"
 
+#include <cstring>
+
 namespace roo_io {
 
 namespace {
@@ -39,7 +41,9 @@ Status MkDirRecursively(roo_io::Mount& fs, const char* path) {
   }
   if (stat.status() != kNotFound) return stat.status();
 
-  std::unique_ptr<char[]> path_copy(strdup(path));
+  auto len = std::strlen(path) + 1;
+  std::unique_ptr<char[]> path_copy(new char[len]);
+  std::memcpy(path_copy.get(), path, len);
   char* p = path_copy.get();
   while (true) {
     while (*p == '/') ++p;
@@ -63,7 +67,9 @@ Status MkParentDirRecursively(roo_io::Mount& fs, const char* path) {
   }
   if (stat.status() != kNotFound) return stat.status();
 
-  std::unique_ptr<char[]> path_copy(strdup(path));
+  auto len = std::strlen(path) + 1;
+  std::unique_ptr<char[]> path_copy(new char[len]);
+  std::memcpy(path_copy.get(), path, len);
   char* p = path_copy.get();
   while (true) {
     while (*p == '/') ++p;
