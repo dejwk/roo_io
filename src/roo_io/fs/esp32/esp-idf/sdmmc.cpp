@@ -20,6 +20,7 @@
 
 #include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
+#include "esp_idf_version.h"
 #include "esp_vfs_fat.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
@@ -72,12 +73,16 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
 
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
   if (!use_default_pins_) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
     slot_config.clk = pin_clk_;
     slot_config.cmd = pin_cmd_;
     slot_config.d0 = pin_d0_;
     slot_config.d1 = pin_d1_;
     slot_config.d2 = pin_d2_;
     slot_config.d3 = pin_d3_;
+#else
+    LOG(WARNING) << "Custom SDMMC pins not supported on ESP-IDF < 5.0";
+#endif
     slot_config.width = width_;
   }
   esp_vfs_fat_sdmmc_mount_config_t mount_config = {
