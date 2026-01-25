@@ -1,3 +1,6 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+
 cc_test(
     name = "arduino_fs_test",
     srcs = [
@@ -6,8 +9,8 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        ":fakefs_arduino",
         "@roo_io//:testing",
-        ":fakefs_arduino"
     ],
 )
 
@@ -19,8 +22,8 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        ":fakefs_arduino",
         "@roo_io//test:testing",
-        ":fakefs_arduino"
     ],
 )
 
@@ -32,21 +35,21 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        ":fakefs_arduino",
         "@roo_io//test:testing",
-        ":fakefs_arduino"
     ],
 )
 
 cc_library(
     name = "fakefs_arduino",
     srcs = [
-        "fakefs_arduino.h",
         "fakefs_arduino.cpp",
+        "fakefs_arduino.h",
     ],
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
         "@roo_io//:testing",
-        "@roo_io//test/fs:fakefs"
+        "@roo_io//test/fs:fakefs",
     ],
 )

@@ -1,13 +1,15 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 cc_library(
     name = "fakefs",
     srcs = [
-        "fakefs.h",
         "fakefs.cpp",
-        "fakefs_reference.h",
+        "fakefs.h",
         "fakefs_reference.cpp",
-        "fs_p.h",
+        "fakefs_reference.h",
         "fs_mount_p.h",
+        "fs_p.h",
     ],
     includes = ["."],
     linkstatic = 1,
@@ -25,8 +27,8 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        ":fakefs",
         "//:testing",
-        ":fakefs"
     ],
 )
 
@@ -38,7 +40,7 @@ cc_test(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        ":fakefs",
         "//:testing",
-        ":fakefs"
     ],
 )

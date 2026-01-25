@@ -1,6 +1,8 @@
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 cc_test(
     name = "ringbuffer_test",
+    size = "small",
     srcs = [
         "ringbuffer_test.cpp",
     ],
@@ -8,11 +10,11 @@ cc_test(
     deps = [
         "//test:testing",
     ],
-    size = "small",
 )
 
 cc_test(
     name = "ringpipe_test",
+    size = "small",
     srcs = [
         "ringpipe_test.cpp",
     ],
@@ -20,5 +22,4 @@ cc_test(
     deps = [
         "//test:testing",
     ],
-    size = "small",
 )

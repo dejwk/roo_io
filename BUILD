@@ -1,3 +1,5 @@
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 cc_library(
     name = "roo_io",
     srcs = glob(
@@ -8,11 +10,11 @@ cc_library(
         ],
         exclude = ["test/**"],
     ),
+    defines = ["ARDUINO=10000"],
     includes = [
         "src",
     ],
     visibility = ["//visibility:public"],
-    defines = ["ARDUINO=10000"],
     deps = [
         "@roo_backport",
         "@roo_logging",
@@ -33,10 +35,10 @@ cc_library(
         exclude = ["test/**"],
     ),
     defines = ["ROO_IO_TESTING"],
-    linkstatic = 1,
     includes = [
         "src",
     ],
+    linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
