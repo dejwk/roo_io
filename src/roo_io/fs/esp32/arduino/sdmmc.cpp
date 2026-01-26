@@ -17,13 +17,13 @@ ArduinoSdMmcFs::ArduinoSdMmcFs()
       mode_1bit_(true) {}
 
 void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
-  SD_MMC.setPins(pin_clk, pin_cmd, pin_d0);
+  ::SD_MMC.setPins(pin_clk, pin_cmd, pin_d0);
   mode_1bit_ = true;
 }
 
 void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
                              uint8_t pin_d1, uint8_t pin_d2, uint8_t pin_d3) {
-  SD_MMC.setPins(pin_clk, pin_cmd, pin_d0, pin_d1, pin_d2, pin_d3);
+  ::SD_MMC.setPins(pin_clk, pin_cmd, pin_d0, pin_d1, pin_d2, pin_d3);
   mode_1bit_ = false;
 }
 
