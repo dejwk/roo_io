@@ -102,8 +102,11 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
     }
     return MountImpl::MountError(kGenericMountError);
   }
+#if defined(ROO_TESTING)
+  pdrv_ = 0;
+#else
   pdrv_ = ff_diskio_get_pdrv_card(card_);
-
+#endif
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mount_base_path_.c_str(), readOnly(), unmount_fn)));
 }

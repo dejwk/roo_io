@@ -90,9 +90,13 @@ void LittlefsFs::unmountImpl() {
 }
 
 Status LittlefsFs::format() {
+#ifndef ROO_TESTING
   esp_task_wdt_delete(xTaskGetIdleTaskHandleForCore(0));
+#endif
   esp_err_t err = esp_littlefs_format(partition_label_.c_str());
+#ifndef ROO_TESTING
   esp_task_wdt_add(xTaskGetIdleTaskHandleForCore(0));
+#endif
   if (err) {
     LOG(ERROR) << "Formatting LITTLEFS failed! Error: " << esp_err_to_name(err);
     return kUnknownIOError;
