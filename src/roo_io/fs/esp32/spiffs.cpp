@@ -6,10 +6,11 @@
 
 #endif
 
-#if (defined(ESP32) || defined(ROO_TESTING))
+#if (defined(ESP_PLATFORM) || defined(ROO_TESTING)) && \
+    __has_include("esp_spiffs.h")
 
-#include "esp32-hal.h"
 #include "esp_spiffs.h"
+#include "esp_task_wdt.h"
 #include "roo_io/fs/posix/posix_mount.h"
 
 #if !defined(MLOG_roo_io_fs)
@@ -95,9 +96,9 @@ void SpiffsFs::unmountImpl() {
 }
 
 Status SpiffsFs::format() {
-  disableCore0WDT();
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCore(0));
   esp_err_t err = esp_spiffs_format(partition_label_.c_str());
-  enableCore0WDT();
+  esp_task_wdt_add(xTaskGetIdleTaskHandleForCore(0));
   if (err) {
     LOG(ERROR) << "Formatting SpiffsFs failed! Error: " << esp_err_to_name(err);
     return kUnknownIOError;

@@ -1,4 +1,4 @@
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP_PLATFORM || defined ROO_TESTING)
 
 #include "roo_io/uart/esp32/uart_input_stream.h"
 
@@ -53,4 +53,4 @@ size_t Esp32UartInputStream::readFully(roo::byte* buf, size_t count) {
 
 }  // namespace roo_io
 
-#endif  // ESP32 || ROO_TESTING
+#endif  // (defined ESP_PLATFORM || defined ROO_TESTING)

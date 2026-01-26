@@ -1,6 +1,7 @@
 #pragma once
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP_PLATFORM || defined ROO_TESTING) && \
+    __has_include("esp_spiffs.h")
 
 #include "roo_io/fs/filesystem.h"
 
@@ -47,4 +48,4 @@ extern SpiffsFs SPIFFS;
 
 }  // namespace roo_io
 
-#endif  // ESP32
+#endif  // ESP_PLATFORM

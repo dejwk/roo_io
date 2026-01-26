@@ -6,7 +6,7 @@
 
 #endif
 
-#if (defined(ESP32) || defined(ROO_TESTING))
+#if (defined ESP_PLATFORM || defined ROO_TESTING)
 
 #if !defined(MLOG_roo_io_fs)
 #define MLOG_roo_io_fs 0
@@ -91,4 +91,4 @@ SdSpiFs SDSPI = CreateSdSpiFs();
 
 }  // namespace roo_io
 
-#endif
+#endif  // (defined ESP_PLATFORM || defined ROO_TESTING)

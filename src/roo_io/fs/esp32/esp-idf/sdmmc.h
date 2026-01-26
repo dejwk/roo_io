@@ -1,6 +1,6 @@
 #pragma once
 
-#if (defined ESP32 && defined ARDUINO)
+#if (defined ESP_PLATFORM)
 
 #include "soc/soc_caps.h"
 
@@ -45,9 +45,9 @@ class SdMmcFs : public BaseEsp32VfsFilesystem {
   uint8_t pdrv_;
 };
 
-extern SdMmcFs SdMmc;
+extern SdMmcFs SDMMC;
 
 }  // namespace roo_io
 
 #endif  // CONFIG_IDF_TARGET_ESP32S3
-#endif  // (defined(ESP32) || defined(ROO_TESTING))
+#endif  // defined(ESP_PLATFORM)

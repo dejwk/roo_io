@@ -1,6 +1,6 @@
 #pragma once
 
-#if (defined(ESP32) || defined(ROO_TESTING))
+#if (defined(ESP_PLATFORM) || defined(ROO_TESTING))
 
 #include "driver/sdmmc_types.h"
 #include "hal/gpio_types.h"
@@ -43,4 +43,4 @@ extern SdSpiFs SDSPI;
 
 }  // namespace roo_io
 
-#endif  // (defined(ESP32) || defined(ROO_TESTING))
+#endif  // (defined(ESP_PLATFORM) || defined(ROO_TESTING))

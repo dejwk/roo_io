@@ -6,17 +6,17 @@
 
 #endif
 
-#if (defined ESP32 && defined ARDUINO)
+#if (defined ESP_PLATFORM)
 
 #include "soc/soc_caps.h"
 
 #if SOC_SDMMC_HOST_SUPPORTED
 
+#include "ff.h"
+
 #if !defined(MLOG_roo_io_fs)
 #define MLOG_roo_io_fs 0
 #endif
-
-#include "ff.h"
 
 #include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
@@ -134,7 +134,7 @@ Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
 
 SdMmcFs CreateSdMmcFs() { return SdMmcFs(); }
 
-SdMmcFs SdMmc = CreateSdMmcFs();
+SdMmcFs SDMMC = CreateSdMmcFs();
 
 }  // namespace roo_io
 

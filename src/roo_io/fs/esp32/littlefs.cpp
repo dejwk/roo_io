@@ -6,11 +6,14 @@
 
 #endif
 
-#if (defined(ESP32) || defined(ROO_TESTING))
+// See https://github.com/joltwallet/esp_littlefs?tab=readme-ov-file#how-to-use
 
-#include "esp32-hal.h"
-#include "roo_io/fs/posix/posix_mount.h"
+#if (defined(ESP_PLATFORM) || defined(ROO_TESTING)) && \
+    __has_include("esp_littlefs.h")
+
 #include "esp_littlefs.h"
+#include "esp_task_wdt.h"
+#include "roo_io/fs/posix/posix_mount.h"
 
 #if !defined(MLOG_roo_io_fs)
 #define MLOG_roo_io_fs 0
@@ -87,9 +90,9 @@ void LittlefsFs::unmountImpl() {
 }
 
 Status LittlefsFs::format() {
-  disableCore0WDT();
+  esp_task_wdt_delete(xTaskGetIdleTaskHandleForCore(0));
   esp_err_t err = esp_littlefs_format(partition_label_.c_str());
-  enableCore0WDT();
+  esp_task_wdt_add(xTaskGetIdleTaskHandleForCore(0));
   if (err) {
     LOG(ERROR) << "Formatting LITTLEFS failed! Error: " << esp_err_to_name(err);
     return kUnknownIOError;

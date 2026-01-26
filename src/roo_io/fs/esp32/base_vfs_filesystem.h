@@ -1,6 +1,6 @@
 #pragma once
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP_PLATFORM || defined ROO_TESTING)
 
 #include "roo_io/fs/filesystem.h"
 
@@ -53,4 +53,4 @@ class BaseEsp32VfsFilesystem : public Filesystem {
 
 }  // namespace roo_io
 
-#endif  // ESP32
+#endif  // ESP_PLATFORM

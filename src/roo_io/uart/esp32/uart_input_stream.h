@@ -1,6 +1,6 @@
 #pragma once
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP_PLATFORM || defined ROO_TESTING)
 
 #include "hal/uart_types.h"
 #include "roo_io/core/input_stream.h"
@@ -33,4 +33,4 @@ class Esp32UartInputStream : public InputStream {
 
 }  // namespace roo_io
 
-#endif  // ESP32 || ROO_TESTING
+#endif  // (defined ESP_PLATFORM || defined ROO_TESTING)
