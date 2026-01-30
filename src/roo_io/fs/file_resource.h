@@ -3,11 +3,10 @@
 #include <memory>
 #include <string>
 
+#include "roo_io/core/resource.h"
 #include "roo_io/fs/filesystem.h"
-#include "roo_io/resource/resource.h"
 
 namespace roo_io {
-
 class FileResource : public MultipassResource {
  public:
   FileResource(Filesystem& fs, std::string path)
