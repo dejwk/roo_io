@@ -68,7 +68,7 @@ class BufferedOutputStreamIterator {
       writeBuffer();
     }
     if (offset_ > 0 || count < kOutputStreamIteratorBufferSize) {
-      int cap = kOutputStreamIteratorBufferSize - offset_;
+      size_t cap = kOutputStreamIteratorBufferSize - offset_;
       if (count > cap) count = cap;
       memcpy(&buffer_[offset_], buf, count);
       offset_ += count;

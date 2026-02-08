@@ -20,9 +20,10 @@ size_t Esp32UartInputStream::read(roo::byte* buf, size_t count) {
     // Block to read at least one byte.
     read = uart_read_bytes(port_, buf, 1, portMAX_DELAY);
     if (read > 0) {
-      if (count > read) {
+      if (count > static_cast<size_t>(read)) {
         // Opportunistically try to read some more bytes if they're available.
-        int more = uart_read_bytes(port_, buf + read, count - read, 0);
+        int more = uart_read_bytes(port_, buf + read,
+                                   count - static_cast<size_t>(read), 0);
         if (more < 0) status_ = roo_io::kReadError;
         read += more;
       }
@@ -44,9 +45,9 @@ size_t Esp32UartInputStream::readFully(roo::byte* buf, size_t count) {
       status_ = roo_io::kReadError;
       break;
     }
-    total += read;
+    total += static_cast<size_t>(read);
     buf += read;
-    count -= read;
+    count -= static_cast<size_t>(read);
   }
   return total;
 }

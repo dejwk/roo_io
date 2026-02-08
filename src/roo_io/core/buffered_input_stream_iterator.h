@@ -74,7 +74,8 @@ class BufferedInputStreamIterator {
   size_t read(byte* buf, size_t count) {
     if (offset_ < length_) {
       // Have some data still in the buffer; just return that.
-      if (count > (length_ - offset_)) count = length_ - offset_;
+      size_t remaining = static_cast<size_t>(length_ - offset_);
+      if (count > remaining) count = remaining;
       memcpy(buf, &buffer_[offset_], count);
       offset_ += count;
       return count;
@@ -101,7 +102,8 @@ class BufferedInputStreamIterator {
       return 0;
     }
     length_ = len;
-    if (count > length_) count = length_;
+    if (count > static_cast<size_t>(length_))
+      count = static_cast<size_t>(length_);
     memcpy(buf, buffer_.get(), count);
     offset_ = count;
     return count;
