@@ -10,7 +10,6 @@ cc_library(
         ],
         exclude = ["test/**"],
     ),
-    defines = ["ARDUINO=10000"],
     includes = [
         "src",
     ],
