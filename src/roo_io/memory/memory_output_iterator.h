@@ -59,7 +59,7 @@ class MemoryOutputIterator {
   // `count` butes.
   size_t write(const byte* buf, size_t count) {
     if (end_ == nullptr) return 0;
-    if (count > end_ - ptr_) {
+    if (count > (size_t)(end_ - ptr_)) {
       count = end_ - ptr_;
       end_ = nullptr;
     }
