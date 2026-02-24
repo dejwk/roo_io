@@ -3,6 +3,10 @@ common --registry="https://raw.githubusercontent.com/dejwk/roo-registry/main/" -
 build --copt -DROO_TESTING
 build --copt -DARDUINO=10803
 
+# Avoid libunwind/forced-unwind crashes in the POSIX FreeRTOS port tests.
+build --copt -fno-unwind-tables
+build --copt -fno-asynchronous-unwind-tables
+
 build:asan --strip=never
 build:asan --copt -fsanitize=address
 build:asan --copt -DADDRESS_SANITIZER
