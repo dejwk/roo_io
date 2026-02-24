@@ -3,9 +3,11 @@
 #include <stdint.h>
 
 #include <cstring>
+#include <limits>
 
 #include "roo_io/base/byte.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 
 namespace roo_io {
 
@@ -109,6 +111,52 @@ inline void StoreBeS64(uint64_t v, byte* target) { StoreBeU64(v, target); }
 // Stores a little-endian signed 64-bit int to the specified memory address.
 inline void StoreLeS64(uint64_t v, byte* target) { StoreLeU64(v, target); }
 
+#if ROO_IO_IEEE754
+// Stores a big-endian IEEE754 float to the specified memory address.
+inline void StoreBeFloat(float v, byte* target) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "StoreBeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "StoreBeFloat requires IEEE754 float.");
+  uint32_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  StoreBeU32(bits, target);
+}
+
+// Stores a little-endian IEEE754 float to the specified memory address.
+inline void StoreLeFloat(float v, byte* target) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "StoreLeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "StoreLeFloat requires IEEE754 float.");
+  uint32_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  StoreLeU32(bits, target);
+}
+
+// Stores a big-endian IEEE754 double to the specified memory address.
+inline void StoreBeDouble(double v, byte* target) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "StoreBeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "StoreBeDouble requires IEEE754 double.");
+  uint64_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  StoreBeU64(bits, target);
+}
+
+// Stores a little-endian IEEE754 double to the specified memory address.
+inline void StoreLeDouble(double v, byte* target) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "StoreLeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "StoreLeDouble requires IEEE754 double.");
+  uint64_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  StoreLeU64(bits, target);
+}
+#endif  // ROO_IO_IEEE754
+
 // Arbitrary types, native encoding.
 
 // Stores a platform-native (implementation-dependent) datum to the specified
@@ -151,6 +199,16 @@ inline void StoreS32(int32_t v, byte* target);
 // Stores a signed 64-bit int to the specified memory address.
 template <ByteOrder byte_order>
 inline void StoreS64(int64_t v, byte* target);
+
+#if ROO_IO_IEEE754
+// Stores an IEEE754 float to the specified memory address.
+template <ByteOrder byte_order>
+inline void StoreFloat(float v, byte* target);
+
+// Stores an IEEE754 double to the specified memory address.
+template <ByteOrder byte_order>
+inline void StoreDouble(double v, byte* target);
+#endif  // ROO_IO_IEEE754
 
 // Templated on both byte order and the type.
 
@@ -239,6 +297,28 @@ template <>
 inline void StoreS64<kLittleEndian>(int64_t v, byte* target) {
   StoreLeS64(v, target);
 }
+
+#if ROO_IO_IEEE754
+template <>
+inline void StoreFloat<kBigEndian>(float v, byte* target) {
+  StoreBeFloat(v, target);
+}
+
+template <>
+inline void StoreFloat<kLittleEndian>(float v, byte* target) {
+  StoreLeFloat(v, target);
+}
+
+template <>
+inline void StoreDouble<kBigEndian>(double v, byte* target) {
+  StoreBeDouble(v, target);
+}
+
+template <>
+inline void StoreDouble<kLittleEndian>(double v, byte* target) {
+  StoreLeDouble(v, target);
+}
+#endif  // ROO_IO_IEEE754
 
 template <>
 inline void StoreInteger<kBigEndian, uint8_t>(uint8_t v, byte* target) {

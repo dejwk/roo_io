@@ -1,13 +1,34 @@
 #include "roo_io/data/multipass_input_stream_reader.h"
 
+#include <stdint.h>
+
+#include <cstring>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/data/read.h"
 #include "roo_io/memory/memory_input_stream.h"
 
 using testing::ElementsAre;
 
 namespace roo_io {
+
+namespace {
+
+float FloatFromBits(uint32_t bits) {
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+double DoubleFromBits(uint64_t bits) {
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+}  // namespace
 
 MultipassInputStreamReader NewReader(const byte* begin, const byte* end) {
   return MultipassInputStreamReader(
@@ -79,6 +100,34 @@ TEST(Reader, Double) {
       NewReader((const byte*)&num, ((const byte*)&num) + 8);
   EXPECT_EQ(num, reader.readHostNative<double>());
 }
+
+#if ROO_IO_IEEE754
+TEST(Reader, FloatEndian) {
+  const float expected = FloatFromBits(0x3F800000u);
+  byte be[] = {byte{0x3F}, byte{0x80}, byte{0x00}, byte{0x00}};
+  byte le[] = {byte{0x00}, byte{0x00}, byte{0x80}, byte{0x3F}};
+
+  MultipassInputStreamReader be_reader = NewReader(be, be + 4);
+  EXPECT_EQ(expected, be_reader.readBeFloat());
+
+  MultipassInputStreamReader le_reader = NewReader(le, le + 4);
+  EXPECT_EQ(expected, le_reader.readLeFloat());
+}
+
+TEST(Reader, DoubleEndian) {
+  const double expected = DoubleFromBits(0x3FF0000000000000ULL);
+  byte be[] = {byte{0x3F}, byte{0xF0}, byte{0x00}, byte{0x00},
+               byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00}};
+  byte le[] = {byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00},
+               byte{0x00}, byte{0x00}, byte{0xF0}, byte{0x3F}};
+
+  MultipassInputStreamReader be_reader = NewReader(be, be + 8);
+  EXPECT_EQ(expected, be_reader.readBeDouble());
+
+  MultipassInputStreamReader le_reader = NewReader(le, le + 8);
+  EXPECT_EQ(expected, le_reader.readLeDouble());
+}
+#endif  // ROO_IO_IEEE754
 
 TEST(Reader, HostNativeOverflow) {
   double num = 34664315.451;

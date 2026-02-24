@@ -1,8 +1,29 @@
 #include "roo_io/memory/load.h"
 
+#include <stdint.h>
+
+#include <cstring>
+
 #include "gtest/gtest.h"
+#include "roo_io/data/ieee754.h"
 
 namespace roo_io {
+
+namespace {
+
+float FloatFromBits(uint32_t bits) {
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+double DoubleFromBits(uint64_t bits) {
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+}  // namespace
 
 const byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
                      byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};
@@ -117,5 +138,33 @@ TEST(Load, Double) {
   double num = 34664315.451;
   EXPECT_EQ(num, LoadHostNative<double>((const byte*)&num));
 }
+
+#if ROO_IO_IEEE754
+TEST(Load, FloatEndian) {
+  const uint32_t bits = 0x3F800000u;
+  const float expected = FloatFromBits(bits);
+  const byte be[] = {byte{0x3F}, byte{0x80}, byte{0x00}, byte{0x00}};
+  const byte le[] = {byte{0x00}, byte{0x00}, byte{0x80}, byte{0x3F}};
+
+  EXPECT_EQ(expected, LoadBeFloat(be));
+  EXPECT_EQ(expected, LoadLeFloat(le));
+  EXPECT_EQ(expected, LoadFloat<kBigEndian>(be));
+  EXPECT_EQ(expected, LoadFloat<kLittleEndian>(le));
+}
+
+TEST(Load, DoubleEndian) {
+  const uint64_t bits = 0x3FF0000000000000ULL;
+  const double expected = DoubleFromBits(bits);
+  const byte be[] = {byte{0x3F}, byte{0xF0}, byte{0x00}, byte{0x00},
+                     byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00}};
+  const byte le[] = {byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00},
+                     byte{0x00}, byte{0x00}, byte{0xF0}, byte{0x3F}};
+
+  EXPECT_EQ(expected, LoadBeDouble(be));
+  EXPECT_EQ(expected, LoadLeDouble(le));
+  EXPECT_EQ(expected, LoadDouble<kBigEndian>(be));
+  EXPECT_EQ(expected, LoadDouble<kLittleEndian>(le));
+}
+#endif  // ROO_IO_IEEE754
 
 }  // namespace roo_io

@@ -2,9 +2,11 @@
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 
 #include "roo_io/base/byte.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 
 namespace roo_io {
 
@@ -102,6 +104,56 @@ inline constexpr int64_t LoadLeS64(const byte *source) {
   return (int64_t)LoadLeU64(source);
 }
 
+#if ROO_IO_IEEE754
+// Loads a big-endian IEEE754 float from the specified memory address.
+inline float LoadBeFloat(const byte *source) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "LoadBeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "LoadBeFloat requires IEEE754 float.");
+  uint32_t bits = LoadBeU32(source);
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Loads a little-endian IEEE754 float from the specified memory address.
+inline float LoadLeFloat(const byte *source) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "LoadLeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "LoadLeFloat requires IEEE754 float.");
+  uint32_t bits = LoadLeU32(source);
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Loads a big-endian IEEE754 double from the specified memory address.
+inline double LoadBeDouble(const byte *source) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "LoadBeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "LoadBeDouble requires IEEE754 double.");
+  uint64_t bits = LoadBeU64(source);
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Loads a little-endian IEEE754 double from the specified memory address.
+inline double LoadLeDouble(const byte *source) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "LoadLeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "LoadLeDouble requires IEEE754 double.");
+  uint64_t bits = LoadLeU64(source);
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+#endif  // ROO_IO_IEEE754
+
 // Loads a platform-native (implementation-dependent) datum from the specified
 // memory address. T must be default-constructible and have trivial destructor.
 template <typename T>
@@ -144,6 +196,16 @@ inline constexpr int32_t LoadS32(const byte *source);
 // Loads a signed 64-bit int from the specified memory address.
 template <ByteOrder byte_order>
 inline constexpr int64_t LoadS64(const byte *source);
+
+#if ROO_IO_IEEE754
+// Loads an IEEE754 float from the specified memory address.
+template <ByteOrder byte_order>
+inline float LoadFloat(const byte *source);
+
+// Loads an IEEE754 double from the specified memory address.
+template <ByteOrder byte_order>
+inline double LoadDouble(const byte *source);
+#endif  // ROO_IO_IEEE754
 
 // Variants that can be used in code templated on the storage type.
 
@@ -243,6 +305,28 @@ template <>
 inline constexpr int64_t LoadS64<kLittleEndian>(const byte *source) {
   return LoadLeS64(source);
 }
+
+#if ROO_IO_IEEE754
+template <>
+inline float LoadFloat<kBigEndian>(const byte *source) {
+  return LoadBeFloat(source);
+}
+
+template <>
+inline float LoadFloat<kLittleEndian>(const byte *source) {
+  return LoadLeFloat(source);
+}
+
+template <>
+inline double LoadDouble<kBigEndian>(const byte *source) {
+  return LoadBeDouble(source);
+}
+
+template <>
+inline double LoadDouble<kLittleEndian>(const byte *source) {
+  return LoadLeDouble(source);
+}
+#endif  // ROO_IO_IEEE754
 
 template <>
 inline constexpr uint8_t LoadInteger<kBigEndian, uint8_t>(const byte *source) {

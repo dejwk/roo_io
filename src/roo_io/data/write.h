@@ -1,11 +1,14 @@
 #pragma once
 
+#include <cstring>
+#include <limits>
 #include <string>
 
 #include "roo_backport.h"
 #include "roo_backport/string_view.h"
 #include "roo_io/core/output_iterator.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 
 namespace roo_io {
 
@@ -135,6 +138,56 @@ constexpr void WriteLeS64(OutputIterator& out, int64_t v) {
   WriteLeU64(out, (uint64_t)v);
 }
 
+#if ROO_IO_IEEE754
+// Writes a big-endian IEEE754 float to the specified iterator.
+template <typename OutputIterator>
+inline void WriteBeFloat(OutputIterator& out, float v) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "WriteBeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "WriteBeFloat requires IEEE754 float.");
+  uint32_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  WriteBeU32(out, bits);
+}
+
+// Writes a little-endian IEEE754 float to the specified iterator.
+template <typename OutputIterator>
+inline void WriteLeFloat(OutputIterator& out, float v) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "WriteLeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "WriteLeFloat requires IEEE754 float.");
+  uint32_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  WriteLeU32(out, bits);
+}
+
+// Writes a big-endian IEEE754 double to the specified iterator.
+template <typename OutputIterator>
+inline void WriteBeDouble(OutputIterator& out, double v) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "WriteBeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "WriteBeDouble requires IEEE754 double.");
+  uint64_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  WriteBeU64(out, bits);
+}
+
+// Writes a little-endian IEEE754 double to the specified iterator.
+template <typename OutputIterator>
+inline void WriteLeDouble(OutputIterator& out, double v) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "WriteLeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "WriteLeDouble requires IEEE754 double.");
+  uint64_t bits;
+  memcpy(&bits, &v, sizeof(bits));
+  WriteLeU64(out, bits);
+}
+#endif  // ROO_IO_IEEE754
+
 // Writes `count` bytes from the `source` to the output iterator. Returns the
 // number of bytes successfully written. If the returned value is smaller than
 // `count`, it indicates that an I/O error has occurred. The `status()` of the
@@ -246,6 +299,40 @@ class NumberWriter<kLittleEndian> {
   }
 };
 
+#if ROO_IO_IEEE754
+// Helper to write IEEE754 floats/doubles templated on byte order.
+template <int ByteOrder>
+class FloatWriter;
+
+template <>
+class FloatWriter<kBigEndian> {
+ public:
+  template <typename OutputIterator>
+  inline void writeFloat(OutputIterator& out, float v) const {
+    WriteBeFloat(out, v);
+  }
+
+  template <typename OutputIterator>
+  inline void writeDouble(OutputIterator& out, double v) const {
+    WriteBeDouble(out, v);
+  }
+};
+
+template <>
+class FloatWriter<kLittleEndian> {
+ public:
+  template <typename OutputIterator>
+  inline void writeFloat(OutputIterator& out, float v) const {
+    WriteLeFloat(out, v);
+  }
+
+  template <typename OutputIterator>
+  inline void writeDouble(OutputIterator& out, double v) const {
+    WriteLeDouble(out, v);
+  }
+};
+#endif  // ROO_IO_IEEE754
+
 template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU16(OutputIterator& in, uint16_t v) {
   NumberWriter<byte_order>().writeU16(in, v);
@@ -260,6 +347,18 @@ template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU32(OutputIterator& in, uint32_t v) {
   NumberWriter<byte_order>().writeU32(in, v);
 }
+
+#if ROO_IO_IEEE754
+template <typename OutputIterator, ByteOrder byte_order>
+inline void WriteFloat(OutputIterator& in, float v) {
+  FloatWriter<byte_order>().writeFloat(in, v);
+}
+
+template <typename OutputIterator, ByteOrder byte_order>
+inline void WriteDouble(OutputIterator& in, double v) {
+  FloatWriter<byte_order>().writeDouble(in, v);
+}
+#endif  // ROO_IO_IEEE754
 
 // Allows writing platform-native (implementation-dependent) data to an input
 // iterator. T must be default-constructible and have trivial destructor.

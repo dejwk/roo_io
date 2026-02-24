@@ -5,6 +5,7 @@
 #include "roo_io/core/buffered_input_stream_iterator.h"
 #include "roo_io/core/input_stream.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/data/read.h"
 
 namespace roo_io {
@@ -141,6 +142,16 @@ class InputStreamReader {
   int64_t readBeS64() { return ReadBeS64(in_); }
 
   int64_t readLeS64() { return ReadLeS64(in_); }
+
+#if ROO_IO_IEEE754
+  float readBeFloat() { return ReadBeFloat(in_); }
+
+  float readLeFloat() { return ReadLeFloat(in_); }
+
+  double readBeDouble() { return ReadBeDouble(in_); }
+
+  double readLeDouble() { return ReadLeDouble(in_); }
+#endif  // ROO_IO_IEEE754
 
   size_t readByteArray(byte* result, size_t count) {
     return ReadByteArray(in_, result, count);

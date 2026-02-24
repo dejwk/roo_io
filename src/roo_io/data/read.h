@@ -1,11 +1,14 @@
 #pragma once
 
+#include <cstring>
+#include <limits>
 #include <type_traits>
 
 #include "roo_backport.h"
 #include "roo_backport/string_view.h"
 #include "roo_io/core/input_iterator.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/memory/memory_input_iterator.h"
 
 namespace roo_io {
@@ -134,6 +137,60 @@ template <typename InputIterator>
 constexpr int64_t ReadLeS64(InputIterator& in) {
   return (int64_t)ReadLeU64(in);
 }
+
+#if ROO_IO_IEEE754
+// Reads a big-endian IEEE754 float from the specified iterator.
+template <typename InputIterator>
+inline float ReadBeFloat(InputIterator& in) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "ReadBeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "ReadBeFloat requires IEEE754 float.");
+  uint32_t bits = ReadBeU32(in);
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Reads a little-endian IEEE754 float from the specified iterator.
+template <typename InputIterator>
+inline float ReadLeFloat(InputIterator& in) {
+  static_assert(sizeof(float) == sizeof(uint32_t),
+                "ReadLeFloat requires 32-bit float.");
+  static_assert(std::numeric_limits<float>::is_iec559,
+                "ReadLeFloat requires IEEE754 float.");
+  uint32_t bits = ReadLeU32(in);
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Reads a big-endian IEEE754 double from the specified iterator.
+template <typename InputIterator>
+inline double ReadBeDouble(InputIterator& in) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "ReadBeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "ReadBeDouble requires IEEE754 double.");
+  uint64_t bits = ReadBeU64(in);
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+// Reads a little-endian IEEE754 double from the specified iterator.
+template <typename InputIterator>
+inline double ReadLeDouble(InputIterator& in) {
+  static_assert(sizeof(double) == sizeof(uint64_t),
+                "ReadLeDouble requires 64-bit double.");
+  static_assert(std::numeric_limits<double>::is_iec559,
+                "ReadLeDouble requires IEEE754 double.");
+  uint64_t bits = ReadLeU64(in);
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+#endif  // ROO_IO_IEEE754
 
 // Reads `count` bytes from the input iterator, storing them in the result.
 // Returns the number of bytes successfully read. If the returned value is
@@ -274,6 +331,40 @@ class IntegerReader<kLittleEndian> {
   // }
 };
 
+#if ROO_IO_IEEE754
+// Helper to read IEEE754 floats/doubles templated on byte order.
+template <ByteOrder byte_order>
+class FloatReader;
+
+template <>
+class FloatReader<kBigEndian> {
+ public:
+  template <typename InputIterator>
+  inline float readFloat(InputIterator& in) const {
+    return ReadBeFloat(in);
+  }
+
+  template <typename InputIterator>
+  inline double readDouble(InputIterator& in) const {
+    return ReadBeDouble(in);
+  }
+};
+
+template <>
+class FloatReader<kLittleEndian> {
+ public:
+  template <typename InputIterator>
+  inline float readFloat(InputIterator& in) const {
+    return ReadLeFloat(in);
+  }
+
+  template <typename InputIterator>
+  inline double readDouble(InputIterator& in) const {
+    return ReadLeDouble(in);
+  }
+};
+#endif  // ROO_IO_IEEE754
+
 template <typename InputIterator, ByteOrder byte_order>
 constexpr uint16_t ReadU16(InputIterator& in) {
   return IntegerReader<byte_order>().readU16(in);
@@ -293,6 +384,18 @@ template <typename InputIterator, ByteOrder byte_order>
 constexpr uint64_t ReadU64(InputIterator& in) {
   return IntegerReader<byte_order>().readU64(in);
 }
+
+#if ROO_IO_IEEE754
+template <typename InputIterator, ByteOrder byte_order>
+inline float ReadFloat(InputIterator& in) {
+  return FloatReader<byte_order>().readFloat(in);
+}
+
+template <typename InputIterator, ByteOrder byte_order>
+inline double ReadDouble(InputIterator& in) {
+  return FloatReader<byte_order>().readDouble(in);
+}
+#endif  // ROO_IO_IEEE754
 
 // Allows reading platform-native (implementation-dependent) data from an input
 // iterator. T must be default-constructible and have trivial destructor.

@@ -5,6 +5,7 @@
 #include "roo_io/core/buffered_output_stream_iterator.h"
 #include "roo_io/core/output_stream.h"
 #include "roo_io/data/byte_order.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/data/write.h"
 
 namespace roo_io {
@@ -145,6 +146,16 @@ class OutputStreamWriter {
   void writeBeS64(uint64_t v) { WriteBeS64(out_, v); }
 
   void writeLeS64(uint64_t v) { WriteLeS64(out_, v); }
+
+#if ROO_IO_IEEE754
+  void writeBeFloat(float v) { WriteBeFloat(out_, v); }
+
+  void writeLeFloat(float v) { WriteLeFloat(out_, v); }
+
+  void writeBeDouble(double v) { WriteBeDouble(out_, v); }
+
+  void writeLeDouble(double v) { WriteLeDouble(out_, v); }
+#endif  // ROO_IO_IEEE754
 
   size_t writeByteArray(const byte* source, size_t count) {
     return WriteByteArray(out_, source, count);

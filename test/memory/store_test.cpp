@@ -1,12 +1,33 @@
 #include "roo_io/memory/store.h"
 
+#include <stdint.h>
+
+#include <cstring>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/memory/load.h"  // For StoreHostNative.
 
 using namespace testing;
 
 namespace roo_io {
+
+namespace {
+
+float FloatFromBits(uint32_t bits) {
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+double DoubleFromBits(uint64_t bits) {
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+}  // namespace
 
 TEST(Store, BeU16) {
   uint8_t data[] = {9, 9, 9, 9, 9, 9, 9, 9};
@@ -107,6 +128,60 @@ TEST(Store, LeS64) {
   EXPECT_THAT(
       data, ElementsAre(0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 9, 9));
 }
+
+#if ROO_IO_IEEE754
+TEST(Store, FloatEndian) {
+  const float v = FloatFromBits(0x3F800000u);
+  uint8_t data_be[] = {9, 9, 9, 9};
+  uint8_t data_le[] = {9, 9, 9, 9};
+
+  StoreBeFloat(v, (byte*)data_be);
+  EXPECT_THAT(data_be, ElementsAre(0x3F, 0x80, 0x00, 0x00));
+
+  StoreLeFloat(v, (byte*)data_le);
+  EXPECT_THAT(data_le, ElementsAre(0x00, 0x00, 0x80, 0x3F));
+}
+
+TEST(Store, DoubleEndian) {
+  const double v = DoubleFromBits(0x3FF0000000000000ULL);
+  uint8_t data_be[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  uint8_t data_le[] = {9, 9, 9, 9, 9, 9, 9, 9};
+
+  StoreBeDouble(v, (byte*)data_be);
+  EXPECT_THAT(data_be,
+              ElementsAre(0x3F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00));
+
+  StoreLeDouble(v, (byte*)data_le);
+  EXPECT_THAT(data_le,
+              ElementsAre(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F));
+}
+
+TEST(Store, FloatTemplated) {
+  const float v = FloatFromBits(0x3F800000u);
+  uint8_t data_be[] = {9, 9, 9, 9};
+  uint8_t data_le[] = {9, 9, 9, 9};
+
+  StoreFloat<kBigEndian>(v, (byte*)data_be);
+  EXPECT_THAT(data_be, ElementsAre(0x3F, 0x80, 0x00, 0x00));
+
+  StoreFloat<kLittleEndian>(v, (byte*)data_le);
+  EXPECT_THAT(data_le, ElementsAre(0x00, 0x00, 0x80, 0x3F));
+}
+
+TEST(Store, DoubleTemplated) {
+  const double v = DoubleFromBits(0x3FF0000000000000ULL);
+  uint8_t data_be[] = {9, 9, 9, 9, 9, 9, 9, 9};
+  uint8_t data_le[] = {9, 9, 9, 9, 9, 9, 9, 9};
+
+  StoreDouble<kBigEndian>(v, (byte*)data_be);
+  EXPECT_THAT(data_be,
+              ElementsAre(0x3F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00));
+
+  StoreDouble<kLittleEndian>(v, (byte*)data_le);
+  EXPECT_THAT(data_le,
+              ElementsAre(0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0, 0x3F));
+}
+#endif  // ROO_IO_IEEE754
 
 TEST(Store, Float) {
   float v = 3.14159265;

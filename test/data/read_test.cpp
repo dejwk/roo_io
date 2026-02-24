@@ -1,12 +1,33 @@
 #include "roo_io/data/read.h"
 
+#include <stdint.h>
+
+#include <cstring>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "roo_io/data/ieee754.h"
 #include "roo_io/memory/memory_input_iterator.h"
 
 using testing::ElementsAre;
 
 namespace roo_io {
+
+namespace {
+
+float FloatFromBits(uint32_t bits) {
+  float value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+double DoubleFromBits(uint64_t bits) {
+  double value;
+  memcpy(&value, &bits, sizeof(value));
+  return value;
+}
+
+}  // namespace
 
 TEST(Read, Unsigned) {
   byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
@@ -128,6 +149,51 @@ TEST(Read, Double) {
   UnsafeMemoryIterator itr((const byte*)&num);
   EXPECT_EQ(num, HostNativeReader<double>().read(itr));
 }
+
+#if ROO_IO_IEEE754
+TEST(Read, FloatEndian) {
+  const uint32_t bits = 0x3F800000u;
+  const float expected = FloatFromBits(bits);
+  byte be[] = {byte{0x3F}, byte{0x80}, byte{0x00}, byte{0x00}};
+  byte le[] = {byte{0x00}, byte{0x00}, byte{0x80}, byte{0x3F}};
+
+  MultipassMemoryIterator be_itr(be, be + 4);
+  EXPECT_EQ(expected, ReadBeFloat(be_itr));
+  be_itr.rewind();
+  const float be_value = ReadFloat<MultipassMemoryIterator, kBigEndian>(be_itr);
+  EXPECT_EQ(expected, be_value);
+
+  MultipassMemoryIterator le_itr(le, le + 4);
+  EXPECT_EQ(expected, ReadLeFloat(le_itr));
+  le_itr.rewind();
+  const float le_value =
+      ReadFloat<MultipassMemoryIterator, kLittleEndian>(le_itr);
+  EXPECT_EQ(expected, le_value);
+}
+
+TEST(Read, DoubleEndian) {
+  const uint64_t bits = 0x3FF0000000000000ULL;
+  const double expected = DoubleFromBits(bits);
+  byte be[] = {byte{0x3F}, byte{0xF0}, byte{0x00}, byte{0x00},
+               byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00}};
+  byte le[] = {byte{0x00}, byte{0x00}, byte{0x00}, byte{0x00},
+               byte{0x00}, byte{0x00}, byte{0xF0}, byte{0x3F}};
+
+  MultipassMemoryIterator be_itr(be, be + 8);
+  EXPECT_EQ(expected, ReadBeDouble(be_itr));
+  be_itr.rewind();
+  const double be_value =
+      ReadDouble<MultipassMemoryIterator, kBigEndian>(be_itr);
+  EXPECT_EQ(expected, be_value);
+
+  MultipassMemoryIterator le_itr(le, le + 8);
+  EXPECT_EQ(expected, ReadLeDouble(le_itr));
+  le_itr.rewind();
+  const double le_value =
+      ReadDouble<MultipassMemoryIterator, kLittleEndian>(le_itr);
+  EXPECT_EQ(expected, le_value);
+}
+#endif  // ROO_IO_IEEE754
 
 TEST(Read, HostNativeOverflow) {
   double num = 34664315.451;
