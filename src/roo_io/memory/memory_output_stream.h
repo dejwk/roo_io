@@ -7,16 +7,16 @@ namespace roo_io {
 template <typename PtrType>
 class MemoryOutputStream : public OutputStream {
  public:
-  MemoryOutputStream()
-      : ptr_(nullptr), end_(nullptr), status_(kClosed) {}
+  MemoryOutputStream() : ptr_(nullptr), end_(nullptr), status_(kClosed) {}
 
   MemoryOutputStream(PtrType begin, PtrType end)
       : ptr_(begin), end_(end), status_(kOk) {}
 
   size_t write(const byte* buf, size_t count) override {
     if (status_ != kOk) return 0;
-    if (count > end_ - ptr_) {
-      count = end_ - ptr_;
+    const size_t available = static_cast<size_t>(end_ - ptr_);
+    if (count > available) {
+      count = available;
       status_ = kNoSpaceLeftOnDevice;
     }
     memcpy(ptr_, buf, count);

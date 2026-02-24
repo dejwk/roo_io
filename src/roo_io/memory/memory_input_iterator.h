@@ -67,8 +67,9 @@ class SafeGenericMemoryIterator {
       end_ = nullptr;
       return 0;
     }
-    if (count > end_ - ptr_) {
-      count = end_ - ptr_;
+    const size_t available = static_cast<size_t>(end_ - ptr_);
+    if (count > available) {
+      count = available;
     }
     memcpy(result, ptr_, count);
     ptr_ += count;
@@ -77,7 +78,8 @@ class SafeGenericMemoryIterator {
 
   void skip(size_t count) {
     if (end_ != nullptr) {
-      if (count <= end_ - ptr_) {
+      const size_t available = static_cast<size_t>(end_ - ptr_);
+      if (count <= available) {
         ptr_ += count;
       } else {
         ptr_ = end_;

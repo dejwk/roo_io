@@ -8,10 +8,10 @@ template <typename PtrType>
 class MemoryInputStream : public MultipassInputStream {
  public:
   MemoryInputStream()
-      : ptr_(nullptr), size_(0), position_(0), status_(kClosed) {}
+      : ptr_(nullptr), position_(0), size_(0), status_(kClosed) {}
 
   MemoryInputStream(PtrType begin, PtrType end)
-      : ptr_(begin), size_(end - begin), position_(0), status_(kOk) {}
+      : ptr_(begin), position_(0), size_(end - begin), status_(kOk) {}
 
   bool isOpen() const override {
     return status_ == kOk || status_ == kEndOfStream;

@@ -67,12 +67,14 @@ INSTANTIATE_TYPED_TEST_SUITE_P(MemoryOutputIterator, OutputIteratorTest,
 TEST(BackInsertingIterator, SimpleEmpty) {
   std::vector<byte> out;
   auto itr = BackInsertingIterator(out);
+  ASSERT_EQ(itr.status(), kOk);
   EXPECT_TRUE(out.empty());
 }
 
 TEST(BackInsertingIterator, SimpleWrite) {
   std::vector<byte> out;
   auto itr = BackInsertingIterator(out);
+  ASSERT_EQ(itr.status(), kOk);
   itr.write(byte{4});
   itr.write(byte{23});
   EXPECT_THAT(out, ElementsAre(byte{4}, byte{23}));

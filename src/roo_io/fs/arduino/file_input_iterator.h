@@ -12,7 +12,7 @@
 
 namespace roo_io {
 
-static const int kFileInputIteratorBufferSize = 64;
+static const size_t kFileInputIteratorBufferSize = 64;
 
 class ArduinoFileInputIterator {
  public:
@@ -140,7 +140,8 @@ inline byte ArduinoFileInputIterator::Rep::read() {
 inline size_t ArduinoFileInputIterator::Rep::read(byte* buf, size_t count) {
   if (offset_ < length_) {
     // Have some data still in the buffer; just return that.
-    if (count > (length_ - offset_)) count = length_ - offset_;
+    const size_t available = static_cast<size_t>(length_ - offset_);
+    if (count > available) count = available;
     memcpy(buf, &buffer_[offset_], count);
     offset_ += count;
     return count;

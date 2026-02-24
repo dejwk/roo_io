@@ -7,6 +7,10 @@ build --copt -DARDUINO=10803
 build --copt -fno-unwind-tables
 build --copt -fno-asynchronous-unwind-tables
 
+# gtest assertion templates frequently trigger sign-compare diagnostics in
+# test sources despite equivalent runtime semantics.
+test --copt -Wno-sign-compare
+
 build:asan --strip=never
 build:asan --copt -fsanitize=address
 build:asan --copt -DADDRESS_SANITIZER

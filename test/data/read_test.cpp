@@ -237,7 +237,8 @@ struct DrippingIterator {
   const char* end;
   size_t read(byte* buf, size_t count) {
     if (count > 3) count = 3;
-    if (count > end - data) count = end - data;
+    const size_t available = static_cast<size_t>(end - data);
+    if (count > available) count = available;
     memcpy(buf, data, count);
     data += count;
     return count;
