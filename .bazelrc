@@ -1,5 +1,6 @@
 common --registry="https://raw.githubusercontent.com/dejwk/roo-registry/main/" --registry="https://bcr.bazel.build"
 
+build --copt -DROO_TESTING
 build --copt -DARDUINO=10803
 
 build:asan --strip=never

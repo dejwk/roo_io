@@ -33,7 +33,6 @@ cc_library(
         ],
         exclude = ["test/**"],
     ),
-    defines = ["ROO_IO_TESTING"],
     includes = [
         "src",
     ],
