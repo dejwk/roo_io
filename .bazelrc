@@ -3,10 +3,6 @@ common --registry="https://raw.githubusercontent.com/dejwk/roo-registry/main/" -
 build --copt -DROO_TESTING
 build --copt -DARDUINO=10803
 
-# Avoid libunwind/forced-unwind crashes in the POSIX FreeRTOS port tests.
-build --copt -fno-unwind-tables
-build --copt -fno-asynchronous-unwind-tables
-
 # gtest assertion templates frequently trigger sign-compare diagnostics in
 # test sources despite equivalent runtime semantics.
 build --per_file_copt=test/.*@-Wno-sign-compare
