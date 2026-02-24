@@ -9,7 +9,7 @@ build --copt -fno-asynchronous-unwind-tables
 
 # gtest assertion templates frequently trigger sign-compare diagnostics in
 # test sources despite equivalent runtime semantics.
-test --copt -Wno-sign-compare
+build --per_file_copt=test/.*@-Wno-sign-compare
 
 build:asan --strip=never
 build:asan --copt -fsanitize=address
