@@ -8,6 +8,10 @@ build --copt -DARDUINO=10803
 # test sources despite equivalent runtime semantics.
 build --per_file_copt=test/.*@-Wno-sign-compare
 
+# GCC 13 may report false positives from libstdc++ internals while compiling
+# external glog sources that use std::regex.
+build --per_file_copt=external/glog.*/.*@-Wno-maybe-uninitialized
+
 build:asan --strip=never
 build:asan --copt -fsanitize=address
 build:asan --copt -DADDRESS_SANITIZER

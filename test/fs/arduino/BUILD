@@ -3,6 +3,7 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 cc_test(
     name = "arduino_fs_test",
+    size = "small",
     srcs = [
         "arduino_fs_test.cpp",
     ],
@@ -16,6 +17,7 @@ cc_test(
 
 cc_test(
     name = "arduino_file_input_iterator_test",
+    size = "small",
     srcs = [
         "arduino_file_input_iterator_test.cpp",
     ],
@@ -29,6 +31,7 @@ cc_test(
 
 cc_test(
     name = "arduino_file_output_iterator_test",
+    size = "small",
     srcs = [
         "arduino_file_output_iterator_test.cpp",
     ],

@@ -21,6 +21,7 @@ cc_library(
 
 cc_test(
     name = "fakefs_test",
+    size = "small",
     srcs = [
         "fakefs_test.cpp",
     ],
@@ -34,6 +35,7 @@ cc_test(
 
 cc_test(
     name = "reference_fs_test",
+    size = "small",
     srcs = [
         "fakefs_reference_test.cpp",
     ],
