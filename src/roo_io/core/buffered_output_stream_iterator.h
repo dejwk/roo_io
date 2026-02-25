@@ -12,12 +12,16 @@ static const size_t kOutputStreamIteratorBufferSize = 64;
 
 class BufferedOutputStreamIterator {
  public:
+  /// Creates a detached iterator with `kClosed` status.
   BufferedOutputStreamIterator()
       : output_(nullptr),
         buffer_(nullptr),
         offset_(kOutputStreamIteratorBufferSize),
         status_(kClosed) {}
 
+  /// Move-constructs iterator state.
+  ///
+  /// Source iterator becomes detached with `kClosed` status.
   BufferedOutputStreamIterator(BufferedOutputStreamIterator&& other)
       : output_(other.output_),
         buffer_(std::move(other.buffer_)),
@@ -28,6 +32,9 @@ class BufferedOutputStreamIterator {
     other.status_ = kClosed;
   }
 
+  /// Move-assigns iterator state.
+  ///
+  /// Source iterator becomes detached with `kClosed` status.
   BufferedOutputStreamIterator& operator=(
       BufferedOutputStreamIterator&& other) {
     if (this != &other) {
@@ -42,6 +49,10 @@ class BufferedOutputStreamIterator {
     return *this;
   }
 
+  /// Creates iterator over `output`.
+  ///
+  /// Initializes `status()` from `output.status()`. Allocates internal buffer
+  /// only when initial status is `kOk`.
   BufferedOutputStreamIterator(roo_io::OutputStream& output)
       : output_(&output), status_(output.status()) {
     if (status_ == kOk) {
@@ -52,8 +63,14 @@ class BufferedOutputStreamIterator {
     }
   }
 
+  /// Flushes pending output on destruction.
   ~BufferedOutputStreamIterator() { flush(); }
 
+  /// Writes one byte.
+  ///
+  /// If output is healthy, byte is buffered and may trigger flushing buffered
+  /// block first. If `status() != kOk` and buffer is full, call is a no-op.
+  /// Updates `status()` through internal buffer flush.
   void write(byte v) {
     if (offset_ >= kOutputStreamIteratorBufferSize) {
       if (status_ != kOk) return;
@@ -62,6 +79,14 @@ class BufferedOutputStreamIterator {
     buffer_[offset_++] = v;
   }
 
+  /// Writes up to `count` bytes.
+  ///
+  /// May buffer bytes or write directly to underlying stream.
+  /// If stream is not writable at entry and no buffer space is available,
+  /// returns zero.
+  /// Updates `status()` after delegated writes/flushes.
+  ///
+  /// @return Number of bytes accepted from `buf`.
   size_t write(const byte* buf, size_t count) {
     if (offset_ >= kOutputStreamIteratorBufferSize) {
       if (status_ != kOk) return 0;
@@ -82,6 +107,10 @@ class BufferedOutputStreamIterator {
     return result;
   }
 
+  /// Flushes buffered data and then flushes underlying stream.
+  ///
+  /// If `status() != kOk`, this call is a no-op.
+  /// Updates `status()` from `output.status()`.
   void flush() {
     if (status_ == kOk) {
       if (offset_ > 0) writeBuffer();
@@ -90,10 +119,19 @@ class BufferedOutputStreamIterator {
     }
   }
 
+  /// Returns current iterator status.
+  ///
+  /// @return Current status value.
   Status status() const { return status_; }
 
+  /// Returns whether `status() == kOk`.
+  ///
+  /// @return `true` iff current status is `kOk`.
   bool ok() const { return status() == roo_io::kOk; }
 
+  /// Detaches from stream and releases internal buffer.
+  ///
+  /// Sets status to `kClosed`.
   void reset() {
     output_ = nullptr;
     buffer_.reset();
@@ -101,6 +139,10 @@ class BufferedOutputStreamIterator {
     status_ = kClosed;
   }
 
+  /// Rebinds iterator to `output` and clears buffered state.
+  ///
+  /// Updates `status()` to `output.status()`. Allocates buffer lazily when
+  /// needed and status is `kOk`.
   void reset(roo_io::OutputStream& output) {
     output_ = &output;
     status_ = output.status();

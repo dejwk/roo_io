@@ -6,53 +6,50 @@
 
 namespace roo_io {
 
-// Virtualizes access to files, memory, or other sources. Represents an 'open'
-// resource with a 'file pointer'.
-//
-// Note: if you want to use a stream as an iterator, use
-// BufferedMultipassInputStreamIterator (to avoid the overhead of calling
-// virtual functions per byte).
+/// Virtualizes access to files, memory, and other readable sources.
+///
+/// Represents an open resource with a seekable read cursor.
+///
+/// For iterator-style use, prefer `BufferedMultipassInputStreamIterator` to
+/// avoid virtual-call overhead per byte.
 class MultipassInputStream : public InputStream {
  public:
-  // Returns the total number of bytes comprising the stream, counting from the
-  // beginning. The method can return different value each time it is called,
-  // e.g. when the underlying data source is concurrently written to.
-  //
-  // If the status was not `kOk` and not `kEndOfStream` at the time of the
-  // call, leaves it as is and returns zero.
-  //
-  // In case of error, updates the status accordingly, and returns zero.
-  //
+  /// Returns stream size in bytes from beginning.
+  ///
+  /// Value may differ across calls when underlying source mutates.
+  ///
+  /// If pre-call status is neither `kOk` nor `kEndOfStream`, status is
+  /// unchanged and return value is 0.
+  ///
+  /// On error, status updates accordingly and return value is 0.
   virtual uint64_t size() = 0;
 
-  // Returns the current byte offset relative to the beginning of the stream. If
-  // the status is neither `kOk` nor `kEndOfStream`, can return an arbitrary
-  // value.
-  //
+  /// Returns current byte offset from beginning of stream.
+  ///
+  /// If status is neither `kOk` nor `kEndOfStream`, return value is
+  /// unspecified.
   virtual uint64_t position() const = 0;
 
-  // Resets the stream to its starting position.
-  //
-  // If the status was neither 'kOk' nor 'kEndOfStream' prior to the call,
-  // leaves it as is. In case of success, resets status to 'kOk' (potentially
-  // clearing the end-of-stream status). On error, updates the status
-  // accordingly.
-  //
-  // After a successful rewind, a call to `position()` should return zero.
-  //
+  /// Resets stream to starting position.
+  ///
+  /// Updates status.
+  ///
+  /// If pre-call status is neither `kOk` nor `kEndOfStream`, status is
+  /// unchanged.
+  ///
+  /// On success, status becomes `kOk` (clearing EOS if present) and
+  /// `position()` becomes 0.
   virtual void rewind() { seek(0); }
 
-  // Resets the stream to the specified byte offset relative to the starting
-  // position. The offset may be past the current `size()`.
-  //
-  // If the status was neither 'kOk' nor 'kEndOfStream' prior to the call,
-  // leaves it as is. In case of error, updates the status accordingly.
-  //
-  // On success, clears the end-of-stream status (updating status to 'kOk').
-  //
-  // After a successful seek, a call to `position()` should return value equal
-  // to `position`.
-  //
+  /// Seeks to byte offset from beginning.
+  ///
+  /// Offset may be greater than current `size()`.
+  ///
+  /// If pre-call status is neither `kOk` nor `kEndOfStream`, status is
+  /// unchanged.
+  ///
+  /// On success, status becomes `kOk` and `position()` equals `offset`.
+  /// On error, status updates accordingly.
   virtual void seek(uint64_t offset) = 0;
 };
 

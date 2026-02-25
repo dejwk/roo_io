@@ -10,13 +10,17 @@
 
 namespace roo_io {
 
-// Convenience wrapper to efficiently write typed data to the underlying output
-// stream. Uses a small buffer (64 bytes) to avoid tiny writes to the underlying
-// stream. It owns the stream if constructed with a unique_ptr, otherwise it
-// just references it. In any case, once you create a writer, do not use the
-// underlying stream explicitly anymore (doing so would interfere with the
-// buffer used in this class). The stream is closed when the writer is
-// destructed or closed explicitly.
+/// Buffered typed writer over `OutputStream`.
+///
+/// Uses a 64-byte internal buffer to avoid tiny upstream writes.
+///
+/// Construction with `unique_ptr` transfers ownership; construction with
+/// reference does not.
+///
+/// After constructing this writer, access the stream only through this writer
+/// to keep buffer state coherent.
+///
+/// Writer closes the stream on destruction or explicit `close()`.
 class OutputStreamWriter {
  public:
   OutputStreamWriter() : os_(nullptr), owned_(false), out_() {}

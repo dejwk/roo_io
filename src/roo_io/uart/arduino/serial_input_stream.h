@@ -8,13 +8,14 @@
 
 namespace roo_io {
 
-// Adapter to read from an arduino serial as an InputStream. This just
-// delegates to the ArduinoStreamInputStream (which you can just use directly
-// instead).
+/// Adapter exposing Arduino serial as `InputStream`.
+///
+/// Delegates to `ArduinoStreamInputStream`.
 class ArduinoSerialInputStream : public ArduinoStreamInputStream {
  public:
   template <typename SerialType>
-  ArduinoSerialInputStream(SerialType& input) : ArduinoStreamInputStream(input) {}
+  ArduinoSerialInputStream(SerialType& input)
+      : ArduinoStreamInputStream(input) {}
 };
 
 }  // namespace roo_io

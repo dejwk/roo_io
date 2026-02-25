@@ -8,9 +8,9 @@
 
 namespace roo_io {
 
-// Adapter to write to an arduino serial as an OutputStream. This just
-// delegates to the ArduinoStreamOutputStream (which you can just use directly
-// instead).
+/// Adapter exposing Arduino serial as `OutputStream`.
+///
+/// Delegates to `ArduinoStreamOutputStream`.
 class ArduinoSerialOutputStream : public ArduinoStreamOutputStream {
  public:
   template <typename SerialType>

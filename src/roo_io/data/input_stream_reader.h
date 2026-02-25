@@ -10,13 +10,17 @@
 
 namespace roo_io {
 
-// Convenience wrapper to efficiently read data from the underlying input
-// stream. Uses a small buffer (64 bytes) to avoid tiny reads from the
-// underlying stream. It owns the stream if constructed with a unique_ptr,
-// otherwise it just references it. In any case, once you create a reader, do
-// not use the underlying stream explicitly anymore (doing so would interfere
-// with the buffer used in this class). The stream is closed when the reader is
-// destructed or closed explicitly.
+/// Buffered typed reader over `InputStream`.
+///
+/// Uses a 64-byte internal buffer to avoid tiny upstream reads.
+///
+/// Construction with `unique_ptr` transfers ownership; construction with
+/// reference does not.
+///
+/// After constructing this reader, access the stream only through this reader
+/// to keep buffer state coherent.
+///
+/// Reader closes the stream on destruction or explicit `close()`.
 class InputStreamReader {
  public:
   InputStreamReader() : is_(nullptr), owned_(false), in_() {}

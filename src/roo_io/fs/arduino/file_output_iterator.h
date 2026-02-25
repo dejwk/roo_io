@@ -29,16 +29,13 @@ class ArduinoFileOutputIterator {
     return rep_->write(buf, count);
   }
 
-  // rep_ can be nullptr after std::move().
+  /// `rep_` can be nullptr after move.
   void flush() {
     if (rep_ != nullptr) rep_->flush();
   }
 
   Status status() const { return rep_->status(); }
   bool ok() const { return status() == roo_io::kOk; }
-
-  //   void reset() { rep_->reset(nullptr); }
-  //   void reset(::fs::File file) { rep_->reset(std::move(file)); }
 
  private:
   class Rep {
@@ -53,8 +50,6 @@ class ArduinoFileOutputIterator {
 
     Status status() const { return status_; }
 
-    // void reset(::fs::File file);
-
    private:
     Rep(const Rep&) = delete;
     Rep(Rep&&);
@@ -67,10 +62,8 @@ class ArduinoFileOutputIterator {
     Status status_;
   };
 
-  // We keep the content on the heap for the following reasons:
-  // * stack space is very limited, and we need some buffer cache;
-  // * underlying file structures are using heap anyway;
-  // * we want the stream object to be cheaply movable.
+  /// Rep is heap-allocated to keep stack usage low, match underlying heap-
+  /// allocated file structures, and keep iterator move operations cheap.
   std::unique_ptr<Rep> rep_;
 };
 
@@ -83,13 +76,6 @@ inline ArduinoFileOutputIterator::Rep::Rep(::fs::File file)
     : file_(std::move(file)), offset_(0), status_(file_ ? kOk : kClosed) {
   if (status_ != kOk) offset_ = kArduinoFileOutputIteratorBufferSize;
 }
-
-// inline void ArduinoFileOutputIterator::Rep::reset(
-//     roo_io::OutputStream* output) {
-//   output_ = output;
-//   offset_ = 0;
-//   status_ = (output != nullptr) ? output->status() : kClosed;
-// }
 
 inline void ArduinoFileOutputIterator::Rep::writeBuffer() {
   if (file_.write((const uint8_t*)buffer_, offset_) < offset_) {

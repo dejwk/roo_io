@@ -7,66 +7,80 @@
 
 namespace roo_io {
 
-// Virtualizes access to files, memory, or other sources. Represents an 'open'
-// resource with a 'file pointer'.
-//
-// Note: if you want to use a stream as an iterator, use
-// BufferedInputStreamIterator (to avoid the overhead of calling virtual
-// functions per byte).
+/// Virtualizes access to files, memory, and other readable sources.
+///
+/// Represents an open resource with a read cursor.
+///
+/// For iterator-style usage, prefer `BufferedInputStreamIterator` to avoid
+/// virtual-call overhead per byte.
 class InputStream {
  public:
   virtual ~InputStream() { close(); }
 
+  /// Returns whether stream is considered open.
+  ///
+  /// @return `true` when `status()` is `kOk` or `kEndOfStream`.
   virtual bool isOpen() const {
     Status s = status();
     return s == kOk || s == kEndOfStream;
   }
 
-  // Closes this stream. If status was 'kOk' or 'kEndOfStream', sets it to
-  // 'kClosed'.
-  //
-  // After calling this method, read operations will always return zero.
+  /// Closes this stream.
+  ///
+  /// Updates status.
+  ///
+  /// If previous status was `kOk` or `kEndOfStream`, status transitions to
+  /// `kClosed`.
+  ///
+  /// After close, read operations should return zero bytes.
   virtual void close() {}
 
-  // Attempts to read up to `count` bytes, but at least one byte, into `result`,
-  // and updates `status()`. Returns the number of bytes read, which must be
-  // greater than zero on success (i.e. when `status()` returns 'kOk'), zero on
-  // end-of-stream (i.e. when `status()` returns 'kEndOfStream'), and possibly
-  // zero on error (i.e. when `status()` returns another value).
-  //
-  // If the status was not 'kOk' prior to the call, leaves it as is and returns
-  // zero. Otherwise, if there are more than zero bytes available before the end
-  // of stream, reads and returns up to `count` bytes, but at least one byte,
-  // and leaves status as `kOk`. Otherwise if there are no more bytes available
-  // before end of stream, returns zero and updates status to `kEndOfStream`.
-  //
-  // In case of error, updates the status, and returns the number of bytes that
-  // have been read before the error was encountered (possibly zero, but might
-  // be greater than zero).
-  //
-  // This method may read fewer than count bytes, even if more are available in
-  // the stream. If that's not what you want, see `readFully()`.
+  /// Attempts to read up to `count` bytes into `result`.
+  ///
+  /// Updates status.
+  ///
+  /// Contract:
+  /// - On success (`status() == kOk`), returns at least one byte.
+  /// - On end-of-stream (`status() == kEndOfStream`), returns zero.
+  /// - On error, may return zero or number of bytes read before failure.
+  ///
+  /// If status before call is not `kOk`, leaves it unchanged and returns zero.
+  ///
+  /// Implementations may return fewer than `count` bytes even when more data is
+  /// available. Use `readFully()` if that is not the desired behavior.
+  /// @return Number of bytes read.
   virtual size_t read(byte* result, size_t count) = 0;
 
-  // Attempts to read up to `count` bytes, into `result`, as long as it is
-  // possible without blocking indefinitely, and updates `status()`. Returns the
-  // number of bytes read.
-  //
-  // Similar to read(), except that it can return zero on success, in case there
-  // are no more bytes available to read without blocking.
-  //
-  // The implementation has some leeway in deciding what constitutes
-  // unacceptable blocking, as long as it is guaranteed that callers can always
-  // make progress by calling tryRead() repeatedly, and never calling read().
+  /// Attempts to read up to `count` bytes into `result` without indefinitely
+  /// blocking.
+  ///
+  /// Updates status.
+  ///
+  /// Similar to `read()`, but may return zero on success when no data is
+  /// currently available without blocking.
+  ///
+  /// The implementation has some leeway for deciding what constitutes
+  /// unacceptable blocking, as long as it is guaranteed that callers can always
+  /// make progress by calling tryRead() repeatedly, and never calling read().
+  ///
+  /// @return Number of bytes read.
   virtual size_t tryRead(byte* result, size_t count) {
     return read(result, count);
   }
 
-  // Attempts to read `count` bytes into `result`, and updates `status()`.
-  // Blocks if necessary.
-  //
-  // This method is similar to `read()`, except it never returns fewer bytes
-  // than `count`, unless it reaches end of stream or encounters an error.
+  /// Attempts to read `count` bytes into `buf`; blocks as needed.
+  ///
+  /// Updates status.
+  ///
+  /// Unlike `read()`, this method keeps reading until one of the following:
+  /// - `count` bytes are read,
+  /// - end-of-stream is reached,
+  /// - an error occurs.
+  ///
+  /// If pre-call status is not `kOk`, this method returns zero and leaves
+  /// status unchanged.
+  ///
+  /// @return Total bytes read.
   virtual size_t readFully(byte* buf, size_t count) {
     size_t read_total = 0;
     while (count > 0) {
@@ -79,17 +93,17 @@ class InputStream {
     return read_total;
   }
 
-  // Skips over the specified count of bytes. Updates the `status()`.
-  //
-  // Conceptually equivalent to `readFully(buf, count)` and ignoring the result.
-  //
-  // If the status was not `kOk` prior to the call, leaves it as is. Otherwise,
-  // if the skip was succesful and the stream is before or exactly at the end,
-  // leaves the status as `kOk`. Otherwise, if the skip moves the stream past
-  // the end, updates the status to `kEndOfStream`.
-  //
-  // In case of error, updates the status accordingly.
-  //
+  /// Skips over `count` bytes, updating `status()`.
+  ///
+  /// Conceptually equivalent to `readFully(tmp, count)` and discarding data.
+  ///
+  /// If pre-call status is not `kOk`, leaves status unchanged and returns.
+  ///
+  /// If skip ends exactly at stream end, status remains `kOk`.
+  /// If skip ends before stream end, status remains `kOk`.
+  /// If skip crosses stream end, status becomes `kEndOfStream`.
+  ///
+  /// Any I/O error updates status accordingly.
   virtual void skip(uint64_t count) {
     byte buf[64];
     while (count >= 64) {
@@ -102,7 +116,7 @@ class InputStream {
     }
   }
 
-  // Returns the status of the most recent I/O operation.
+  /// Returns status of the most recent I/O operation.
   virtual Status status() const = 0;
 };
 

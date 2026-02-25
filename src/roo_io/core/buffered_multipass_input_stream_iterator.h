@@ -12,6 +12,7 @@ static const size_t kMultipassInputStreamIteratorBufferSize = 64;
 
 class BufferedMultipassInputStreamIterator {
  public:
+  /// Creates a detached iterator with `kClosed` status.
   BufferedMultipassInputStreamIterator()
       : input_(nullptr),
         buffer_(nullptr),
@@ -19,6 +20,10 @@ class BufferedMultipassInputStreamIterator {
         length_(0),
         status_(kClosed) {}
 
+  /// Creates iterator over `input`.
+  ///
+  /// Initializes `status()` from `input.status()`. Allocates internal buffer
+  /// when initial status is `kOk` or `kEndOfStream`.
   BufferedMultipassInputStreamIterator(roo_io::MultipassInputStream& input)
       : input_(&input), offset_(0), length_(0), status_(input.status()) {
     buffer_ = (status_ == kOk || status_ == kEndOfStream)
@@ -27,6 +32,9 @@ class BufferedMultipassInputStreamIterator {
                   : nullptr;
   }
 
+  /// Move-constructs iterator state.
+  ///
+  /// Source iterator becomes detached with `kClosed` status.
   BufferedMultipassInputStreamIterator(
       BufferedMultipassInputStreamIterator&& other)
       : input_(other.input_),
@@ -40,6 +48,9 @@ class BufferedMultipassInputStreamIterator {
     other.status_ = kClosed;
   }
 
+  /// Move-assigns iterator state.
+  ///
+  /// Source iterator becomes detached with `kClosed` status.
   BufferedMultipassInputStreamIterator& operator=(
       BufferedMultipassInputStreamIterator&& other) {
     if (this != &other) {
@@ -56,6 +67,14 @@ class BufferedMultipassInputStreamIterator {
     return *this;
   }
 
+  /// Reads one byte.
+  ///
+  /// If buffered data is available, returns it without changing `status()`.
+  /// If `status() != kOk`, returns zero byte and leaves status unchanged.
+  /// Otherwise reads from underlying stream; when that read returns zero,
+  /// updates `status()` from `input.status()`.
+  ///
+  /// @return Read byte, or zero byte when no byte can be read.
   byte read() {
     if (offset_ < length_) {
       return buffer_[offset_++];
@@ -74,6 +93,13 @@ class BufferedMultipassInputStreamIterator {
     return buffer_[0];
   }
 
+  /// Reads up to `count` bytes into `buf`.
+  ///
+  /// Uses buffered bytes first. If `status() != kOk`, returns zero and leaves
+  /// status unchanged. When delegated stream read returns zero, updates
+  /// `status()` from `input.status()`.
+  ///
+  /// @return Number of bytes read.
   size_t read(byte* buf, size_t count) {
     if (offset_ < length_) {
       // Have some data still in the buffer; just return that.
@@ -113,6 +139,12 @@ class BufferedMultipassInputStreamIterator {
     return count;
   }
 
+  /// Skips up to `count` bytes.
+  ///
+  /// If skip is satisfied from buffered bytes, `status()` is unchanged.
+  /// Otherwise clears local buffer state and, when `status() == kOk`, delegates
+  /// remaining skip to underlying stream and updates `status()` from
+  /// `input.status()`.
   void skip(size_t count) {
     size_t remaining = (length_ - offset_);
     if (count < remaining) {
@@ -126,18 +158,38 @@ class BufferedMultipassInputStreamIterator {
     }
   }
 
+  /// Returns current iterator status.
+  ///
+  /// @return Current status value.
   Status status() const { return status_; }
 
+  /// Returns stream size when iterator status is `kOk` or `kEndOfStream`.
+  ///
+  /// Otherwise returns zero.
+  ///
+  /// @return Stream size, or zero when iterator is in other statuses.
   uint64_t size() const {
     return status_ == kOk || status_ == kEndOfStream ? input_->size() : 0;
   }
 
+  /// Returns current read position when status is `kOk` or `kEndOfStream`.
+  ///
+  /// Otherwise returns zero.
+  ///
+  /// @return Current position, or zero when iterator is in other statuses.
   uint64_t position() const {
     return (status_ == kOk || status_ == kEndOfStream)
                ? input_->position() + offset_ - length_
                : 0;
   }
 
+  /// Rewinds to stream start.
+  ///
+  /// If status is neither `kOk` nor `kEndOfStream`, no-op.
+  /// If current position still lies within buffered window, only adjusts
+  /// buffer offset and leaves status unchanged.
+  /// Otherwise delegates rewind to underlying stream, clears buffer, and
+  /// updates `status()` from `input.status()`.
   void rewind() {
     if (status_ != kOk && status_ != kEndOfStream) return;
     uint64_t file_pos = input_->position();
@@ -153,6 +205,15 @@ class BufferedMultipassInputStreamIterator {
     }
   }
 
+  /// Seeks to absolute `position`.
+  ///
+  /// If status is neither `kOk` nor `kEndOfStream`, no-op.
+  /// If target lies within buffered window, adjusts offset only.
+  /// Otherwise delegates seek to underlying stream, clears buffer, and
+  /// synchronizes from `input.status()`.
+  ///
+  /// As implemented, accepted seek requests set iterator status to `kOk`
+  /// at the end of the call.
   void seek(uint64_t position) {
     if (status_ != kOk && status_ != kEndOfStream) return;
     uint64_t file_pos = input_->position();
@@ -169,10 +230,20 @@ class BufferedMultipassInputStreamIterator {
     status_ = kOk;
   }
 
+  /// Returns whether `status() == kOk`.
+  ///
+  /// @return `true` iff current status is `kOk`.
   bool ok() const { return status() == roo_io::kOk; }
 
+  /// Returns whether `status() == kEndOfStream`.
+  ///
+  /// @return `true` iff current status is `kEndOfStream`.
   bool eos() const { return status() == roo_io::kEndOfStream; }
 
+  /// Rebinds iterator to `input` and clears buffered state.
+  ///
+  /// Updates `status()` to `input.status()`. Allocates buffer lazily when
+  /// needed and status is `kOk`/`kEndOfStream`.
   void reset(roo_io::MultipassInputStream& input) {
     input_ = &input;
     offset_ = 0;
@@ -184,6 +255,9 @@ class BufferedMultipassInputStreamIterator {
     }
   }
 
+  /// Detaches from stream and releases internal buffer.
+  ///
+  /// Sets status to `kClosed`.
   void reset() {
     input_ = nullptr;
     buffer_ = nullptr;
