@@ -1,5 +1,6 @@
 common --registry="https://raw.githubusercontent.com/dejwk/roo-registry/main/" --registry="https://bcr.bazel.build"
 
+# we define these for sake of unit tests in this repository.
 build --copt -DROO_TESTING
 build --copt -DARDUINO=10803
 
