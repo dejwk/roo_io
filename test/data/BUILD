@@ -60,3 +60,15 @@ cc_test(
         "//:testing",
     ],
 )
+
+cc_test(
+    name = "output_stream_writer_test",
+    size = "small",
+    srcs = [
+        "output_stream_writer_test.cpp",
+    ],
+    linkstatic = 1,
+    deps = [
+        "//:testing",
+    ],
+)

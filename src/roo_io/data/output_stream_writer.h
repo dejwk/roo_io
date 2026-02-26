@@ -102,10 +102,13 @@ class OutputStreamWriter {
     if (os_ != nullptr) {
       out_.flush();
       os_->close();
+      if (owned_) {
+        delete os_;
+        owned_ = false;
+      }
       os_ = nullptr;
       out_.reset();
-    }
-    if (owned_) {
+    } else if (owned_) {
       delete os_;
       owned_ = false;
     }
