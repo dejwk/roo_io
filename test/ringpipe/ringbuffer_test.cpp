@@ -69,4 +69,26 @@ TEST(RingBufferTest, WrapAround) {
   EXPECT_EQ(buf.free(), 3);
 }
 
+TEST(RingBufferTest, SingleByteWriteWrapsWhenWritePosEqualsCapacity) {
+  RingBuffer buf(4);
+
+  byte initial[] = {byte{1}, byte{2}, byte{3}};
+  EXPECT_EQ(buf.write(initial, 3), 3);
+
+  byte tmp;
+  EXPECT_TRUE(buf.read(&tmp));
+  EXPECT_EQ(tmp, byte{1});
+
+  EXPECT_TRUE(buf.write(byte{4}));
+  // At this point head + used == capacity and the next write should wrap.
+  EXPECT_TRUE(buf.write(byte{5}));
+
+  byte out[4];
+  EXPECT_EQ(buf.read(out, 4), 4);
+  EXPECT_EQ(out[0], byte{2});
+  EXPECT_EQ(out[1], byte{3});
+  EXPECT_EQ(out[2], byte{4});
+  EXPECT_EQ(out[3], byte{5});
+}
+
 }  // namespace roo_io

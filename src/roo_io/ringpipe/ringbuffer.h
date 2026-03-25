@@ -85,7 +85,7 @@ class RingBuffer {
  private:
   size_t write_pos() const {
     size_t pos = head_ + used_;
-    if (pos > capacity_) pos -= capacity_;
+    if (pos >= capacity_) pos -= capacity_;
     return pos;
   }
 
