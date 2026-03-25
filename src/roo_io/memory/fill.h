@@ -38,17 +38,16 @@ inline void PatternWrite<4>(byte* buf, const byte* val) {
 }
 
 template <int bytes>
-inline void PatternFill(byte* buf, uint32_t count, const byte* val);
+inline void PatternFill(byte* buf, size_t count, const byte* val);
 
 template <>
-inline void PatternFill<1>(byte* buf, uint32_t count, const byte* val) {
+inline void PatternFill<1>(byte* buf, size_t count, const byte* val) {
   memset(buf, (int)*val, count);
 }
 
 namespace internal {
 
-inline void pattern_fill_32_aligned(uint32_t* buf, uint32_t count,
-                                    uint32_t val) {
+inline void pattern_fill_32_aligned(uint32_t* buf, size_t count, uint32_t val) {
   while (count >= 8) {
     buf[0] = val;
     buf[1] = val;
@@ -84,8 +83,7 @@ inline void pattern_fill_32_aligned(uint32_t* buf, uint32_t count,
   return;
 }
 
-inline void pattern_fill_16_aligned(uint16_t* buf, uint32_t count,
-                                    uint16_t val) {
+inline void pattern_fill_16_aligned(uint16_t* buf, size_t count, uint16_t val) {
   if (((intptr_t)buf & 3) != 0) {
     *buf++ = val;
     --count;
@@ -100,7 +98,7 @@ inline void pattern_fill_16_aligned(uint16_t* buf, uint32_t count,
 }  // namespace internal
 
 template <>
-inline void PatternFill<2>(byte* buf, uint32_t count, const byte* val) {
+inline void PatternFill<2>(byte* buf, size_t count, const byte* val) {
   if (count < 8) {
     if (count == 0) return;
     *buf++ = val[0];
@@ -151,7 +149,7 @@ inline void PatternFill<2>(byte* buf, uint32_t count, const byte* val) {
 }
 
 template <>
-inline void PatternFill<3>(byte* buf, uint32_t count, const byte* val) {
+inline void PatternFill<3>(byte* buf, size_t count, const byte* val) {
   // Get to the point where we're aligned on 4 bytes.
   if (count < 8) {
     if (count == 0) return;
@@ -239,7 +237,7 @@ inline void PatternFill<3>(byte* buf, uint32_t count, const byte* val) {
 }
 
 template <>
-inline void PatternFill<4>(byte* buf, uint32_t count, const byte* val) {
+inline void PatternFill<4>(byte* buf, size_t count, const byte* val) {
   if ((val[0] == val[1]) && (val[0] == val[2]) && (val[0] == val[3])) {
     memset(buf, (int)val[0], count * 4);
     return;
@@ -265,7 +263,7 @@ inline void PatternFill<4>(byte* buf, uint32_t count, const byte* val) {
 
 // Fills 'count' consecutive bits of memory (in MSB order), starting at the
 // given bit offset of the given buffer.
-inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
+inline void BitFill(byte* buf, uint32_t offset, size_t count, bool value) {
   buf += (offset / 8);
   offset %= 8;
   if (value) {
@@ -301,7 +299,7 @@ inline void BitFill(byte* buf, uint32_t offset, int16_t count, bool value) {
   }
 }
 
-inline void NibbleFill(byte* buf, uint32_t offset, int16_t count, byte value) {
+inline void NibbleFill(byte* buf, uint32_t offset, size_t count, byte value) {
   if ((offset % 2) == 1) {
     byte& first = buf[offset / 2];
     first &= byte{0xF0};
