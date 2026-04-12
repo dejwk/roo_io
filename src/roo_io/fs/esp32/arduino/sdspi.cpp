@@ -4,7 +4,7 @@
 
 #include "FS.h"
 #include "SD.h"
-#include "ff.h"
+#include "diskio_impl.h"
 #include "sd_diskio.h"
 #include "vfs_api.h"
 
@@ -44,13 +44,23 @@ void ArduinoSdSpiFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence ArduinoSdSpiFs::checkMediaPresence() {
-  FATFS* fsinfo;
-  DWORD fre_clust;
-  if (f_getfree("0:", &fre_clust, &fsinfo) != 0) {
-    return Filesystem::kMediaAbsent;
+  if (pdrv_ != 0xFF) {
+    // Drive is registered. Send CMD13 to check if card is still responsive.
+    // disk_status (ff_sd_status) is non-destructive and won't disrupt a mount.
+    return (disk_status(pdrv_) & STA_NOINIT) ? kMediaAbsent : kMediaPresent;
   }
-  return (fsinfo->csize == 0) ? Filesystem::kMediaAbsent
-                              : Filesystem::kMediaPresent;
+  // Not initialized; register a drive and run the SPI handshake to probe for
+  // card presence, without mounting a filesystem.
+  uint8_t pdrv = sdcard_init(cs_pin_, spi_, frequency());
+  if (pdrv == 0xFF) {
+    return kMediaAbsent;
+  }
+  // sdcard_init only registers the drive; disk_initialize actually talks to
+  // the card over SPI and sets the card type.
+  disk_initialize(pdrv);
+  bool present = sdcard_type(pdrv) != CARD_NONE;
+  sdcard_uninit(pdrv);
+  return present ? kMediaPresent : kMediaAbsent;
 }
 
 ArduinoSdSpiFs CreateArduinoSdSpiFs() { return ArduinoSdSpiFs(); }
