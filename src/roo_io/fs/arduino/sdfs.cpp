@@ -8,9 +8,8 @@
 #if (defined ESP32 || defined ROO_TESTING)
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
 // completely.
-#include "diskio_impl.h"
+#include "roo_io/fs/esp32/arduino/internal/sd_spi_probe.h"
 #include "roo_io/fs/posix/posix_mount.h"
-#include "sd_diskio.h"
 #else
 // Fall back to Arduino filesystem APIs.
 #include "roo_io/fs/arduino/mount.h"
@@ -39,21 +38,15 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
   if (isMounted()) {
-    // totalBytes() calls f_getfree() which goes through mount_volume() →
-    // disk_status() → CMD13.  If the card has been removed, CMD13 fails,
-    // disk_status returns STA_NOINIT, and totalBytes() returns 0.
-    return sd_.totalBytes() > 0 ? kMediaPresent : kMediaAbsent;
+    // Use a fast direct CMD13 probe instead of sd_.totalBytes() which goes
+    // through disk_status() → sdWait(500) — blocks ~500 ms on card removal.
+    return internal::SdSpiCheckStatus(*spi_, cs_pin_) ? kMediaPresent
+                                                      : kMediaAbsent;
   }
-  // Not mounted: register a temporary drive, run the SPI handshake to probe
-  // for card presence, then clean up.
-  uint8_t pdrv = sdcard_init(cs_pin_, spi_, frequency());
-  if (pdrv == 0xFF) {
-    return kMediaAbsent;
-  }
-  disk_initialize(pdrv);
-  bool present = sdcard_type(pdrv) != CARD_NONE;
-  sdcard_uninit(pdrv);
-  return present ? kMediaPresent : kMediaAbsent;
+  // Not mounted — do a fast direct SPI probe (CMD0 only, no retries).
+  // Much faster than disk_initialize() which retries 3× with ~600 ms waits.
+  return internal::SdSpiProbeCard(*spi_, cs_pin_) ? kMediaPresent
+                                                  : kMediaAbsent;
 }
 
 #else

@@ -4,7 +4,7 @@
 
 #include "FS.h"
 #include "SD.h"
-#include "diskio_impl.h"
+#include "roo_io/fs/esp32/arduino/internal/sd_spi_probe.h"
 #include "sd_diskio.h"
 #include "vfs_api.h"
 
@@ -43,22 +43,16 @@ void ArduinoSdSpiFs::unmountImpl() {
 
 Filesystem::MediaPresence ArduinoSdSpiFs::checkMediaPresence() {
   if (pdrv_ != 0xFF) {
-    // Drive is registered. Send CMD13 to check if card is still responsive.
-    // disk_status (ff_sd_status) is non-destructive and won't disrupt a mount.
-    return (disk_status(pdrv_) & STA_NOINIT) ? kMediaAbsent : kMediaPresent;
+    // Drive is registered.  Use a fast direct CMD13 probe instead of
+    // disk_status(), which blocks ~500 ms when the card is absent (its
+    // sdWait spins on floating-low MISO).
+    return internal::SdSpiCheckStatus(*spi_, cs_pin_) ? kMediaPresent
+                                                      : kMediaAbsent;
   }
-  // Not initialized; register a drive and run the SPI handshake to probe for
-  // card presence, without mounting a filesystem.
-  uint8_t pdrv = sdcard_init(cs_pin_, spi_, frequency());
-  if (pdrv == 0xFF) {
-    return kMediaAbsent;
-  }
-  // sdcard_init only registers the drive; disk_initialize actually talks to
-  // the card over SPI and sets the card type.
-  disk_initialize(pdrv);
-  bool present = sdcard_type(pdrv) != CARD_NONE;
-  sdcard_uninit(pdrv);
-  return present ? kMediaPresent : kMediaAbsent;
+  // Not initialized — do a fast direct SPI probe (CMD0 only, no retries).
+  // Much faster than disk_initialize() which retries 3× with ~600 ms waits.
+  return internal::SdSpiProbeCard(*spi_, cs_pin_) ? kMediaPresent
+                                                  : kMediaAbsent;
 }
 
 ArduinoSdSpiFs CreateArduinoSdSpiFs() { return ArduinoSdSpiFs(); }
