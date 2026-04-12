@@ -6,7 +6,7 @@ namespace fakefs {
 size_t File::read(size_t pos, byte* buf, size_t size) const {
   if (pos > data_.size()) return 0;
   if (pos + size > data_.size()) size = data_.size() - pos;
-  memcpy(buf, &data_[pos], size);
+  if (size > 0) memcpy(buf, &data_[pos], size);
   return size;
 }
 
@@ -17,7 +17,7 @@ size_t File::write(size_t pos, const byte* buf, size_t size) {
     data_.resize(data_.size() + obtained);
     size -= (requested - obtained);
   }
-  memcpy(&data_[pos], buf, size);
+  if (size > 0) memcpy(&data_[pos], buf, size);
   return size;
 }
 
