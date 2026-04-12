@@ -28,6 +28,9 @@ ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin, decltype(::SD)& sd,
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   if (!sd_.begin(cs_pin_, *spi_, frequency(), mountPoint(), maxOpenFiles(),
                  formatIfMountFailed())) {
     return MountImpl::MountError(kGenericMountError);

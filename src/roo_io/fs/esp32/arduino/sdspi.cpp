@@ -17,6 +17,9 @@ ArduinoSdSpiFs::ArduinoSdSpiFs(uint8_t cs_pin, decltype(::SPI) &spi,
 
 MountImpl::MountResult
 ArduinoSdSpiFs::mountImpl(std::function<void()> unmount_fn) {
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   pdrv_ = sdcard_init(cs_pin_, spi_, frequency());
   if (pdrv_ == 0xFF) {
     return MountImpl::MountError(kGenericMountError);
