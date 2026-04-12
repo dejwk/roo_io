@@ -8,7 +8,9 @@
 #if (defined ESP32 || defined ROO_TESTING)
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
 // completely.
+#include "diskio_impl.h"
 #include "roo_io/fs/posix/posix_mount.h"
+#include "sd_diskio.h"
 #else
 // Fall back to Arduino filesystem APIs.
 #include "roo_io/fs/arduino/mount.h"
@@ -36,7 +38,22 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
-  return sd_.totalBytes() > 0 ? kMediaPresent : kMediaAbsent;
+  if (isMounted()) {
+    // totalBytes() calls f_getfree() which goes through mount_volume() →
+    // disk_status() → CMD13.  If the card has been removed, CMD13 fails,
+    // disk_status returns STA_NOINIT, and totalBytes() returns 0.
+    return sd_.totalBytes() > 0 ? kMediaPresent : kMediaAbsent;
+  }
+  // Not mounted: register a temporary drive, run the SPI handshake to probe
+  // for card presence, then clean up.
+  uint8_t pdrv = sdcard_init(cs_pin_, spi_, frequency());
+  if (pdrv == 0xFF) {
+    return kMediaAbsent;
+  }
+  disk_initialize(pdrv);
+  bool present = sdcard_type(pdrv) != CARD_NONE;
+  sdcard_uninit(pdrv);
+  return present ? kMediaPresent : kMediaAbsent;
 }
 
 #else
