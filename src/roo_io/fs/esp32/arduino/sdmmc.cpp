@@ -10,21 +10,42 @@
 #define MLOG_roo_io_fs 0
 #endif
 
+#include "driver/sdmmc_host.h"
+#include "sdmmc_cmd.h"
+
+#include <sys/stat.h>
+
 namespace roo_io {
 
 ArduinoSdMmcFs::ArduinoSdMmcFs()
     : BaseEsp32VfsFilesystem(SDMMC_FREQ_HIGHSPEED, "/sdcard"),
-      mode_1bit_(true) {}
+      mode_1bit_(true),
+      slot_config_(SDMMC_SLOT_CONFIG_DEFAULT()) {}
 
 void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
   ::SD_MMC.setPins(pin_clk, pin_cmd, pin_d0);
   mode_1bit_ = true;
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+  slot_config_.clk = (gpio_num_t)pin_clk;
+  slot_config_.cmd = (gpio_num_t)pin_cmd;
+  slot_config_.d0 = (gpio_num_t)pin_d0;
+#endif
+  slot_config_.width = 1;
 }
 
 void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
                              uint8_t pin_d1, uint8_t pin_d2, uint8_t pin_d3) {
   ::SD_MMC.setPins(pin_clk, pin_cmd, pin_d0, pin_d1, pin_d2, pin_d3);
   mode_1bit_ = false;
+#ifdef SOC_SDMMC_USE_GPIO_MATRIX
+  slot_config_.clk = (gpio_num_t)pin_clk;
+  slot_config_.cmd = (gpio_num_t)pin_cmd;
+  slot_config_.d0 = (gpio_num_t)pin_d0;
+  slot_config_.d1 = (gpio_num_t)pin_d1;
+  slot_config_.d2 = (gpio_num_t)pin_d2;
+  slot_config_.d3 = (gpio_num_t)pin_d3;
+#endif
+  slot_config_.width = 4;
 }
 
 MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
@@ -53,8 +74,35 @@ void ArduinoSdMmcFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence ArduinoSdMmcFs::checkMediaPresence() {
-  return ::SD_MMC.totalBytes() > 0 ? Filesystem::kMediaPresent
-                                   : Filesystem::kMediaAbsent;
+  if (!mount_base_path_.empty()) {
+    // Mounted. Stat the mount path — goes through VFS/FatFs/SDMMC driver,
+    // which will fail if the card was physically removed.
+    struct stat st;
+    return (stat(mount_base_path_.c_str(), &st) == 0) ? kMediaPresent
+                                                      : kMediaAbsent;
+  }
+  // Not mounted. Init the SDMMC host and do the card handshake to probe
+  // for card presence, without mounting a filesystem.
+  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+  host.flags = mode_1bit_ ? SDMMC_HOST_FLAG_1BIT : SDMMC_HOST_FLAG_4BIT;
+  host.max_freq_khz = frequency() / 1000;
+
+  esp_err_t ret = sdmmc_host_init();
+  if (ret != ESP_OK) {
+    return kMediaAbsent;
+  }
+
+  ret = sdmmc_host_init_slot(host.slot, &slot_config_);
+  if (ret != ESP_OK) {
+    sdmmc_host_deinit();
+    return kMediaAbsent;
+  }
+
+  sdmmc_card_t card;
+  ret = sdmmc_card_init(&host, &card);
+
+  sdmmc_host_deinit();
+  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
 }
 
 ArduinoSdMmcFs CreateArduinoSdMmcFs() { return ArduinoSdMmcFs(); }

@@ -10,15 +10,13 @@
 
 namespace roo_io {
 
-ArduinoSdSpiFs::ArduinoSdSpiFs(uint8_t cs_pin, decltype(::SPI)& spi,
+ArduinoSdSpiFs::ArduinoSdSpiFs(uint8_t cs_pin, decltype(::SPI) &spi,
                                uint32_t freq)
-    : BaseEsp32VfsFilesystem(freq, "/sd"),
-      cs_pin_((gpio_num_t)cs_pin),
-      spi_(&spi),
-      pdrv_(0xFF) {}
+    : BaseEsp32VfsFilesystem(freq, "/sd"), cs_pin_((gpio_num_t)cs_pin),
+      spi_(&spi), pdrv_(0xFF) {}
 
-MountImpl::MountResult ArduinoSdSpiFs::mountImpl(
-    std::function<void()> unmount_fn) {
+MountImpl::MountResult
+ArduinoSdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   pdrv_ = sdcard_init(cs_pin_, spi_, frequency());
   if (pdrv_ == 0xFF) {
     return MountImpl::MountError(kGenericMountError);

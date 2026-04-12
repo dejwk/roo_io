@@ -12,33 +12,29 @@
 
 #if SOC_SDMMC_HOST_SUPPORTED
 
-#include "ff.h"
-
 #if !defined(MLOG_roo_io_fs)
 #define MLOG_roo_io_fs 0
 #endif
 
+#include "ff.h"
 #include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "esp_idf_version.h"
 #include "esp_vfs_fat.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
+#if !defined(ROO_TESTING)
+#include "sdmmc_cmd.h"
+#endif
 
 namespace roo_io {
 
 SdMmcFs::SdMmcFs()
     : BaseEsp32VfsFilesystem(SDMMC_FREQ_HIGHSPEED, "/sdmmc"),
-      use_default_pins_(true),
-      pin_clk_((gpio_num_t)-1),
-      pin_cmd_((gpio_num_t)-1),
-      pin_d0_((gpio_num_t)-1),
-      pin_d1_((gpio_num_t)-1),
-      pin_d2_((gpio_num_t)-1),
-      pin_d3_((gpio_num_t)-1),
-      width_(0),
-      card_(nullptr),
-      pdrv_(0xFF) {}
+      use_default_pins_(true), pin_clk_((gpio_num_t)-1),
+      pin_cmd_((gpio_num_t)-1), pin_d0_((gpio_num_t)-1),
+      pin_d1_((gpio_num_t)-1), pin_d2_((gpio_num_t)-1), pin_d3_((gpio_num_t)-1),
+      width_(0), card_(nullptr), pdrv_(0xFF) {}
 
 void SdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
   use_default_pins_ = false;
@@ -125,14 +121,52 @@ void SdMmcFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
-  FATFS* fsinfo;
-  DWORD fre_clust;
-  char drv[3] = {(char)(48 + pdrv_), ':', 0};
-  if (f_getfree(drv, &fre_clust, &fsinfo) != 0) {
-    return Filesystem::kMediaAbsent;
+#if defined(ROO_TESTING)
+  return kMediaPresenceUnknown;
+#else
+  if (card_ != nullptr) {
+    // Already mounted. Send CMD13 to check if card is still responsive.
+    return (sdmmc_get_status(card_) == ESP_OK) ? kMediaPresent : kMediaAbsent;
   }
-  return (fsinfo->csize == 0) ? Filesystem::kMediaAbsent
-                              : Filesystem::kMediaPresent;
+  // Not mounted. Init the SDMMC host and do the card handshake to probe
+  // for card presence, without mounting a filesystem.
+  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+
+  sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+  if (!use_default_pins_) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+    slot_config.clk = pin_clk_;
+    slot_config.cmd = pin_cmd_;
+    slot_config.d0 = pin_d0_;
+    slot_config.d1 = pin_d1_;
+    slot_config.d2 = pin_d2_;
+    slot_config.d3 = pin_d3_;
+#endif
+    slot_config.width = width_;
+  }
+
+  host.max_freq_khz = frequency() / 1000;
+  if (width_ == 1) {
+    host.flags = SDMMC_HOST_FLAG_1BIT;
+  }
+
+  esp_err_t ret = sdmmc_host_init();
+  if (ret != ESP_OK) {
+    return kMediaAbsent;
+  }
+
+  ret = sdmmc_host_init_slot(host.slot, &slot_config);
+  if (ret != ESP_OK) {
+    sdmmc_host_deinit();
+    return kMediaAbsent;
+  }
+
+  sdmmc_card_t card;
+  ret = sdmmc_card_init(&host, &card);
+
+  sdmmc_host_deinit();
+  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
+#endif
 }
 
 SdMmcFs CreateSdMmcFs() { return SdMmcFs(); }

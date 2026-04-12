@@ -41,7 +41,7 @@ class SdMmcFs : public BaseEsp32VfsFilesystem {
   uint8_t width_;
 
   std::string mount_base_path_;
-  sdmmc_card_t* card_;
+  sdmmc_card_t *card_;
   uint8_t pdrv_;
 };
 

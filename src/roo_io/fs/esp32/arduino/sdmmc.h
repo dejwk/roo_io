@@ -12,6 +12,7 @@
 #include <functional>
 #include <string>
 
+#include "driver/sdmmc_host.h"
 #include "roo_io/base/string_view.h"
 #include "roo_io/fs/esp32/base_vfs_filesystem.h"
 #include "roo_io/fs/posix/posix_mount.h"
@@ -42,6 +43,7 @@ class ArduinoSdMmcFs : public BaseEsp32VfsFilesystem {
   ArduinoSdMmcFs();
 
   bool mode_1bit_;
+  sdmmc_slot_config_t slot_config_;
 
   std::string mount_base_path_;
 };

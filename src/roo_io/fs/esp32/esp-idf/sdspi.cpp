@@ -18,12 +18,14 @@
 #include "esp_vfs_fat.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
+#if !defined(ROO_TESTING)
+#include "sdmmc_cmd.h"
+#endif
 
 namespace roo_io {
 
 SdSpiFs::SdSpiFs(uint8_t cs_pin, spi_host_device_t spi_host, uint32_t frequency)
-    : BaseEsp32VfsFilesystem(frequency, "/sd"),
-      cs_pin_((gpio_num_t)cs_pin),
+    : BaseEsp32VfsFilesystem(frequency, "/sd"), cs_pin_((gpio_num_t)cs_pin),
       spi_host_(spi_host) {}
 
 MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
@@ -43,10 +45,10 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   dev_config.host_id = spi_host_;
   dev_config.gpio_cs = cs_pin_;
 
-  esp_vfs_fat_mount_config_t mount_config = {
-      .format_if_mount_failed = formatIfMountFailed(),
-      .max_files = maxOpenFiles(),
-      .allocation_unit_size = 16 * 1024};
+  esp_vfs_fat_mount_config_t mount_config = {.format_if_mount_failed =
+                                                 formatIfMountFailed(),
+                                             .max_files = maxOpenFiles(),
+                                             .allocation_unit_size = 16 * 1024};
 
   ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
                                 &mount_config, &card_);
@@ -82,7 +84,38 @@ void SdSpiFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
+#if defined(ROO_TESTING)
   return kMediaPresenceUnknown;
+#else
+  if (card_ != nullptr) {
+    // Already mounted. Send CMD13 to check if card is still responsive.
+    return (sdmmc_get_status(card_) == ESP_OK) ? kMediaPresent : kMediaAbsent;
+  }
+  // Not mounted. Register an SPI device and do the card handshake to probe
+  // for card presence, without mounting a filesystem.
+  // sdspi_host_init() is a no-op in ESP-IDF v4.4; call it for forward compat.
+  sdspi_host_init();
+
+  sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
+  dev_config.host_id = spi_host_;
+  dev_config.gpio_cs = cs_pin_;
+
+  sdspi_dev_handle_t handle;
+  esp_err_t ret = sdspi_host_init_device(&dev_config, &handle);
+  if (ret != ESP_OK) {
+    return kMediaAbsent;
+  }
+
+  sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+  host.slot = handle;
+  host.max_freq_khz = frequency() / 1000;
+
+  sdmmc_card_t card;
+  ret = sdmmc_card_init(&host, &card);
+
+  sdspi_host_remove_device(handle);
+  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
+#endif
 }
 
 SdSpiFs CreateSdSpiFs() { return SdSpiFs(); }
