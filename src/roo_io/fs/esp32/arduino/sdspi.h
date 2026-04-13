@@ -17,6 +17,11 @@ namespace roo_io {
 // implementation, using the VFS API and Posix interface to the file system.
 // This is very similar to "roo_io/fs/arduino/sdfs.h", but uses the lower-level
 // sd_diskio interface directly, instead of going through the Arduino SD object.
+//
+// NOTE: the default frequency is set to 4 MHz, which is safe for jumper wires.
+// You can increase it (20 MHz is a fair game) if your wiring is solid, using
+// setFrequency().
+
 class ArduinoSdSpiFs : public BaseEsp32VfsFilesystem {
  public:
   void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
@@ -28,7 +33,7 @@ class ArduinoSdSpiFs : public BaseEsp32VfsFilesystem {
   friend ArduinoSdSpiFs CreateArduinoSdSpiFs();
 
   ArduinoSdSpiFs(uint8_t cs_pin = SS, decltype(::SPI)& spi = ::SPI,
-                 uint32_t freq = 20000000);
+                 uint32_t freq = 4000000);
 
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 

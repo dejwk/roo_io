@@ -13,6 +13,10 @@ namespace roo_io {
 //
 // You can use it in Arduino, as long as you don't have other Arduino devices on
 // the same SPI bus. Otherwise, use "roo_io/fs/esp32/arduino/sdfs.h" instead.
+//
+// NOTE: the default frequency is set to 4 MHz, which is safe for jumper wires.
+// You can increase it (20 MHz is a fair game) if your wiring is solid, using
+// setFrequency().
 class SdSpiFs : public BaseEsp32VfsFilesystem {
  public:
   void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
@@ -26,7 +30,7 @@ class SdSpiFs : public BaseEsp32VfsFilesystem {
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 
   SdSpiFs(uint8_t cs_pin = -1, spi_host_device_t spi_host = SPI2_HOST,
-          uint32_t freq = 20000000);
+          uint32_t freq = 4000000);
 
   void unmountImpl() override;
 

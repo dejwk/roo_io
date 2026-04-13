@@ -7,7 +7,11 @@
 //
 // On ESP32, very similar functionality is provided by the
 // roo_io::ArduinoSdSpiFs class, which uses the lower-level sd_diskio interface
-// directly, instead of going through the Arduino SD object at all.
+// directly, instead of going through the Arduino SD object.
+//
+// NOTE: the default frequency is set to 4 MHz, which is safe for jumper wires.
+// You can increase it (20 MHz is a fair game) if your wiring is solid, using
+// setFrequency().
 
 #ifdef ARDUINO
 
@@ -37,7 +41,7 @@ class ArduinoSdFs : public BaseEsp32VfsFilesystem {
   friend ArduinoSdFs CreateArduinoSdFs();
 
   ArduinoSdFs(uint8_t cs_pin = SS, decltype(::SD)& sd = ::SD,
-              decltype(::SPI)& spi = ::SPI, uint32_t freq = 20000000);
+              decltype(::SPI)& spi = ::SPI, uint32_t freq = 4000000);
 
   MountImpl::MountResult mountImpl(std::function<void()> unmount_fn) override;
 
