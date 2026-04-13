@@ -40,16 +40,20 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
+#if defined(ROO_TESTING)
+  return kMediaPresenceUnknown;
+#else
   if (isMounted()) {
     // Use a fast direct CMD13 probe instead of sd_.totalBytes() which goes
     // through disk_status() → sdWait(500) — blocks ~500 ms on card removal.
-    return internal::SdSpiCheckStatus(*spi_, cs_pin_) ? kMediaPresent
-                                                      : kMediaAbsent;
+    return internal::SdSpiCheckStatusArduino(*spi_, cs_pin_) ? kMediaPresent
+                                                             : kMediaAbsent;
   }
   // Not mounted — do a fast direct SPI probe (CMD0 only, no retries).
   // Much faster than disk_initialize() which retries 3× with ~600 ms waits.
-  return internal::SdSpiProbeCard(*spi_, cs_pin_) ? kMediaPresent
-                                                  : kMediaAbsent;
+  return internal::SdSpiProbeCardArduino(*spi_, cs_pin_) ? kMediaPresent
+                                                         : kMediaAbsent;
+#endif
 }
 
 #else
