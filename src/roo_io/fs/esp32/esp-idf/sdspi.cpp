@@ -16,9 +16,9 @@
 #include "driver/spi_common.h"
 #include "driver/spi_master.h"
 #include "esp_vfs_fat.h"
-#include "sd_protocol_defs.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
+#include "sd_protocol_defs.h"
 #if !defined(ROO_TESTING)
 #include "roo_io/fs/esp32/esp-idf/internal/sd_spi_probe.h"
 #endif
@@ -26,7 +26,8 @@
 namespace roo_io {
 
 SdSpiFs::SdSpiFs(uint8_t cs_pin, spi_host_device_t spi_host, uint32_t frequency)
-    : BaseEsp32VfsFilesystem(frequency, "/sd"), cs_pin_((gpio_num_t)cs_pin),
+    : BaseEsp32VfsFilesystem(frequency, "/sd"),
+      cs_pin_((gpio_num_t)cs_pin),
       spi_host_(spi_host) {}
 
 MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
@@ -49,10 +50,10 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   dev_config.host_id = spi_host_;
   dev_config.gpio_cs = cs_pin_;
 
-  esp_vfs_fat_mount_config_t mount_config = {.format_if_mount_failed =
-                                                 formatIfMountFailed(),
-                                             .max_files = maxOpenFiles(),
-                                             .allocation_unit_size = 16 * 1024};
+  esp_vfs_fat_mount_config_t mount_config = {
+      .format_if_mount_failed = formatIfMountFailed(),
+      .max_files = maxOpenFiles(),
+      .allocation_unit_size = 16 * 1024};
   if (checkMediaPresence() == kMediaAbsent) {
     return MountImpl::MountError(kNoMedia);
   }
@@ -108,13 +109,12 @@ Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
     //  - 0x00000000 (MISO driven low by another bus device)
     //  - 0xFFFFFFFF (MISO pulled high)
     uint32_t ocr = cmd.response[0];
-    if (ocr == 0 || ocr == 0xFFFFFFFF) return kMediaAbsent;
-    return kMediaPresent;
+    return (ocr == 0 || ocr == 0xFFFFFFFF) ? kMediaAbsent : kMediaPresent;
   }
   // Not mounted — fast direct CMD0 probe.  Much faster than
   // sdspi_host_init_device + sdmmc_card_init which does multiple retries.
-  return internal::SdSpiProbeCard(spi_host_, cs_pin_) ? kMediaPresent
-                                                      : kMediaAbsent;
+  return internal::SdSpiProbeCardEspIdf(spi_host_, cs_pin_) ? kMediaPresent
+                                                            : kMediaAbsent;
 #endif
 }
 

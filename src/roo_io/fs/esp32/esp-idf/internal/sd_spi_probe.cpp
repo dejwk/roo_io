@@ -1,6 +1,6 @@
 #include "roo_io/fs/esp32/esp-idf/internal/sd_spi_probe.h"
 
-#if defined(ESP_PLATFORM) && !defined(ARDUINO) && !defined(ROO_TESTING)
+#if defined(ESP_PLATFORM) && !defined(ROO_TESTING)
 
 #include <cstring>
 
@@ -71,7 +71,7 @@ uint8_t SendCmd(spi_device_handle_t handle, const uint8_t* cmd) {
 
 }  // namespace
 
-bool SdSpiProbeCard(spi_host_device_t spi_host, gpio_num_t cs_pin) {
+bool SdSpiProbeCardEspIdf(spi_host_device_t spi_host, gpio_num_t cs_pin) {
   bool present = false;
 
   // Ensure CS pin is configured as output and driven HIGH before we add the
@@ -117,4 +117,4 @@ bool SdSpiProbeCard(spi_host_device_t spi_host, gpio_num_t cs_pin) {
 }  // namespace internal
 }  // namespace roo_io
 
-#endif  // ESP_PLATFORM && !ARDUINO && !ROO_TESTING
+#endif  // ESP_PLATFORM && !ROO_TESTING
