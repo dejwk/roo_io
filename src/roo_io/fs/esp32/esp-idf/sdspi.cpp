@@ -16,10 +16,11 @@
 #include "driver/spi_common.h"
 #include "driver/spi_master.h"
 #include "esp_vfs_fat.h"
+#include "sd_protocol_defs.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
 #if !defined(ROO_TESTING)
-#include "sdmmc_cmd.h"
+#include "roo_io/fs/esp32/esp-idf/internal/sd_spi_probe.h"
 #endif
 
 namespace roo_io {
@@ -30,6 +31,9 @@ SdSpiFs::SdSpiFs(uint8_t cs_pin, spi_host_device_t spi_host, uint32_t frequency)
 
 MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
 #if defined(ROO_TESTING)
   mount_base_path_ = FakeEsp32().fs_root();
 #else
@@ -49,7 +53,9 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
                                                  formatIfMountFailed(),
                                              .max_files = maxOpenFiles(),
                                              .allocation_unit_size = 16 * 1024};
-
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   ret = esp_vfs_fat_sdspi_mount(mount_base_path_.c_str(), &host, &dev_config,
                                 &mount_config, &card_);
 
@@ -88,33 +94,27 @@ Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
   return kMediaPresenceUnknown;
 #else
   if (card_ != nullptr) {
-    // Already mounted. Send CMD13 to check if card is still responsive.
-    return (sdmmc_get_status(card_) == ESP_OK) ? kMediaPresent : kMediaAbsent;
+    // Already mounted — send CMD58 (READ_OCR) through the mounted SDSPI
+    // driver's existing device handle.  No retries, no extra SPI device.
+    sdmmc_command_t cmd = {};
+    cmd.opcode = SD_READ_OCR;
+    cmd.arg = 0;
+    cmd.flags = SCF_CMD_AC | SCF_RSP_R3;
+    esp_err_t err = card_->host.do_transaction(card_->host.slot, &cmd);
+
+    if (err != ESP_OK) return kMediaAbsent;
+    // A real card's OCR has MMC_OCR_MEM_READY (bit 31) plus voltage window
+    // bits set.  Absent card reads as either:
+    //  - 0x00000000 (MISO driven low by another bus device)
+    //  - 0xFFFFFFFF (MISO pulled high)
+    uint32_t ocr = cmd.response[0];
+    if (ocr == 0 || ocr == 0xFFFFFFFF) return kMediaAbsent;
+    return kMediaPresent;
   }
-  // Not mounted. Register an SPI device and do the card handshake to probe
-  // for card presence, without mounting a filesystem.
-  // sdspi_host_init() is a no-op in ESP-IDF v4.4; call it for forward compat.
-  sdspi_host_init();
-
-  sdspi_device_config_t dev_config = SDSPI_DEVICE_CONFIG_DEFAULT();
-  dev_config.host_id = spi_host_;
-  dev_config.gpio_cs = cs_pin_;
-
-  sdspi_dev_handle_t handle;
-  esp_err_t ret = sdspi_host_init_device(&dev_config, &handle);
-  if (ret != ESP_OK) {
-    return kMediaAbsent;
-  }
-
-  sdmmc_host_t host = SDSPI_HOST_DEFAULT();
-  host.slot = handle;
-  host.max_freq_khz = frequency() / 1000;
-
-  sdmmc_card_t card;
-  ret = sdmmc_card_init(&host, &card);
-
-  sdspi_host_remove_device(handle);
-  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
+  // Not mounted — fast direct CMD0 probe.  Much faster than
+  // sdspi_host_init_device + sdmmc_card_init which does multiple retries.
+  return internal::SdSpiProbeCard(spi_host_, cs_pin_) ? kMediaPresent
+                                                      : kMediaAbsent;
 #endif
 }
 
