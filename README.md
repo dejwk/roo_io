@@ -9,6 +9,7 @@ The abstraction is somewhat similar to the Arduino filesystem, but with several 
 * much more detailed error reporting,
 * support for dynamic mounting (automatic mounting/unmounting),
 * support for read-only mounts,
+* support for fast card presence detection,
 * support for graceful shutdown policies (lame-duck read-only mode, etc.)
 
 Additional features:
