@@ -21,6 +21,7 @@
 #include "driver/sdmmc_host.h"
 #include "esp_idf_version.h"
 #include "esp_vfs_fat.h"
+#include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
 #if !defined(ROO_TESTING)
@@ -61,6 +62,9 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
 #if defined(ROO_TESTING)
   mount_base_path_ = FakeEsp32().fs_root();
 #else
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   mount_base_path_.clear();
 #endif
   mount_base_path_.append(mountPoint());
@@ -128,10 +132,7 @@ Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
     // Already mounted. Send CMD13 to check if card is still responsive.
     return (sdmmc_get_status(card_) == ESP_OK) ? kMediaPresent : kMediaAbsent;
   }
-  // Not mounted. Init the SDMMC host and do the card handshake to probe
-  // for card presence, without mounting a filesystem.
-  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-
+  // Not mounted.  Full init → CMD8 → deinit cycle (~3–4 ms).
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
   if (!use_default_pins_) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
@@ -144,28 +145,8 @@ Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
 #endif
     slot_config.width = width_;
   }
-
-  host.max_freq_khz = frequency() / 1000;
-  if (width_ == 1) {
-    host.flags = SDMMC_HOST_FLAG_1BIT;
-  }
-
-  esp_err_t ret = sdmmc_host_init();
-  if (ret != ESP_OK) {
-    return kMediaAbsent;
-  }
-
-  ret = sdmmc_host_init_slot(host.slot, &slot_config);
-  if (ret != ESP_OK) {
-    sdmmc_host_deinit();
-    return kMediaAbsent;
-  }
-
-  sdmmc_card_t card;
-  ret = sdmmc_card_init(&host, &card);
-
-  sdmmc_host_deinit();
-  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
+  return internal::SdMmcProbe(SDMMC_HOST_SLOT_1, &slot_config) ? kMediaPresent
+                                                               : kMediaAbsent;
 #endif
 }
 

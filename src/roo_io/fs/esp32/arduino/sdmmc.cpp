@@ -10,15 +10,16 @@
 #define MLOG_roo_io_fs 0
 #endif
 
+#include "diskio_impl.h"
+#include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
+#include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
 #include "sdmmc_cmd.h"
-
-#include <sys/stat.h>
 
 namespace roo_io {
 
 ArduinoSdMmcFs::ArduinoSdMmcFs()
-    : BaseEsp32VfsFilesystem(SDMMC_FREQ_HIGHSPEED, "/sdcard"),
+    : BaseEsp32VfsFilesystem((uint32_t)SDMMC_FREQ_HIGHSPEED * 1000L, "/sdcard"),
       mode_1bit_(true),
       slot_config_(SDMMC_SLOT_CONFIG_DEFAULT()) {}
 
@@ -54,15 +55,22 @@ MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
 #if defined(ROO_TESTING)
   mount_base_path_ = FakeEsp32().fs_root();
 #else
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   mount_base_path_.clear();
 #endif
   mount_base_path_.append(mountPoint());
+  // Note: SD_MMC expects frequency in kHz, not Hz.
   bool result =
       ::SD_MMC.begin(mount_base_path_.c_str(), mode_1bit_,
-                     formatIfMountFailed(), frequency(), maxOpenFiles());
+                     formatIfMountFailed(), frequency() / 1000, maxOpenFiles());
   if (!result) {
+    mount_base_path_.clear();
     return MountImpl::MountError(kGenericMountError);
   }
+  // Enable disk status checking so disk_status(0) sends CMD13.
+  ff_sdmmc_set_disk_status_check(0, true);
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mount_base_path_.c_str(), readOnly(), unmount_fn)));
 }
@@ -74,35 +82,18 @@ void ArduinoSdMmcFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence ArduinoSdMmcFs::checkMediaPresence() {
+#if defined(ROO_TESTING)
+  return kMediaPresenceUnknown;
+#else
   if (!mount_base_path_.empty()) {
-    // Mounted. Stat the mount path — goes through VFS/FatFs/SDMMC driver,
-    // which will fail if the card was physically removed.
-    struct stat st;
-    return (stat(mount_base_path_.c_str(), &st) == 0) ? kMediaPresent
-                                                      : kMediaAbsent;
+    // Already mounted.  disk_status(0) calls sdmmc_get_status() internally
+    // (CMD13) when status checking is enabled — fast, non-destructive.
+    return (disk_status(0) == 0) ? kMediaPresent : kMediaAbsent;
   }
-  // Not mounted. Init the SDMMC host and do the card handshake to probe
-  // for card presence, without mounting a filesystem.
-  sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-  host.flags = mode_1bit_ ? SDMMC_HOST_FLAG_1BIT : SDMMC_HOST_FLAG_4BIT;
-  host.max_freq_khz = frequency() / 1000;
-
-  esp_err_t ret = sdmmc_host_init();
-  if (ret != ESP_OK) {
-    return kMediaAbsent;
-  }
-
-  ret = sdmmc_host_init_slot(host.slot, &slot_config_);
-  if (ret != ESP_OK) {
-    sdmmc_host_deinit();
-    return kMediaAbsent;
-  }
-
-  sdmmc_card_t card;
-  ret = sdmmc_card_init(&host, &card);
-
-  sdmmc_host_deinit();
-  return (ret == ESP_OK) ? kMediaPresent : kMediaAbsent;
+  // Not mounted.  Full init → CMD8 → deinit cycle (~2–3 ms).
+  return internal::SdMmcProbe(SDMMC_HOST_SLOT_1, &slot_config_) ? kMediaPresent
+                                                                : kMediaAbsent;
+#endif
 }
 
 ArduinoSdMmcFs CreateArduinoSdMmcFs() { return ArduinoSdMmcFs(); }
