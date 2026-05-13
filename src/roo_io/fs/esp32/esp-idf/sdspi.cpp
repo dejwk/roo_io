@@ -50,10 +50,11 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
   dev_config.host_id = spi_host_;
   dev_config.gpio_cs = cs_pin_;
 
-  esp_vfs_fat_mount_config_t mount_config = {
-      .format_if_mount_failed = formatIfMountFailed(),
-      .max_files = maxOpenFiles(),
-      .allocation_unit_size = 16 * 1024};
+  esp_vfs_fat_mount_config_t mount_config = {};
+  mount_config.format_if_mount_failed = formatIfMountFailed(),
+  mount_config.max_files = maxOpenFiles(),
+  mount_config.allocation_unit_size = 16 * 1024;
+
   if (checkMediaPresence() == kMediaAbsent) {
     return MountImpl::MountError(kNoMedia);
   }

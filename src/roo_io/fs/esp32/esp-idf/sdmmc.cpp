@@ -85,10 +85,10 @@ MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
 #endif
     slot_config.width = width_;
   }
-  esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-      .format_if_mount_failed = formatIfMountFailed(),
-      .max_files = maxOpenFiles(),
-      .allocation_unit_size = 16 * 1024};
+  esp_vfs_fat_sdmmc_mount_config_t mount_config = {};
+  mount_config.format_if_mount_failed = formatIfMountFailed();
+  mount_config.max_files = maxOpenFiles();
+  mount_config.allocation_unit_size = 16 * 1024;
 
   esp_err_t ret = esp_vfs_fat_sdmmc_mount(mount_base_path_.c_str(), &host,
                                           &slot_config, &mount_config, &card_);
