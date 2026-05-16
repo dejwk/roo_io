@@ -12,7 +12,7 @@ template <typename PtrType>
 class MemoryResource : public MultipassResource {
  public:
   MemoryResource(PtrType begin, PtrType end)
-      : fs_(fs), path_(std::move(path)) {}
+    : begin_(begin), end_(end) {}
 
   std::unique_ptr<roo_io::MultipassInputStream> open() const override {
     return std::unique_ptr<roo_io::MultipassInputStream>(
