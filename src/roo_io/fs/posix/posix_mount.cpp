@@ -2,8 +2,6 @@
 
 #if ROO_IO_FS_SUPPORT_POSIX
 
-#include "roo_io/fs/posix/posix_mount.h"
-
 #include <dirent.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,11 +11,20 @@
 #include "roo_io/fs/posix/posix_directory.h"
 #include "roo_io/fs/posix/posix_file_input_stream.h"
 #include "roo_io/fs/posix/posix_file_output_stream.h"
+#include "roo_io/fs/posix/posix_mount.h"
 #include "sys/stat.h"
 
 namespace roo_io {
 
 namespace {
+
+std::unique_ptr<char[]> dup(const char* value) {
+  if (value == nullptr) return nullptr;
+  size_t len = strlen(value) + 1;
+  std::unique_ptr<char[]> tmp(new char[len]);
+  memcpy(tmp.get(), value, len);
+  return tmp;
+}
 
 std::unique_ptr<char[]> cat(const char* mount_point, const char* path) {
   std::unique_ptr<char[]> tmp(new char[strlen(path) + strlen(mount_point) + 2]);
@@ -43,7 +50,7 @@ Status ResolveExistsError(const char* full_path) {
 PosixMountImpl::PosixMountImpl(const char* mount_point, bool read_only,
                                std::function<void()> unmount_fn)
     : MountImpl(unmount_fn),
-      mount_point_(strdup(mount_point)),
+      mount_point_(dup(mount_point)),
       active_(true),
       read_only_(read_only) {}
 

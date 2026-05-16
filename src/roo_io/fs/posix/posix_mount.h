@@ -42,7 +42,7 @@ class PosixMountImpl : public MountImpl {
   void deactivate() override;
 
  private:
-  std::unique_ptr<const char[]> mount_point_;
+  std::unique_ptr<char[]> mount_point_;
   bool active_;
   bool read_only_;
 };

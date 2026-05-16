@@ -3,16 +3,15 @@
 #include <memory>
 #include <string>
 
-#include "roo_io/memory/memory_input_stream.h"
 #include "roo_io/core/resource.h"
+#include "roo_io/memory/memory_input_stream.h"
 
 namespace roo_io {
 
 template <typename PtrType>
 class MemoryResource : public MultipassResource {
  public:
-  MemoryResource(PtrType begin, PtrType end)
-    : begin_(begin), end_(end) {}
+  MemoryResource(PtrType begin, PtrType end) : begin_(begin), end_(end) {}
 
   std::unique_ptr<roo_io::MultipassInputStream> open() const override {
     return std::unique_ptr<roo_io::MultipassInputStream>(

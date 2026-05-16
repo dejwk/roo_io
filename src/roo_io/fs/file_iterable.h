@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstring>
 #include <memory>
-#include <string>
 
 #include "roo_io/core/buffered_multipass_input_stream_iterator.h"
 #include "roo_io/fs/filesystem.h"
@@ -43,13 +43,20 @@ class FileIterable {
   };
 
   FileIterable(Filesystem& fs, const char* path)
-      : fs_(fs), path_(strdup(path)) {}
+      : fs_(fs), path_(DupPath(path)) {}
 
   FileIterator iterator() const { return FileIterator(fs_, path_.get()); }
 
  private:
+  static std::shared_ptr<const char[]> DupPath(const char* path) {
+    size_t len = std::strlen(path) + 1;
+    std::shared_ptr<char[]> dup(new char[len]);
+    std::memcpy(dup.get(), path, len);
+    return dup;
+  }
+
   Filesystem& fs_;
-  std::shared_ptr<char[]> path_;
+  std::shared_ptr<const char[]> path_;
 };
 
 }  // namespace roo_io
