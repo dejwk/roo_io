@@ -8,28 +8,38 @@
 
 namespace roo_io {
 
-// Recursively deletes the specified file or directory, if it exists.
-// Does nothing, and returns kNotFound, if it does not exist.
+/// Recursively deletes the file or directory at `path`.
+///
+/// Returns `kNotFound` when `path` does not exist. Directory removal stops at
+/// the first failing descendant operation and leaves the remaining subtree
+/// untouched.
 Status DeleteRecursively(roo_io::Mount& fs, const char* path);
 
-// Recursively creates the specified directory. If the directory already exists,
-// returns 'kDirectoryExists'. If the path, or any of its subcomponents, names
-// an existing file, returns 'kNotDirectory'.
+/// Recursively creates the directory at `path`.
+///
+/// Existing intermediate directories are accepted. Returns
+/// `kDirectoryExists` if `path` already names a directory, `kNotDirectory` if
+/// an existing file blocks the path, or another filesystem error from the
+/// first failing step.
 Status MkDirRecursively(roo_io::Mount& fs, const char* path);
 
-// Recursively creates a parent directory of the specified named file or
-// directory, without creating the target file or directory itself. If the
-// parent directory already exists, returns 'kDirectoryExists'. If the parent
-// directory or any of its subcomponents is an existing file, returns
-// 'kNotDirectory'.
+/// Recursively creates the parent directory of `path` without creating `path`.
+///
+/// This is useful before creating a file at `path`. If `path` itself already
+/// exists, whether as a file or a directory, the result is `kDirectoryExists`.
+/// Otherwise the first failing parent-directory creation error is returned.
 Status MkParentDirRecursively(roo_io::Mount& fs, const char* path);
 
-// Opens the specified file for reading, and returns a reader that allows to
-// efficiently read typed data from that file.
+/// Opens `path` for buffered typed reading.
+///
+/// The returned reader wraps `fs.fopen(path)` directly and reports mount or
+/// open failures through the reader status.
 MultipassInputStreamReader OpenDataFile(roo_io::Mount& fs, const char* path);
 
-// Opens the specified file for writing, and returns a writer that allows to
-// efficiently write typed data to that file.
+/// Opens `path` for buffered typed writing using `update_policy`.
+///
+/// The returned writer wraps `fs.fopenForWrite(path, update_policy)` directly
+/// and reports mount, permission, or open failures through the writer status.
 OutputStreamWriter OpenDataFileForWrite(roo_io::Mount& fs, const char* path,
                                         roo_io::FileUpdatePolicy update_policy);
 

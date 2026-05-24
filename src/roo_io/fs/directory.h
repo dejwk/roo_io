@@ -8,36 +8,33 @@ namespace roo_io {
 
 class DirectoryImpl;
 
-// Represent a browsable directory. A directory is like a multipass iterator
-// over entries.
-//
-// Basic usage idiom:
-//
-// Directory dir = mount.opendir(path);
-// while (dir.read()) {
-//   // Use dir.entry()
-// }
-// if (dir.failed()) { handleFailure(dir.status()); }
-//
+/// Represents a browsable directory.
+///
+/// A directory behaves like a multipass iterator over transient entries:
+/// repeated `read()` calls advance iteration, and `entry()` exposes the most
+/// recently produced entry view.
 class Directory {
  public:
-  // Represents a single directory entry. Entries are transient during directory
-  // iteration.
+  /// Represents one transient directory entry produced during iteration.
+  ///
+  /// The path and name pointers refer to storage owned by the directory handle
+  /// and should be copied if they need to outlive the current entry view.
   class Entry {
    public:
+    /// Non-copyable because entry storage is owned by the directory iterator.
     Entry(const Entry&) = delete;
+    /// Move-constructs an entry view.
     Entry(Entry&&) = default;
+    /// Move-assigns an entry view.
     Entry& operator=(Entry&&) = default;
 
-    // Returns the absolute path of the file or directory represented by this
-    // entry.
+    /// Returns the absolute path of the file or directory represented here.
     const char* path() const { return path_; }
 
-    // Returns a name of the file or directory represented by this entry,
-    // relative to the directory path.
+    /// Returns the entry name relative to the containing directory.
     const char* name() const { return name_; }
 
-    // Returns true if this entry represents a directory.
+    /// Returns whether this entry represents a directory.
     bool isDirectory() const { return is_dir_; }
 
    private:
@@ -53,56 +50,63 @@ class Directory {
     bool is_dir_;
   };
 
-  // Creates a directory object with the specified status (default closed).
+  /// Creates a detached directory object with the specified status.
   Directory(Status status = kClosed);
 
+  /// Destroys the directory object, closing it when needed.
   ~Directory() = default;
+  /// Move-constructs the directory handle.
   Directory(Directory&& other) = default;
 
+  /// Move-assigns the directory handle.
   Directory& operator=(Directory&& other) = default;
 
-  // Returns the absolute path of this directory. Empty if closed.
+  /// Returns the absolute path of this directory, or an empty string if closed.
   const char* path() const;
 
   // // Returns the name of this directory, relative to its parent. Empty if
   // // closed.
   // const char* name() const;
 
-  // Returns true if the directory object represents an existing, open
-  // directory.
+  /// Returns whether this object represents an open browsable directory.
   bool isOpen() const { return (status() == kOk || status() == kEndOfStream); }
 
-  // Return true if opening or browsing the directory has failed, i.e. the
-  // state is not one of kOk, kEndOfStream, or kClosed.
+  /// Returns whether opening or browsing the directory failed.
   bool failed() const { return !isOpen() && status() != kClosed; }
 
-  // Returns the status of this directory. Can be one of:
-  // * kOk, if the directory object is healthy and browsable,
-  // * kClosed, if the directory was never opened, or if it was closed,
-  // * kEndOfStream, if the directory has been read till the end,
-  // * any error returned by mount.opendir().
+  /// Returns the current directory status.
+  ///
+  /// `kOk` means iteration can continue, `kEndOfStream` means all entries have
+  /// been consumed, `kClosed` means the handle is detached, and any other value
+  /// is the error that prevented iteration.
   Status status() const { return status_; }
 
-  // Closes this directory. If the state was an error, leaves it as is;
-  // otherwise, changes the state to kClosed.
-  //
-  // Directory gets auto-closed when destroyed. Therefore, calling close()
-  // explicitly is usually unnecessary.
+  /// Closes this directory handle.
+  ///
+  /// Calling this explicitly is usually unnecessary because destruction also
+  /// closes the handle. If the directory is already in an error state, that
+  /// status is preserved. Otherwise the handle adopts the backend close status,
+  /// typically `kClosed`.
   void close();
 
-  // If the directory is open, resets the entry index to the beginning, and
-  // resets the state to kOk. Otherwise, does nothing.
+  /// Rewinds directory iteration to the beginning when the directory is open.
+  ///
+  /// On success this clears `kEndOfStream` and makes the next `read()` return
+  /// the first entry again.
   void rewind();
 
-  // Reads a subsequent directory entry. Invalidates the previously read entry.
-  // Returns true on success. If there is no more entries, or if error occurs,
-  // returns false.
+  /// Advances to the next directory entry.
+  ///
+  /// Returns `true` only when a new entry was read. A `false` result means
+  /// end-of-directory or an error; inspect `status()` to distinguish the two.
+  /// A successful call invalidates the previously returned `entry()`.
   bool read();
 
-  // Returns the details of the last read entry. If read() was never called, or
-  // if it returned false, the contents is undefined and should not be used.
-  // The value gets invalidated by a subsequent call to read(). If you want to
-  // rely on the contents of the entry beyond that, you need to make a copy.
+  /// Returns the most recently read entry.
+  ///
+  /// This is only valid after `read()` has returned `true`. The returned
+  /// reference is transient and is invalidated by the next successful
+  /// `read()`.
   const Entry& entry() const { return entry_; }
 
  private:

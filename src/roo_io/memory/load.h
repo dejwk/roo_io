@@ -10,102 +10,106 @@
 
 namespace roo_io {
 
+/// Loads an unsigned 8-bit integer from `source`.
 inline constexpr uint8_t LoadU8(const byte *source) {
   return (uint8_t)(*source);
 }
 
-// Loads a big-endian unsigned 16-bit int from the specified memory address.
+/// Loads a big-endian unsigned 16-bit integer from `source`.
 inline constexpr uint16_t LoadBeU16(const byte *source) {
   return ((uint8_t)source[0] << 8) | ((uint8_t)source[1] << 0);
 }
 
-// Loads a little-endian unsigned 16-bit int from the specified memory address.
+/// Loads a little-endian unsigned 16-bit integer from `source`.
 inline constexpr uint16_t LoadLeU16(const byte *source) {
   return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8);
 }
 
-// Loads a big-endian unsigned 24-bit int from the specified memory address.
+/// Loads a big-endian unsigned 24-bit integer from `source`.
 inline constexpr uint32_t LoadBeU24(const byte *source) {
   return ((uint8_t)source[0] << 16) | ((uint8_t)source[1] << 8) |
          ((uint8_t)source[2] << 0);
 }
 
-// Loads a little-endian unsigned 24-bit int from the specified memory address.
+/// Loads a little-endian unsigned 24-bit integer from `source`.
 inline constexpr uint32_t LoadLeU24(const byte *source) {
   return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8) |
          ((uint8_t)source[2] << 16);
 }
 
-// Loads a big-endian unsigned 32-bit int from the specified memory address.
+/// Loads a big-endian unsigned 32-bit integer from `source`.
 inline constexpr uint32_t LoadBeU32(const byte *source) {
   return ((uint8_t)source[0] << 24) | ((uint8_t)source[1] << 16) |
          ((uint8_t)source[2] << 8) | ((uint8_t)source[3] << 0);
 }
 
-// Loads a little-endian unsigned 32-bit int from the specified memory address.
+/// Loads a little-endian unsigned 32-bit integer from `source`.
 inline constexpr uint32_t LoadLeU32(const byte *source) {
   return ((uint8_t)source[0] << 0) | ((uint8_t)source[1] << 8) |
          ((uint8_t)source[2] << 16) | ((uint8_t)source[3] << 24);
 }
 
-// Loads a big-endian unsigned 64-bit int from the specified memory address.
+/// Loads a big-endian unsigned 64-bit integer from `source`.
 inline constexpr uint64_t LoadBeU64(const byte *source) {
   return (((uint64_t)LoadBeU32(source)) << 32) | LoadBeU32(source + 4);
 }
 
-// Loads a little-endian unsigned 64-bit int from the specified memory address.
+/// Loads a little-endian unsigned 64-bit integer from `source`.
 inline constexpr uint64_t LoadLeU64(const byte *source) {
   return LoadLeU32(source) | (((uint64_t)LoadLeU32(source + 4)) << 32);
 }
 
+/// Loads a signed 8-bit integer from `source`.
 inline constexpr int8_t LoadS8(const byte *source) {
   return (int8_t)LoadU8(source);
 }
 
-// Loads a big-endian signed 16-bit int from the specified memory address.
+/// Loads a big-endian signed 16-bit integer from `source`.
 inline constexpr int16_t LoadBeS16(const byte *source) {
   return (int16_t)LoadBeU16(source);
 }
 
-// Loads a little-endian signed 16-bit int from the specified memory address.
+/// Loads a little-endian signed 16-bit integer from `source`.
 inline constexpr int16_t LoadLeS16(const byte *source) {
   return (int16_t)LoadLeU16(source);
 }
 
-// Loads a big-endian signed 24-bit int from the specified memory address.
+/// Loads a big-endian signed 24-bit integer from `source`.
 inline constexpr int32_t LoadBeS24(const byte *source) {
   return (int32_t)LoadBeU24(source) | ((((uint8_t)source[0] & 0x80) > 0) * 0xFF)
                                           << 24;
 }
 
-// Loads a little-endian signed 24-bit int from the specified memory address.
+/// Loads a little-endian signed 24-bit integer from `source`.
 inline constexpr int32_t LoadLeS24(const byte *source) {
   return (int32_t)LoadLeU24(source) | ((((uint8_t)source[3] & 0x80) > 0) * 0xFF)
                                           << 24;
 }
 
-// Loads a big-endian signed 32-bit int from the specified memory address.
+/// Loads a big-endian signed 32-bit integer from `source`.
 inline constexpr int32_t LoadBeS32(const byte *source) {
   return (int32_t)LoadBeU32(source);
 }
 
-// Loads a little-endian signed 32-bit int from the specified memory address.
+/// Loads a little-endian signed 32-bit integer from `source`.
 inline constexpr int32_t LoadLeS32(const byte *source) {
   return (int32_t)LoadLeU32(source);
 }
 
-// Loads a big-endian signed 64-bit int from the specified memory address.
+/// Loads a big-endian signed 64-bit integer from `source`.
 inline constexpr int64_t LoadBeS64(const byte *source) {
   return (int64_t)LoadBeU64(source);
 }
 
-// Loads a little-endian signed 64-bit int from the specified memory address.
+/// Loads a little-endian signed 64-bit integer from `source`.
 inline constexpr int64_t LoadLeS64(const byte *source) {
   return (int64_t)LoadLeU64(source);
 }
 
 #if ROO_IO_IEEE754
-// Loads a big-endian IEEE754 float from the specified memory address.
+/// Loads a big-endian IEEE754 float from the first 4 bytes at `source`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 inline float LoadBeFloat(const byte *source) {
   static_assert(sizeof(float) == sizeof(uint32_t),
                 "LoadBeFloat requires 32-bit float.");
@@ -117,7 +121,9 @@ inline float LoadBeFloat(const byte *source) {
   return value;
 }
 
-// Loads a little-endian IEEE754 float from the specified memory address.
+/// Loads a little-endian IEEE754 float from the first 4 bytes at `source`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 inline float LoadLeFloat(const byte *source) {
   static_assert(sizeof(float) == sizeof(uint32_t),
                 "LoadLeFloat requires 32-bit float.");
@@ -129,7 +135,9 @@ inline float LoadLeFloat(const byte *source) {
   return value;
 }
 
-// Loads a big-endian IEEE754 double from the specified memory address.
+/// Loads a big-endian IEEE754 double from the first 8 bytes at `source`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 inline double LoadBeDouble(const byte *source) {
   static_assert(sizeof(double) == sizeof(uint64_t),
                 "LoadBeDouble requires 64-bit double.");
@@ -141,7 +149,9 @@ inline double LoadBeDouble(const byte *source) {
   return value;
 }
 
-// Loads a little-endian IEEE754 double from the specified memory address.
+/// Loads a little-endian IEEE754 double from the first 8 bytes at `source`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 inline double LoadLeDouble(const byte *source) {
   static_assert(sizeof(double) == sizeof(uint64_t),
                 "LoadLeDouble requires 64-bit double.");
@@ -154,8 +164,12 @@ inline double LoadLeDouble(const byte *source) {
 }
 #endif  // ROO_IO_IEEE754
 
-// Loads a platform-native (implementation-dependent) datum from the specified
-// memory address. T must be default-constructible and have trivial destructor.
+/// Loads a host-native trivially copyable value from `source`.
+///
+/// `source` must point to at least `sizeof(T)` readable bytes. The bytes are
+/// interpreted using the host byte order and object representation, so this is
+/// only portable between compatible platforms and is typically paired with
+/// `StoreHostNative()`.
 template <typename T>
 inline constexpr T LoadHostNative(const byte *source) {
   T result;
@@ -165,62 +179,76 @@ inline constexpr T LoadHostNative(const byte *source) {
 
 // Variants that can be used in code templated on the byte order.
 
-// Loads an unsigned 16-bit int from the specified memory address.
+/// Loads a byte-order-selected unsigned 16-bit integer from the first 2 bytes
+/// at `source`.
 template <ByteOrder byte_order>
 inline constexpr uint16_t LoadU16(const byte *source);
 
-// Loads an unsigned 24-bit int from the specified memory address.
+/// Loads a byte-order-selected unsigned 24-bit integer from the first 3 bytes
+/// at `source`.
 template <ByteOrder byte_order>
 inline constexpr uint32_t LoadU24(const byte *source);
 
-// Loads an unsigned 32-bit int from the specified memory address.
+/// Loads a byte-order-selected unsigned 32-bit integer from the first 4 bytes
+/// at `source`.
 template <ByteOrder byte_order>
 inline constexpr uint32_t LoadU32(const byte *source);
 
-// Loads an unsigned 64-bit int from the specified memory address.
+/// Loads a byte-order-selected unsigned 64-bit integer from the first 8 bytes
+/// at `source`.
 template <ByteOrder byte_order>
 inline constexpr uint64_t LoadU64(const byte *source);
 
-// Loads a signed 16-bit int from the specified memory address.
+/// Loads a byte-order-selected signed 16-bit integer from the first 2 bytes at
+/// `source`.
 template <ByteOrder byte_order>
 inline constexpr int16_t LoadS16(const byte *source);
 
-// Loads a signed 24-bit int from the specified memory address.
+/// Loads a byte-order-selected signed 24-bit integer from the first 3 bytes at
+/// `source`.
 template <ByteOrder byte_order>
 inline constexpr int32_t LoadS24(const byte *source);
 
-// Loads a signed 32-bit int from the specified memory address.
+/// Loads a byte-order-selected signed 32-bit integer from the first 4 bytes at
+/// `source`.
 template <ByteOrder byte_order>
 inline constexpr int32_t LoadS32(const byte *source);
 
-// Loads a signed 64-bit int from the specified memory address.
+/// Loads a byte-order-selected signed 64-bit integer from the first 8 bytes at
+/// `source`.
 template <ByteOrder byte_order>
 inline constexpr int64_t LoadS64(const byte *source);
 
 #if ROO_IO_IEEE754
-// Loads an IEEE754 float from the specified memory address.
+/// Loads a byte-order-selected IEEE754 float from the first 4 bytes at
+/// `source`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 template <ByteOrder byte_order>
 inline float LoadFloat(const byte *source);
 
-// Loads an IEEE754 double from the specified memory address.
+/// Loads a byte-order-selected IEEE754 double from the first 8 bytes at
+/// `source`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 template <ByteOrder byte_order>
 inline double LoadDouble(const byte *source);
 #endif  // ROO_IO_IEEE754
 
 // Variants that can be used in code templated on the storage type.
 
-// Loads a big-endian integer from the specified memory address.
+/// Loads a big-endian integer of type `IntegerType` from `source`.
 template <typename IntegerType>
 inline constexpr IntegerType LoadBeInteger(const byte *source);
 
-// Loads a little-endian integer from the specified memory address.
+/// Loads a little-endian integer of type `IntegerType` from `source`.
 template <typename IntegerType>
 inline constexpr IntegerType LoadLeInteger(const byte *source);
 
 // Variant that can be used in code templated on both the byte order and the
 // storage type.
 
-// Loads an integer from the specified memory address.
+/// Loads a byte-order-selected integer of type `IntegerType` from `source`.
 template <ByteOrder byte_order, typename IntegerType>
 inline constexpr IntegerType LoadInteger(const byte *source);
 

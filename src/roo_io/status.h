@@ -4,6 +4,7 @@
 
 namespace roo_io {
 
+/// Enumerates I/O, filesystem, and transport status outcomes used by roo_io.
 enum Status {
   kOk = 0,
   kEndOfStream = 1,
@@ -70,8 +71,10 @@ enum Status {
   kBrokenPipe,
 };
 
+/// Returns a stable string name for the specified status value.
 const char* StatusAsString(Status status);
 
+/// Streams the symbolic status name into the logging sink.
 inline roo_logging::Stream& operator<<(roo_logging::Stream& s, Status status) {
   s << StatusAsString(status);
   return s;

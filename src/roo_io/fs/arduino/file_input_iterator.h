@@ -14,21 +14,31 @@ namespace roo_io {
 
 static const size_t kFileInputIteratorBufferSize = 64;
 
+/// Buffered input iterator wrapper around an Arduino `fs::File`.
 class ArduinoFileInputIterator {
  public:
+  /// Opens the iterator over an already open Arduino file handle.
   ArduinoFileInputIterator(::fs::File file) : rep_(new Rep(std::move(file))) {}
 
+  /// Reads and returns one byte.
   byte read() { return rep_->read(); }
 
+  /// Reads up to `count` bytes into `buf`.
   size_t read(byte* buf, size_t count) { return rep_->read(buf, count); }
 
+  /// Skips up to `count` bytes.
   void skip(size_t count) { rep_->skip(count); }
+  /// Returns the current iterator status.
   Status status() const { return rep_->status(); }
 
+  /// Returns the total file size.
   uint64_t size() const { return rep_->size(); }
+  /// Returns the current file position.
   uint64_t position() const { return rep_->position(); }
 
+  /// Rewinds iteration to the beginning of the file.
   void rewind() { rep_->rewind(); }
+  /// Seeks to `position` in the file.
   void seek(uint64_t position) { rep_->seek(position); }
 
   // void reset(::File file) { rep_->reset(&input); }

@@ -13,36 +13,36 @@ namespace roo_io {
 
 // Basic, unsigned.
 
-// Stores an unsigned 8-bit int to the specified memory address.
+/// Stores an unsigned 8-bit integer to `target`.
 inline void StoreU8(uint8_t v, byte* target) { target[0] = (byte)v; }
 
-// Stores a big-endian unsigned 16-bit int to the specified memory address.
+/// Stores a big-endian unsigned 16-bit integer to `target`.
 inline void StoreBeU16(uint16_t v, byte* target) {
   target[0] = (byte)(v >> 8);
   target[1] = (byte)(v >> 0);
 }
 
-// Stores a little-endian unsigned 16-bit int to the specified memory address.
+/// Stores a little-endian unsigned 16-bit integer to `target`.
 inline void StoreLeU16(uint16_t v, byte* target) {
   target[0] = (byte)(v >> 0);
   target[1] = (byte)(v >> 8);
 }
 
-// Stores a big-endian unsigned 24-bit int to the specified memory address.
+/// Stores a big-endian unsigned 24-bit integer to `target`.
 inline void StoreBeU24(uint32_t v, byte* target) {
   target[0] = (byte)(v >> 16);
   target[1] = (byte)(v >> 8);
   target[2] = (byte)(v >> 0);
 }
 
-// Stores a little-endian unsigned 24-bit int to the specified memory address.
+/// Stores a little-endian unsigned 24-bit integer to `target`.
 inline void StoreLeU24(uint32_t v, byte* target) {
   target[0] = (byte)(v >> 0);
   target[1] = (byte)(v >> 8);
   target[2] = (byte)(v >> 16);
 }
 
-// Stores a big-endian unsigned 32-bit int to the specified memory address.
+/// Stores a big-endian unsigned 32-bit integer to `target`.
 inline void StoreBeU32(uint32_t v, byte* target) {
   target[0] = (byte)(v >> 24);
   target[1] = (byte)(v >> 16);
@@ -50,7 +50,7 @@ inline void StoreBeU32(uint32_t v, byte* target) {
   target[3] = (byte)(v >> 0);
 }
 
-// Stores a little-endian unsigned 32-bit int to the specified memory address.
+/// Stores a little-endian unsigned 32-bit integer to `target`.
 inline void StoreLeU32(uint32_t v, byte* target) {
   target[0] = (byte)(v >> 0);
   target[1] = (byte)(v >> 8);
@@ -58,7 +58,7 @@ inline void StoreLeU32(uint32_t v, byte* target) {
   target[3] = (byte)(v >> 24);
 }
 
-// Stores a big-endian unsigned 64-bit int to the specified memory address.
+/// Stores a big-endian unsigned 64-bit integer to `target`.
 inline void StoreBeU64(uint64_t v, byte* target) {
   target[0] = (byte)(v >> 56);
   target[1] = (byte)(v >> 48);
@@ -70,7 +70,7 @@ inline void StoreBeU64(uint64_t v, byte* target) {
   target[7] = (byte)(v >> 0);
 }
 
-// Stores a little-endian unsigned 64-bit int to the specified memory address.
+/// Stores a little-endian unsigned 64-bit integer to `target`.
 inline void StoreLeU64(uint64_t v, byte* target) {
   target[0] = (byte)(v >> 0);
   target[1] = (byte)(v >> 8);
@@ -84,35 +84,37 @@ inline void StoreLeU64(uint64_t v, byte* target) {
 
 // Basic, signed.
 
-// Stores an unsigned 8-bit int to the specified memory address.
+/// Stores a signed 8-bit integer to `target`.
 inline void StoreS8(int8_t v, byte* target) { StoreU8(v, target); }
 
-// Stores a big-endian signed 16-bit int to the specified memory address.
+/// Stores a big-endian signed 16-bit integer to `target`.
 inline void StoreBeS16(uint16_t v, byte* target) { StoreBeU16(v, target); }
 
-// Stores a little-endian signed 16-bit int to the specified memory address.
+/// Stores a little-endian signed 16-bit integer to `target`.
 inline void StoreLeS16(uint16_t v, byte* target) { StoreLeU16(v, target); }
 
-// Stores a big-endian signed 24-bit int to the specified memory address.
+/// Stores a big-endian signed 24-bit integer to `target`.
 inline void StoreBeS24(uint32_t v, byte* target) { StoreBeU24(v, target); }
 
-// Stores a little-endian signed 24-bit int to the specified memory address.
+/// Stores a little-endian signed 24-bit integer to `target`.
 inline void StoreLeS24(uint32_t v, byte* target) { StoreLeU24(v, target); }
 
-// Stores a big-endian signed 32-bit int to the specified memory address.
+/// Stores a big-endian signed 32-bit integer to `target`.
 inline void StoreBeS32(uint32_t v, byte* target) { StoreBeU32(v, target); }
 
-// Stores a little-endian signed 32-bit int to the specified memory address.
+/// Stores a little-endian signed 32-bit integer to `target`.
 inline void StoreLeS32(uint32_t v, byte* target) { StoreLeU32(v, target); }
 
-// Stores a big-endian signed 64-bit int to the specified memory address.
+/// Stores a big-endian signed 64-bit integer to `target`.
 inline void StoreBeS64(uint64_t v, byte* target) { StoreBeU64(v, target); }
 
-// Stores a little-endian signed 64-bit int to the specified memory address.
+/// Stores a little-endian signed 64-bit integer to `target`.
 inline void StoreLeS64(uint64_t v, byte* target) { StoreLeU64(v, target); }
 
 #if ROO_IO_IEEE754
-// Stores a big-endian IEEE754 float to the specified memory address.
+/// Stores a big-endian IEEE754 float into the first 4 bytes at `target`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 inline void StoreBeFloat(float v, byte* target) {
   static_assert(sizeof(float) == sizeof(uint32_t),
                 "StoreBeFloat requires 32-bit float.");
@@ -123,7 +125,9 @@ inline void StoreBeFloat(float v, byte* target) {
   StoreBeU32(bits, target);
 }
 
-// Stores a little-endian IEEE754 float to the specified memory address.
+/// Stores a little-endian IEEE754 float into the first 4 bytes at `target`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 inline void StoreLeFloat(float v, byte* target) {
   static_assert(sizeof(float) == sizeof(uint32_t),
                 "StoreLeFloat requires 32-bit float.");
@@ -134,7 +138,9 @@ inline void StoreLeFloat(float v, byte* target) {
   StoreLeU32(bits, target);
 }
 
-// Stores a big-endian IEEE754 double to the specified memory address.
+/// Stores a big-endian IEEE754 double into the first 8 bytes at `target`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 inline void StoreBeDouble(double v, byte* target) {
   static_assert(sizeof(double) == sizeof(uint64_t),
                 "StoreBeDouble requires 64-bit double.");
@@ -145,7 +151,9 @@ inline void StoreBeDouble(double v, byte* target) {
   StoreBeU64(bits, target);
 }
 
-// Stores a little-endian IEEE754 double to the specified memory address.
+/// Stores a little-endian IEEE754 double into the first 8 bytes at `target`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 inline void StoreLeDouble(double v, byte* target) {
   static_assert(sizeof(double) == sizeof(uint64_t),
                 "StoreLeDouble requires 64-bit double.");
@@ -159,8 +167,12 @@ inline void StoreLeDouble(double v, byte* target) {
 
 // Arbitrary types, native encoding.
 
-// Stores a platform-native (implementation-dependent) datum to the specified
-// memory address. T must be default-constructible and have trivial destructor.
+/// Stores a host-native trivially copyable value to `target`.
+///
+/// `target` must point to at least `sizeof(T)` writable bytes. The bytes are
+/// written using the host byte order and object representation, so this is
+/// only portable between compatible platforms and is typically paired with
+/// `LoadHostNative()`.
 template <typename T>
 inline void StoreHostNative(const T& v, byte* target) {
   memcpy((char*)target, (const char*)&v, sizeof(v));
@@ -168,51 +180,65 @@ inline void StoreHostNative(const T& v, byte* target) {
 
 // Variants that can be used in code templated on byte order.
 
-// Stores an unsigned 16-bit int to the specified memory address.
+/// Stores a byte-order-selected unsigned 16-bit integer into the first 2 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreU16(uint16_t v, byte* target);
 
-// Stores an unsigned 24-bit int to the specified memory address.
+/// Stores a byte-order-selected unsigned 24-bit integer into the first 3 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreU24(uint32_t v, byte* target);
 
-// Stores an unsigned 32-bit int to the specified memory address.
+/// Stores a byte-order-selected unsigned 32-bit integer into the first 4 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreU32(uint32_t v, byte* target);
 
-// Stores an unsigned 64-bit int to the specified memory address.
+/// Stores a byte-order-selected unsigned 64-bit integer into the first 8 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreU64(uint64_t v, byte* target);
 
-// Stores a signed 16-bit int to the specified memory address.
+/// Stores a byte-order-selected signed 16-bit integer into the first 2 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreS16(int16_t v, byte* target);
 
-// Stores a signed 24-bit int to the specified memory address.
+/// Stores a byte-order-selected signed 24-bit integer into the first 3 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreS24(int32_t v, byte* target);
 
-// Stores a signed 32-bit int to the specified memory address.
+/// Stores a byte-order-selected signed 32-bit integer into the first 4 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreS32(int32_t v, byte* target);
 
-// Stores a signed 64-bit int to the specified memory address.
+/// Stores a byte-order-selected signed 64-bit integer into the first 8 bytes
+/// at `target`.
 template <ByteOrder byte_order>
 inline void StoreS64(int64_t v, byte* target);
 
 #if ROO_IO_IEEE754
-// Stores an IEEE754 float to the specified memory address.
+/// Stores a byte-order-selected IEEE754 float into the first 4 bytes at
+/// `target`.
+///
+/// Requires host `float` to be a 32-bit IEEE754 type.
 template <ByteOrder byte_order>
 inline void StoreFloat(float v, byte* target);
 
-// Stores an IEEE754 double to the specified memory address.
+/// Stores a byte-order-selected IEEE754 double into the first 8 bytes at
+/// `target`.
+///
+/// Requires host `double` to be a 64-bit IEEE754 type.
 template <ByteOrder byte_order>
 inline void StoreDouble(double v, byte* target);
 #endif  // ROO_IO_IEEE754
 
 // Templated on both byte order and the type.
 
-// Stores an integer to the specified memory address.
+/// Stores a byte-order-selected integer of type `IntegerType` to `target`.
 template <ByteOrder byte_order, typename IntegerType>
 inline void StoreInteger(IntegerType v, byte* target);
 

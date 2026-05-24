@@ -12,20 +12,24 @@
 
 namespace roo_io {
 
+/// Writes one `bytes`-wide pattern value into `buf`.
 template <int bytes>
 inline void PatternWrite(byte* buf, const byte* val);
 
 template <>
+/// Writes one 1-byte pattern value into `buf`.
 inline void PatternWrite<1>(byte* buf, const byte* val) {
   *buf = *val;
 }
 
 template <>
+/// Writes one 2-byte pattern value into `buf`.
 inline void PatternWrite<2>(byte* buf, const byte* val) {
   *((uint16_t*)buf) = *((const uint16_t*)val);
 }
 
 template <>
+/// Writes one 3-byte pattern value into `buf`.
 inline void PatternWrite<3>(byte* buf, const byte* val) {
   buf[0] = val[0];
   buf[1] = val[1];
@@ -33,14 +37,17 @@ inline void PatternWrite<3>(byte* buf, const byte* val) {
 }
 
 template <>
+/// Writes one 4-byte pattern value into `buf`.
 inline void PatternWrite<4>(byte* buf, const byte* val) {
   *((uint32_t*)buf) = *((const uint32_t*)val);
 }
 
+/// Fills `count` `bytes`-wide elements in `buf` with the pattern `val`.
 template <int bytes>
 inline void PatternFill(byte* buf, size_t count, const byte* val);
 
 template <>
+/// Fills `count` bytes in `buf` with a 1-byte repeating pattern.
 inline void PatternFill<1>(byte* buf, size_t count, const byte* val) {
   memset(buf, (int)*val, count);
 }
@@ -98,6 +105,7 @@ inline void pattern_fill_16_aligned(uint16_t* buf, size_t count, uint16_t val) {
 }  // namespace internal
 
 template <>
+/// Fills `count` 2-byte elements in `buf` with a repeating 2-byte pattern.
 inline void PatternFill<2>(byte* buf, size_t count, const byte* val) {
   if (count < 8) {
     if (count == 0) return;
@@ -149,6 +157,7 @@ inline void PatternFill<2>(byte* buf, size_t count, const byte* val) {
 }
 
 template <>
+/// Fills `count` 3-byte elements in `buf` with a repeating 3-byte pattern.
 inline void PatternFill<3>(byte* buf, size_t count, const byte* val) {
   // Get to the point where we're aligned on 4 bytes.
   if (count < 8) {
@@ -237,6 +246,7 @@ inline void PatternFill<3>(byte* buf, size_t count, const byte* val) {
 }
 
 template <>
+/// Fills `count` 4-byte elements in `buf` with a repeating 4-byte pattern.
 inline void PatternFill<4>(byte* buf, size_t count, const byte* val) {
   if ((val[0] == val[1]) && (val[0] == val[2]) && (val[0] == val[3])) {
     memset(buf, (int)val[0], count * 4);
@@ -261,8 +271,7 @@ inline void PatternFill<4>(byte* buf, size_t count, const byte* val) {
   }
 }
 
-// Fills 'count' consecutive bits of memory (in MSB order), starting at the
-// given bit offset of the given buffer.
+/// Fills `count` consecutive bits starting at bit `offset` within `buf`.
 inline void BitFill(byte* buf, uint32_t offset, size_t count, bool value) {
   buf += (offset / 8);
   offset %= 8;
@@ -299,6 +308,7 @@ inline void BitFill(byte* buf, uint32_t offset, size_t count, bool value) {
   }
 }
 
+/// Fills `count` consecutive nibbles starting at nibble `offset` within `buf`.
 inline void NibbleFill(byte* buf, uint32_t offset, size_t count, byte value) {
   if ((offset % 2) == 1) {
     byte& first = buf[offset / 2];

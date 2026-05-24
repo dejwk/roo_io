@@ -15,59 +15,59 @@ namespace roo_io {
 
 // Unsigned.
 
-// Reads an unsigned 8-bit int from the specified iterator.
+/// Reads an unsigned 8-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint8_t ReadU8(InputIterator& in) {
   return (uint8_t)in.read();
 }
 
-// Reads a big-endian unsigned 16-bit int from the specified iterator.
+/// Reads a big-endian unsigned 16-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint16_t ReadBeU16(InputIterator& in) {
   return ((uint16_t)in.read() << 8) | ((uint16_t)in.read() << 0);
 }
 
-// Reads a little-endian unsigned 16-bit int from the specified iterator.
+/// Reads a little-endian unsigned 16-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint16_t ReadLeU16(InputIterator& in) {
   return ((uint16_t)in.read() << 0) | ((uint16_t)in.read() << 8);
 }
 
-// Reads a big-endian unsigned 24-bit int from the specified iterator.
+/// Reads a big-endian unsigned 24-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint32_t ReadBeU24(InputIterator& in) {
   return ((uint32_t)in.read() << 16) | ((uint32_t)in.read() << 8) |
          ((uint32_t)in.read() << 0);
 }
 
-// Reads a little-endian unsigned 24-bit int from the specified iterator.
+/// Reads a little-endian unsigned 24-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint32_t ReadLeU24(InputIterator& in) {
   return ((uint32_t)in.read() << 0) | ((uint32_t)in.read() << 8) |
          ((uint32_t)in.read() << 16);
 }
 
-// Reads a big-endian unsigned 32-bit int from the specified iterator.
+/// Reads a big-endian unsigned 32-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint32_t ReadBeU32(InputIterator& in) {
   return ((uint32_t)in.read() << 24) | ((uint32_t)in.read() << 16) |
          ((uint32_t)in.read() << 8) | ((uint32_t)in.read() << 0);
 }
 
-// Reads a little-endian unsigned 32-bit int from the specified iterator.
+/// Reads a little-endian unsigned 32-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint32_t ReadLeU32(InputIterator& in) {
   return ((uint32_t)in.read() << 0) | ((uint32_t)in.read() << 8) |
          ((uint32_t)in.read() << 16) | ((uint32_t)in.read() << 24);
 }
 
-// Reads a big-endian unsigned 64-bit int from the specified iterator.
+/// Reads a big-endian unsigned 64-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint64_t ReadBeU64(InputIterator& in) {
   return ((uint64_t)ReadBeU32(in) << 32) | ReadBeU32(in);
 }
 
-// Reads a little-endian unsigned 64-bit int from the specified iterator.
+/// Reads a little-endian unsigned 64-bit integer from `in`.
 template <typename InputIterator>
 constexpr uint64_t ReadLeU64(InputIterator& in) {
   return ReadLeU32(in) | ((uint64_t)ReadLeU32(in) << 32);
@@ -75,19 +75,19 @@ constexpr uint64_t ReadLeU64(InputIterator& in) {
 
 // Signed.
 
-// Reads a signed 8-bit int from the specified iterator.
+/// Reads a signed 8-bit integer from `in`.
 template <typename InputIterator>
 constexpr int8_t ReadS8(InputIterator& in) {
   return (int8_t)in.read();
 }
 
-// Reads a big-endian signed 16-bit int from the specified iterator.
+/// Reads a big-endian signed 16-bit integer from `in`.
 template <typename InputIterator>
 constexpr int16_t ReadBeS16(InputIterator& in) {
   return (int16_t)ReadBeU16(in);
 }
 
-// Reads a little-endian signed 16-bit int from the specified iterator.
+/// Reads a little-endian signed 16-bit integer from `in`.
 template <typename InputIterator>
 constexpr int16_t ReadLeS16(InputIterator& in) {
   return (int16_t)ReadLeU16(in);
@@ -102,44 +102,44 @@ constexpr int32_t sign_extend_24(int32_t v) {
 
 }  // namespace internal
 
-// Reads a big-endian signed 24-bit int from the specified iterator.
+/// Reads a big-endian signed 24-bit integer from `in`.
 template <typename InputIterator>
 constexpr int32_t ReadBeS24(InputIterator& in) {
   return internal::sign_extend_24((int32_t)ReadBeU24(in));
 }
 
-// Reads a little-endian signed 24-bit int from the specified iterator.
+/// Reads a little-endian signed 24-bit integer from `in`.
 template <typename InputIterator>
 constexpr int32_t ReadLeS24(InputIterator& in) {
   return internal::sign_extend_24((int32_t)ReadLeU24(in));
 }
 
-// Reads a big-endian signed 32-bit int from the specified iterator.
+/// Reads a big-endian signed 32-bit integer from `in`.
 template <typename InputIterator>
 constexpr int32_t ReadBeS32(InputIterator& in) {
   return (int32_t)ReadBeU32(in);
 }
 
-// Reads a little-endian signed 32-bit int from the specified iterator.
+/// Reads a little-endian signed 32-bit integer from `in`.
 template <typename InputIterator>
 constexpr int32_t ReadLeS32(InputIterator& in) {
   return (int32_t)ReadLeU32(in);
 }
 
-// Reads a big-endian signed 64-bit int from the specified iterator.
+/// Reads a big-endian signed 64-bit integer from `in`.
 template <typename InputIterator>
 constexpr int64_t ReadBeS64(InputIterator& in) {
   return (int64_t)ReadBeU64(in);
 }
 
-// Reads a little-endian signed 64-bit int from the specified iterator.
+/// Reads a little-endian signed 64-bit integer from `in`.
 template <typename InputIterator>
 constexpr int64_t ReadLeS64(InputIterator& in) {
   return (int64_t)ReadLeU64(in);
 }
 
 #if ROO_IO_IEEE754
-// Reads a big-endian IEEE754 float from the specified iterator.
+/// Reads a big-endian IEEE754 float from `in`.
 template <typename InputIterator>
 inline float ReadBeFloat(InputIterator& in) {
   static_assert(sizeof(float) == sizeof(uint32_t),
@@ -152,7 +152,7 @@ inline float ReadBeFloat(InputIterator& in) {
   return value;
 }
 
-// Reads a little-endian IEEE754 float from the specified iterator.
+/// Reads a little-endian IEEE754 float from `in`.
 template <typename InputIterator>
 inline float ReadLeFloat(InputIterator& in) {
   static_assert(sizeof(float) == sizeof(uint32_t),
@@ -165,7 +165,7 @@ inline float ReadLeFloat(InputIterator& in) {
   return value;
 }
 
-// Reads a big-endian IEEE754 double from the specified iterator.
+/// Reads a big-endian IEEE754 double from `in`.
 template <typename InputIterator>
 inline double ReadBeDouble(InputIterator& in) {
   static_assert(sizeof(double) == sizeof(uint64_t),
@@ -178,7 +178,7 @@ inline double ReadBeDouble(InputIterator& in) {
   return value;
 }
 
-// Reads a little-endian IEEE754 double from the specified iterator.
+/// Reads a little-endian IEEE754 double from `in`.
 template <typename InputIterator>
 inline double ReadLeDouble(InputIterator& in) {
   static_assert(sizeof(double) == sizeof(uint64_t),
@@ -192,11 +192,11 @@ inline double ReadLeDouble(InputIterator& in) {
 }
 #endif  // ROO_IO_IEEE754
 
-// Reads `count` bytes from the input iterator, storing them in the result.
-// Returns the number of bytes successfully read. If the returned value is
-// smaller than `count`, it indicates that the end of stream has been reached,
-// or that an error was encountered. The `status()` of the underlying iterator
-// can be used to determine the cause.
+/// Reads up to `count` bytes from `in` into `result`.
+///
+/// Returns the number of bytes transferred. A short read means that the end of
+/// stream was reached or that the iterator entered an error state; inspect
+/// `in.status()` to distinguish the two.
 template <typename InputIterator>
 size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
   size_t read_total = 0;
@@ -210,9 +210,10 @@ size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
   return read_total;
 }
 
-// Reads an unsigned 64-bit integer, encoded using variable-length encoding as
-// defined by Google protocol buffers. (Small numbers take little space; numbers
-// up to 127 take 1 byte).
+/// Reads a protobuf-style variable-length unsigned 64-bit integer from `in`.
+///
+/// This uses the protobuf varint encoding, so values up to 127 occupy one
+/// byte. Returns zero if the iterator leaves the `kOk` state while decoding.
 template <typename InputIterator>
 uint64_t ReadVarU64(InputIterator& in) {
   uint64_t result = 0;
@@ -229,48 +230,56 @@ uint64_t ReadVarU64(InputIterator& in) {
   return result;
 }
 
-// Helper to read integers templated on the byte order.
+/// Byte-order-specific integer reader helper.
 template <ByteOrder byte_order>
 class IntegerReader;
 
 template <>
 class IntegerReader<kBigEndian> {
  public:
+  /// Reads a big-endian unsigned 16-bit integer.
   template <typename InputIterator>
   constexpr uint16_t readU16(InputIterator& in) const {
     return ReadBeU16(in);
   }
 
+  /// Reads a big-endian unsigned 24-bit integer.
   template <typename InputIterator>
   constexpr uint32_t readU24(InputIterator& in) const {
     return ReadBeU24(in);
   }
 
+  /// Reads a big-endian unsigned 32-bit integer.
   template <typename InputIterator>
   constexpr uint32_t readU32(InputIterator& in) const {
     return ReadBeU32(in);
   }
 
+  /// Reads a big-endian unsigned 64-bit integer.
   template <typename InputIterator>
   constexpr uint64_t readU64(InputIterator& in) const {
     return ReadBeU64(in);
   }
 
+  /// Reads a big-endian signed 16-bit integer.
   template <typename InputIterator>
   constexpr int16_t readS16(InputIterator& in) const {
     return ReadBeS16(in);
   }
 
+  /// Reads a big-endian signed 24-bit integer.
   template <typename InputIterator>
   constexpr int32_t readS24(InputIterator& in) const {
     return ReadBeS24(in);
   }
 
+  /// Reads a big-endian signed 32-bit integer.
   template <typename InputIterator>
   constexpr int32_t readS32(InputIterator& in) const {
     return ReadBeS32(in);
   }
 
+  /// Reads a big-endian signed 64-bit integer.
   template <typename InputIterator>
   constexpr int64_t readS64(InputIterator& in) const {
     return ReadBeS64(in);
@@ -285,41 +294,49 @@ class IntegerReader<kBigEndian> {
 template <>
 class IntegerReader<kLittleEndian> {
  public:
+  /// Reads a little-endian unsigned 16-bit integer.
   template <typename InputIterator>
   constexpr uint16_t readU16(InputIterator& in) const {
     return ReadLeU16(in);
   }
 
+  /// Reads a little-endian unsigned 24-bit integer.
   template <typename InputIterator>
   constexpr uint32_t readU24(InputIterator& in) const {
     return ReadLeU24(in);
   }
 
+  /// Reads a little-endian unsigned 32-bit integer.
   template <typename InputIterator>
   constexpr uint32_t readU32(InputIterator& in) const {
     return ReadLeU32(in);
   }
 
+  /// Reads a little-endian unsigned 64-bit integer.
   template <typename InputIterator>
   constexpr uint64_t readU64(InputIterator& in) const {
     return ReadLeU64(in);
   }
 
+  /// Reads a little-endian signed 16-bit integer.
   template <typename InputIterator>
   constexpr int16_t readS16(InputIterator& in) const {
     return ReadLeS16(in);
   }
 
+  /// Reads a little-endian signed 24-bit integer.
   template <typename InputIterator>
   constexpr int32_t readS24(InputIterator& in) const {
     return ReadLeS24(in);
   }
 
+  /// Reads a little-endian signed 32-bit integer.
   template <typename InputIterator>
   constexpr int32_t readS32(InputIterator& in) const {
     return ReadLeS32(in);
   }
 
+  /// Reads a little-endian signed 64-bit integer.
   template <typename InputIterator>
   constexpr int64_t readS64(InputIterator& in) const {
     return ReadLeS64(in);
@@ -332,18 +349,20 @@ class IntegerReader<kLittleEndian> {
 };
 
 #if ROO_IO_IEEE754
-// Helper to read IEEE754 floats/doubles templated on byte order.
+/// Byte-order-specific IEEE754 floating-point reader helper.
 template <ByteOrder byte_order>
 class FloatReader;
 
 template <>
 class FloatReader<kBigEndian> {
  public:
+  /// Reads a big-endian IEEE754 float.
   template <typename InputIterator>
   inline float readFloat(InputIterator& in) const {
     return ReadBeFloat(in);
   }
 
+  /// Reads a big-endian IEEE754 double.
   template <typename InputIterator>
   inline double readDouble(InputIterator& in) const {
     return ReadBeDouble(in);
@@ -353,11 +372,13 @@ class FloatReader<kBigEndian> {
 template <>
 class FloatReader<kLittleEndian> {
  public:
+  /// Reads a little-endian IEEE754 float.
   template <typename InputIterator>
   inline float readFloat(InputIterator& in) const {
     return ReadLeFloat(in);
   }
 
+  /// Reads a little-endian IEEE754 double.
   template <typename InputIterator>
   inline double readDouble(InputIterator& in) const {
     return ReadLeDouble(in);
@@ -365,45 +386,49 @@ class FloatReader<kLittleEndian> {
 };
 #endif  // ROO_IO_IEEE754
 
+/// Reads a byte-order-selected unsigned 16-bit integer from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 constexpr uint16_t ReadU16(InputIterator& in) {
   return IntegerReader<byte_order>().readU16(in);
 }
 
+/// Reads a byte-order-selected unsigned 24-bit integer from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 constexpr uint32_t ReadU24(InputIterator& in) {
   return IntegerReader<byte_order>().readU24(in);
 }
 
+/// Reads a byte-order-selected unsigned 32-bit integer from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 constexpr uint32_t ReadU32(InputIterator& in) {
   return IntegerReader<byte_order>().readU32(in);
 }
 
+/// Reads a byte-order-selected unsigned 64-bit integer from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 constexpr uint64_t ReadU64(InputIterator& in) {
   return IntegerReader<byte_order>().readU64(in);
 }
 
 #if ROO_IO_IEEE754
+/// Reads a byte-order-selected IEEE754 float from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 inline float ReadFloat(InputIterator& in) {
   return FloatReader<byte_order>().readFloat(in);
 }
 
+/// Reads a byte-order-selected IEEE754 double from `in`.
 template <typename InputIterator, ByteOrder byte_order>
 inline double ReadDouble(InputIterator& in) {
   return FloatReader<byte_order>().readDouble(in);
 }
 #endif  // ROO_IO_IEEE754
 
-// Allows reading platform-native (implementation-dependent) data from an input
-// iterator. T must be default-constructible and have trivial destructor.
+/// Reads host-native trivially copyable values from an input iterator.
 template <typename T>
 struct HostNativeReader {
  public:
-  // Reads T from the iterator. If T cannot be fully read, a default value is
-  // returned.
+  /// Reads `T` from `in`, or returns `default_value` on short read.
   template <typename InputIterator>
   T read(InputIterator& in, T default_value = T()) const {
     T result;
@@ -414,20 +439,12 @@ struct HostNativeReader {
   }
 };
 
-// Reads a string, represented in portable representation (varint length
-// followed by the character array), as a C string, into the specified buffer
-// `buf` of specified `capacity`, and returns the length of the returned C
-// string.
-//
-// If the string won't fit into the buffer, i.e. if the string's lengh plus 1
-// (to account for the terminating zero) is greater than `capacity`, the
-// returned string gets truncated. As long as `capacity` is greater than zero,
-// the result gets zero-terminated. The return value indicates the actual
-// returned length, not counting the terminal zero.
-//
-// Regardless whether the string gets truncated or not, it is always entirely
-// skipped in the input stream, so that subsequent reads can access the data
-// past the string.
+/// Reads a portable length-prefixed string into `buf`.
+///
+/// `capacity` includes space for the terminating zero. If the encoded string
+/// is longer than the available space, the result is truncated, but the entire
+/// encoded string is still consumed from `in` so that subsequent reads remain
+/// aligned. When `capacity` is non-zero, `buf` is always zero-terminated.
 template <typename InputIterator>
 size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
@@ -448,11 +465,11 @@ size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
   return 0;
 }
 
-// Reads a string, represented in portable representation (varint length
-// followed by the character array), up to `max_size` length.
-//
-// If the string length exceeds `max_size`, the result gets truncated to
-// `max_size`, but the entire string gets skipped in the input stream.
+/// Reads a portable length-prefixed string into a `std::string`.
+///
+/// If the encoded string exceeds `max_size`, the result is truncated to
+/// `max_size`, but the iterator still consumes the full encoded string so that
+/// subsequent reads can continue past it.
 template <typename InputIterator>
 std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
   uint64_t len = ReadVarU64(in);
@@ -478,14 +495,11 @@ std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
   return result;
 }
 
-// For memory iterators only. Reads a string, represented in portable
-// representation (varint length followed by the character array), as
-// a string_view up to `max_size` length, without copying the underlying data.
-// (The returned string_view is backed by the underlying iterator's memory
-// buffer).
-//
-// If the string length exceeds `max_size`, the result gets truncated to
-// `max_size`, but the entire string gets skipped in the input stream.
+/// Reads a portable length-prefixed string view from a memory iterator.
+///
+/// The returned view points into the iterator's underlying memory buffer and
+/// does not own the data. If the encoded string exceeds `max_size`, the view
+/// is truncated, but the iterator still skips the full encoded string.
 template <typename InputIterator,
           typename std::enable_if<
               internal::MemoryIteratorTraits<InputIterator>::is_memory,

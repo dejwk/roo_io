@@ -7,20 +7,30 @@
 
 namespace roo_io {
 
+/// ESP32 SPIFFS filesystem wrapper.
 class SpiffsFs : public Filesystem {
  public:
+  /// Returns the mount point used for future mounts.
   const char* mountPoint() const;
+  /// Sets the mount point used for future mounts.
   void setMountPoint(const char* mount_point);
 
+  /// Returns the partition label used for future mounts, if configured.
   const char* partitionLabel() const;
+  /// Sets the partition label used for future mounts.
   void setPartitionLabel(const char* partition_label);
 
+  /// Returns the maximum number of simultaneously open files.
   uint8_t maxOpenFiles() const;
+  /// Sets the maximum number of simultaneously open files.
   void setMaxOpenFiles(uint8_t max_files);
 
+  /// Returns whether the filesystem will be formatted after mount failure.
   bool formatIfMountFailed() const;
+  /// Sets whether the filesystem will be formatted after mount failure.
   void setFormatIfMountFailed(bool format_if_mount_failed);
 
+  /// Probes whether the SPIFFS partition is present.
   MediaPresence checkMediaPresence() override;
 
  protected:
@@ -44,6 +54,7 @@ class SpiffsFs : public Filesystem {
   std::string mounted_partition_label_;
 };
 
+/// Global SPIFFS filesystem instance.
 extern SpiffsFs SPIFFS;
 
 }  // namespace roo_io

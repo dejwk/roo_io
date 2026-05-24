@@ -13,18 +13,25 @@ namespace roo_io {
 
 static const size_t kArduinoFileOutputIteratorBufferSize = 64;
 
+/// Buffered output iterator wrapper around an Arduino `fs::File`.
 class ArduinoFileOutputIterator {
  public:
+  /// Creates a detached iterator with `kClosed` status.
   ArduinoFileOutputIterator() : rep_(new Rep()) {}
 
+  /// Opens the iterator over an already open Arduino file handle.
   ArduinoFileOutputIterator(::fs::File file) : rep_(new Rep(std::move(file))) {}
 
+  /// Move-constructs the iterator.
   ArduinoFileOutputIterator(ArduinoFileOutputIterator&&) = default;
 
+  /// Flushes buffered data before destruction.
   ~ArduinoFileOutputIterator() { flush(); }
 
+  /// Buffers or writes a single byte.
   void write(byte v) { rep_->write(v); }
 
+  /// Writes up to `count` bytes from `buf`.
   size_t write(const byte* buf, size_t count) {
     return rep_->write(buf, count);
   }
@@ -34,7 +41,9 @@ class ArduinoFileOutputIterator {
     if (rep_ != nullptr) rep_->flush();
   }
 
+  /// Returns the current iterator status.
   Status status() const { return rep_->status(); }
+  /// Returns whether the iterator status is `kOk`.
   bool ok() const { return status() == roo_io::kOk; }
 
  private:

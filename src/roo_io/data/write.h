@@ -14,27 +14,27 @@ namespace roo_io {
 
 // Unsigned.
 
-// Writes an unsigned 8-bit int to the specified iterator.
+/// Writes an unsigned 8-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteU8(OutputIterator& out, uint8_t v) {
   out.write((byte)(v >> 0));
 }
 
-// Writes a big-endian unsigned 16-bit int to the specified iterator.
+/// Writes a big-endian unsigned 16-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeU16(OutputIterator& out, uint16_t v) {
   out.write((byte)(v >> 8));
   out.write((byte)(v >> 0));
 }
 
-// Writes a little-endian unsigned 16-bit int to the specified iterator.
+/// Writes a little-endian unsigned 16-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeU16(OutputIterator& out, uint16_t v) {
   out.write((byte)(v >> 0));
   out.write((byte)(v >> 8));
 }
 
-// Writes a big-endian unsigned 24-bit int to the specified iterator.
+/// Writes a big-endian unsigned 24-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeU24(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 16));
@@ -42,7 +42,7 @@ constexpr void WriteBeU24(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 0));
 }
 
-// Writes a little-endian unsigned 24-bit int to the specified iterator.
+/// Writes a little-endian unsigned 24-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeU24(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 0));
@@ -50,7 +50,7 @@ constexpr void WriteLeU24(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 16));
 }
 
-// Writes a big-endian unsigned 32-bit int to the specified iterator.
+/// Writes a big-endian unsigned 32-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeU32(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 24));
@@ -59,7 +59,7 @@ constexpr void WriteBeU32(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 0));
 }
 
-// Writes a little-endian unsigned 32-bit int to the specified iterator.
+/// Writes a little-endian unsigned 32-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeU32(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 0));
@@ -68,14 +68,14 @@ constexpr void WriteLeU32(OutputIterator& out, uint32_t v) {
   out.write((byte)(v >> 24));
 }
 
-// Writes a big-endian unsigned 64-bit int to the specified iterator.
+/// Writes a big-endian unsigned 64-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeU64(OutputIterator& out, uint64_t v) {
   WriteBeU32(out, (v >> 32) & 0xFFFFFFFFLL);
   WriteBeU32(out, (v >> 0) & 0xFFFFFFFFLL);
 }
 
-// Writes a little-endian unsigned 64-bit int to the specified iterator.
+/// Writes a little-endian unsigned 64-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeU64(OutputIterator& out, uint64_t v) {
   WriteLeU32(out, (v >> 0) & 0xFFFFFFFFLL);
@@ -84,62 +84,62 @@ constexpr void WriteLeU64(OutputIterator& out, uint64_t v) {
 
 // Signed.
 
-// Writes a signed 8-bit int to the specified iterator.
+/// Writes a signed 8-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteS8(OutputIterator& out, int8_t v) {
   WriteU8(out, (uint8_t)v);
 }
 
-// Writes a big-endian signed 16-bit int to the specified iterator.
+/// Writes a big-endian signed 16-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeS16(OutputIterator& out, int16_t v) {
   WriteBeU16(out, (uint16_t)v);
 }
 
-// Writes a little-endian signed 16-bit int to the specified iterator.
+/// Writes a little-endian signed 16-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeS16(OutputIterator& out, int16_t v) {
   WriteLeU16(out, (uint16_t)v);
 }
 
-// Writes a big-endian signed 24-bit int to the specified iterator.
+/// Writes a big-endian signed 24-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeS24(OutputIterator& out, int32_t v) {
   WriteBeU24(out, (uint32_t)v);
 }
 
-// Writes a little-endian signed 24-bit int to the specified iterator.
+/// Writes a little-endian signed 24-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeS24(OutputIterator& out, int32_t v) {
   WriteLeU24(out, (uint32_t)v);
 }
 
-// Writes a big-endian signed 32-bit int to the specified iterator.
+/// Writes a big-endian signed 32-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeS32(OutputIterator& out, int32_t v) {
   WriteBeU32(out, (uint32_t)v);
 }
 
-// Writes a little-endian signed 32-bit int to the specified iterator.
+/// Writes a little-endian signed 32-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeS32(OutputIterator& out, int32_t v) {
   WriteLeU32(out, (uint32_t)v);
 }
 
-// Writes a big-endian signed 64-bit int to the specified iterator.
+/// Writes a big-endian signed 64-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteBeS64(OutputIterator& out, int64_t v) {
   WriteBeU64(out, (uint64_t)v);
 }
 
-// Writes a little-endian signed 64-bit int to the specified iterator.
+/// Writes a little-endian signed 64-bit integer to `out`.
 template <typename OutputIterator>
 constexpr void WriteLeS64(OutputIterator& out, int64_t v) {
   WriteLeU64(out, (uint64_t)v);
 }
 
 #if ROO_IO_IEEE754
-// Writes a big-endian IEEE754 float to the specified iterator.
+/// Writes a big-endian IEEE754 float to `out`.
 template <typename OutputIterator>
 inline void WriteBeFloat(OutputIterator& out, float v) {
   static_assert(sizeof(float) == sizeof(uint32_t),
@@ -151,7 +151,7 @@ inline void WriteBeFloat(OutputIterator& out, float v) {
   WriteBeU32(out, bits);
 }
 
-// Writes a little-endian IEEE754 float to the specified iterator.
+/// Writes a little-endian IEEE754 float to `out`.
 template <typename OutputIterator>
 inline void WriteLeFloat(OutputIterator& out, float v) {
   static_assert(sizeof(float) == sizeof(uint32_t),
@@ -163,7 +163,7 @@ inline void WriteLeFloat(OutputIterator& out, float v) {
   WriteLeU32(out, bits);
 }
 
-// Writes a big-endian IEEE754 double to the specified iterator.
+/// Writes a big-endian IEEE754 double to `out`.
 template <typename OutputIterator>
 inline void WriteBeDouble(OutputIterator& out, double v) {
   static_assert(sizeof(double) == sizeof(uint64_t),
@@ -175,7 +175,7 @@ inline void WriteBeDouble(OutputIterator& out, double v) {
   WriteBeU64(out, bits);
 }
 
-// Writes a little-endian IEEE754 double to the specified iterator.
+/// Writes a little-endian IEEE754 double to `out`.
 template <typename OutputIterator>
 inline void WriteLeDouble(OutputIterator& out, double v) {
   static_assert(sizeof(double) == sizeof(uint64_t),
@@ -188,10 +188,10 @@ inline void WriteLeDouble(OutputIterator& out, double v) {
 }
 #endif  // ROO_IO_IEEE754
 
-// Writes `count` bytes from the `source` to the output iterator. Returns the
-// number of bytes successfully written. If the returned value is smaller than
-// `count`, it indicates that an I/O error has occurred. The `status()` of the
-// underlying iterator can be used to determine the cause.
+/// Writes up to `count` bytes from `source` through `out`.
+///
+/// Returns the number of bytes transferred. A short write indicates that the
+/// iterator entered an error state; inspect `out.status()` for the cause.
 template <typename OutputIterator>
 size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
   size_t written_total = 0;
@@ -205,9 +205,10 @@ size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
   return written_total;
 }
 
-// Writes an unsigned 64-bit integer, encoded using variable-length encoding as
-// defined by Google protocol buffers. (Small numbers take little space; numbers
-// up to 127 take 1 byte).
+/// Writes a protobuf-style variable-length unsigned 64-bit integer to `out`.
+///
+/// This uses the protobuf varint encoding, so values up to 127 occupy one
+/// byte.
 template <typename OutputIterator>
 void WriteVarU64(OutputIterator& out, uint64_t data) {
   byte buffer[10];
@@ -226,8 +227,9 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   out.write(buffer, size);
 }
 
-// Write a string view, using a portable string representation (varint length
-// followed by the character array). Works for std::string.
+/// Writes `data` using roo_io's portable string encoding.
+///
+/// The encoding is the varint length followed by the raw character bytes.
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, roo::string_view data) {
   WriteVarU64(itr, data.size());
@@ -236,37 +238,41 @@ void WriteString(OutputIterator& itr, roo::string_view data) {
   }
 }
 
-// Write a C string, using a portable string representation (varint length
-// followed by the character array). Disambiguation of WriteString, since
-// both the string view and an Arduino String can be implicitly constructed from
-// a C string.
+/// Writes a C string using roo_io's portable string encoding.
+///
+/// The terminating zero is not written. This overload disambiguates calls that
+/// would otherwise match both the string-view and Arduino `String` overloads.
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, const char* data) {
   WriteString(itr, roo::string_view(data));
 }
 
-// Helper to write numbers to output iterators, templated on a byte order.
+/// Byte-order-specific integer writer helper.
 template <int ByteOrder>
 class NumberWriter;
 
 template <>
 class NumberWriter<kBigEndian> {
  public:
+  /// Writes a big-endian unsigned 16-bit integer.
   template <typename OutputIterator>
   constexpr void writeU16(OutputIterator& out, uint16_t v) const {
     WriteBeU16(out, v);
   }
 
+  /// Writes a big-endian unsigned 24-bit integer.
   template <typename OutputIterator>
   constexpr void writeU24(OutputIterator& out, uint32_t v) const {
     WriteBeU24(out, v);
   }
 
+  /// Writes a big-endian unsigned 32-bit integer.
   template <typename OutputIterator>
   constexpr void writeU32(OutputIterator& out, uint32_t v) const {
     WriteBeU32(out, v);
   }
 
+  /// Writes a big-endian unsigned 64-bit integer.
   template <typename OutputIterator>
   constexpr void writeU64(OutputIterator& out, uint64_t v) const {
     WriteBeU32(out, (v >> 32) & 0xFFFFFFFFLL);
@@ -277,21 +283,25 @@ class NumberWriter<kBigEndian> {
 template <>
 class NumberWriter<kLittleEndian> {
  public:
+  /// Writes a little-endian unsigned 16-bit integer.
   template <typename OutputIterator>
   constexpr void writeU16(OutputIterator& out, uint16_t v) const {
     WriteLeU16(out, v);
   }
 
+  /// Writes a little-endian unsigned 24-bit integer.
   template <typename OutputIterator>
   constexpr void writeU24(OutputIterator& out, uint32_t v) const {
     WriteLeU24(out, v);
   }
 
+  /// Writes a little-endian unsigned 32-bit integer.
   template <typename OutputIterator>
   constexpr void writeU32(OutputIterator& out, uint32_t v) const {
     WriteLeU32(out, v);
   }
 
+  /// Writes a little-endian unsigned 64-bit integer.
   template <typename OutputIterator>
   constexpr void writeU64(OutputIterator& out, uint64_t v) const {
     WriteLeU32(out, (v >> 0) & 0xFFFFFFFFLL);
@@ -300,18 +310,20 @@ class NumberWriter<kLittleEndian> {
 };
 
 #if ROO_IO_IEEE754
-// Helper to write IEEE754 floats/doubles templated on byte order.
+/// Byte-order-specific IEEE754 floating-point writer helper.
 template <int ByteOrder>
 class FloatWriter;
 
 template <>
 class FloatWriter<kBigEndian> {
  public:
+  /// Writes a big-endian IEEE754 float.
   template <typename OutputIterator>
   inline void writeFloat(OutputIterator& out, float v) const {
     WriteBeFloat(out, v);
   }
 
+  /// Writes a big-endian IEEE754 double.
   template <typename OutputIterator>
   inline void writeDouble(OutputIterator& out, double v) const {
     WriteBeDouble(out, v);
@@ -321,11 +333,13 @@ class FloatWriter<kBigEndian> {
 template <>
 class FloatWriter<kLittleEndian> {
  public:
+  /// Writes a little-endian IEEE754 float.
   template <typename OutputIterator>
   inline void writeFloat(OutputIterator& out, float v) const {
     WriteLeFloat(out, v);
   }
 
+  /// Writes a little-endian IEEE754 double.
   template <typename OutputIterator>
   inline void writeDouble(OutputIterator& out, double v) const {
     WriteLeDouble(out, v);
@@ -333,40 +347,43 @@ class FloatWriter<kLittleEndian> {
 };
 #endif  // ROO_IO_IEEE754
 
+/// Writes a byte-order-selected unsigned 16-bit integer to `in`.
 template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU16(OutputIterator& in, uint16_t v) {
   NumberWriter<byte_order>().writeU16(in, v);
 }
 
+/// Writes a byte-order-selected unsigned 24-bit integer to `in`.
 template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU24(OutputIterator& in, uint32_t v) {
   NumberWriter<byte_order>().writeU24(in, v);
 }
 
+/// Writes a byte-order-selected unsigned 32-bit integer to `in`.
 template <typename OutputIterator, ByteOrder byte_order>
 constexpr void WriteU32(OutputIterator& in, uint32_t v) {
   NumberWriter<byte_order>().writeU32(in, v);
 }
 
 #if ROO_IO_IEEE754
+/// Writes a byte-order-selected IEEE754 float to `in`.
 template <typename OutputIterator, ByteOrder byte_order>
 inline void WriteFloat(OutputIterator& in, float v) {
   FloatWriter<byte_order>().writeFloat(in, v);
 }
 
+/// Writes a byte-order-selected IEEE754 double to `in`.
 template <typename OutputIterator, ByteOrder byte_order>
 inline void WriteDouble(OutputIterator& in, double v) {
   FloatWriter<byte_order>().writeDouble(in, v);
 }
 #endif  // ROO_IO_IEEE754
 
-// Allows writing platform-native (implementation-dependent) data to an input
-// iterator. T must be default-constructible and have trivial destructor.
+/// Writes host-native trivially copyable values to an output iterator.
 template <typename T>
 struct HostNativeWriter {
  public:
-  // Writes T to the iterator. On failure, the iterator status is updated as
-  // appropriate.
+  /// Writes `v` to `out` using the platform-native representation.
   template <typename OutputIterator>
   void write(OutputIterator& out, const T& v) const {
     WriteByteArray(out, (const byte*)&v, sizeof(v));
@@ -379,8 +396,9 @@ struct HostNativeWriter {
 
 #include "Arduino.h"
 
-// Write an Arduino string, using a portable string representation (varint
-// length followed by the character array).
+/// Writes an Arduino `String` using roo_io's portable string encoding.
+///
+/// The encoding is the varint length followed by the raw character bytes.
 namespace roo_io {
 template <typename OutputIterator>
 void WriteString(OutputIterator& itr, const ::String& data) {

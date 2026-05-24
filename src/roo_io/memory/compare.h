@@ -12,14 +12,17 @@
 
 namespace roo_io {
 
+/// Compares `count` `bytes`-wide elements in `buf` against the pattern `val`.
 template <int bytes>
 inline bool PatternCompare(const byte* buf, size_t count, const byte* val);
 
+/// Compares aligned `bytes`-wide elements in `buf` against the pattern `val`.
 template <int bytes>
 inline bool PatternCompareAligned(const byte* buf, size_t count,
                                   const byte* val);
 
 template <>
+/// Compares a 1-byte repeating pattern against `buf`.
 inline bool PatternCompare<1>(const byte* buf, size_t count, const byte* val) {
   while (count >= 4) {
     if (buf[0] != *val || buf[1] != *val || buf[2] != *val || buf[3] != *val) {
@@ -35,12 +38,14 @@ inline bool PatternCompare<1>(const byte* buf, size_t count, const byte* val) {
 }
 
 template <>
+/// Compares an aligned 1-byte repeating pattern against `buf`.
 inline bool PatternCompareAligned<1>(const byte* buf, size_t count,
                                      const byte* val) {
   return PatternCompare<1>(buf, count, val);
 }
 
 template <>
+/// Compares a 2-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompare<2>(const byte* buf,
                                                              size_t count,
                                                              const byte* val) {
@@ -82,6 +87,7 @@ inline __attribute__((always_inline)) bool PatternCompare<2>(const byte* buf,
 }
 
 template <>
+/// Compares an aligned 2-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompareAligned<2>(
     const byte* buf, size_t count, const byte* val) {
   uint16_t v = *(const uint16_t*)val;
@@ -100,6 +106,7 @@ inline __attribute__((always_inline)) bool PatternCompareAligned<2>(
 }
 
 template <>
+/// Compares a 3-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompare<3>(const byte* buf,
                                                              size_t count,
                                                              const byte* val) {
@@ -121,12 +128,14 @@ inline __attribute__((always_inline)) bool PatternCompare<3>(const byte* buf,
 }
 
 template <>
+/// Compares an aligned 3-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompareAligned<3>(
     const byte* buf, size_t count, const byte* val) {
   return PatternCompare<3>(buf, count, val);
 }
 
 template <>
+/// Compares a 4-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompare<4>(const byte* buf,
                                                              size_t count,
                                                              const byte* val) {
@@ -172,6 +181,7 @@ inline __attribute__((always_inline)) bool PatternCompare<4>(const byte* buf,
 }
 
 template <>
+/// Compares an aligned 4-byte repeating pattern against `buf`.
 inline __attribute__((always_inline)) bool PatternCompareAligned<4>(
     const byte* buf, size_t count, const byte* val) {
   const uint32_t v = (*(const uint32_t*)val);

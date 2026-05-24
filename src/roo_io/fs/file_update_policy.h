@@ -2,8 +2,7 @@
 
 namespace roo_io {
 
-// Passed to Mount::fopen and Mount::fopenForWrite, to specify what should
-// happen when the target file already exists.
+/// Describes how file-creation helpers behave when the target already exists.
 enum FileUpdatePolicy {
   kFailIfExists = 0,
   kTruncateIfExists = 1,

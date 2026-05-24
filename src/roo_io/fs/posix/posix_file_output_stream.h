@@ -12,18 +12,25 @@
 
 namespace roo_io {
 
+/// Output stream wrapper around a POSIX `FILE*`.
 class PosixFileOutputStream : public OutputStream {
  public:
+  /// Creates a detached stream that reports `error` from `status()`.
   PosixFileOutputStream(Status error);
 
+  /// Wraps an already open POSIX file handle and retains the mount while open.
   PosixFileOutputStream(std::shared_ptr<MountImpl> mount, FILE* file);
 
+  /// Closes the file if needed.
   ~PosixFileOutputStream();
 
+  /// Writes up to `count` bytes to the file.
   size_t write(const byte* buf, size_t count) override;
 
+  /// Closes the file and releases any retained mount reference.
   void close() override;
 
+  /// Returns the current stream status.
   Status status() const override { return status_; }
 
  private:

@@ -7,25 +7,32 @@
 
 namespace roo_io {
 
+/// Fixed-size circular byte buffer with non-blocking read and write helpers.
 class RingBuffer {
  public:
+  /// Allocates a ring buffer with the specified byte capacity.
   RingBuffer(size_t capacity)
       : buf_(new byte[capacity]), capacity_(capacity), head_(0), used_(0) {}
 
+  /// Returns the total number of bytes the buffer can hold.
   size_t capacity() const { return capacity_; }
+  /// Returns the number of bytes currently stored in the buffer.
   size_t used() const { return used_; }
+  /// Returns the number of free bytes currently available for writing.
   size_t free() const { return capacity_ - used_; }
 
+  /// Returns whether no additional bytes can be written.
   bool full() const { return used_ == capacity_; }
+  /// Returns whether the buffer currently holds no data.
   bool empty() const { return used_ == 0; }
 
+  /// Removes all buffered bytes.
   void clear() {
     head_ = 0;
     used_ = 0;
   }
 
-  // Writes up to 'len' bytes, but no more than the current value of free(), to
-  // the ringbuffer. Returns the count of bytes written.
+  /// Writes up to `len` bytes, capped by the current free capacity.
   size_t write(const byte* data, size_t len) {
     size_t maxlen = free();
     if (len > maxlen) len = maxlen;
@@ -44,8 +51,7 @@ class RingBuffer {
     return len;
   }
 
-  // Writes a single byte to the ringbuffer. Returns true if successful, or
-  // false if the buffer is full.
+  /// Writes one byte and returns whether it fit in the buffer.
   bool write(byte b) {
     if (used_ == capacity_) return false;
     buf_[write_pos()] = b;
@@ -53,8 +59,7 @@ class RingBuffer {
     return true;
   }
 
-  // Reads a single byte from the ringbuffer. Returns true if successful, or
-  // false if the buffer is empty.
+  /// Reads one byte into `b` and returns whether data was available.
   bool read(byte* b) {
     if (used_ == 0) return false;
     *b = buf_[head_];
@@ -64,8 +69,7 @@ class RingBuffer {
     return true;
   }
 
-  // Reads up to 'len' bytes, but no more than the current value of used(), from
-  // the ringbuffer. Returns the count of bytes read.
+  /// Reads up to `len` bytes, capped by the currently buffered byte count.
   size_t read(byte* data, size_t len) {
     if (len > used_) len = used_;
     if (len == 0) return 0;

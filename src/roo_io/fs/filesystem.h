@@ -9,107 +9,110 @@
 
 namespace roo_io {
 
-// A high-level abstract class representing a mountable filesystem (e.g. an SD
-// card slot).
+/// High-level abstraction for a mountable filesystem, such as an SD card slot.
+///
+/// `Mount` handles created from the same filesystem share one backend mount
+/// when possible. In normal use, callers should rely on the filesystem's
+/// automatic unmount behavior instead of explicitly calling `forceUnmount()`.
 class Filesystem {
  public:
+  /// Destroys the filesystem abstraction.
   virtual ~Filesystem() = default;
 
-  // Result of checkMediaPresence().
+  /// Result returned by `checkMediaPresence()`.
   enum MediaPresence {
-    // Media (e.g. SD card) is known to be absent.
+    /// Media is known to be absent.
     kMediaAbsent = 0,
 
-    // Media (e.g. SD card) is known to be present.
+    /// Media is known to be present.
     kMediaPresent = 1,
 
-    // Media presence cannot be determined.
+    /// Media presence cannot be determined.
     kMediaPresenceUnknown = 2
   };
 
-  // Decides the level of access allowed for new mounts. Does not affect
-  // existing mounts.
+  /// Controls the access mode allowed for newly created mounts.
   enum MountingPolicy {
-    // New mounts can both read and write (as long as the filesystem supports
-    // that).
+    /// Future mounts may read and write when the backend supports both.
     kMountReadWrite,
 
-    // New mounts cannot write to the file system.
+    /// Future mounts are forced read-only even if the backend supports writes.
     kMountReadOnly,
 
-    // New mounts are disallowed.
+    /// Future `mount()` calls return `kNotMounted` without touching the backend.
     kMountDisabled,
   };
 
-  // Decides how aggressive the filesystem gets unmounted when no longer used.
+  /// Controls whether the backend mount is dropped automatically when no
+  /// healthy `Mount` handles remain.
   enum UnmountingPolicy {
-    // Unmount as soon as all mount objects go out of scope.
+    /// Keep the backend mount cached after the last `Mount` handle is dropped.
     kUnmountLazily = 0,
 
-    // Keep mounted until explicit call to unmount.
+    /// Drop the backend mount as soon as the last `Mount` handle is dropped.
     kUnmountEagerly = 1
   };
 
-  // Returns a new mount for the filesystem, or error status. The error can be:
-  // * kNoMedia, when mount fails because there is no media (e.g. no SD card
-  //   inserted),
-  // * kGenericMountError, if the cause of error is unknown.
-  //
-  // Multiple mount objects can be independently created. They are all backed by
-  // the same mounted filesystem. The filesystem gets mounted when the first
-  // mount object is created.
-  //
-  // Generally you don't need to, and shouldn't, explicitly unmount the
-  // filesystem. If `unmountingPolicy()' is 'kEagerUnmount', the filesystem gets
-  // automatically unmounted when the last mount object gets out of scope.
-  // If that policy is 'kLazyUnmount', the filesystem is kept mounted, to be
-  // reused by future created mount objects.
+  /// Returns a new mount handle for the filesystem or an error state.
+  ///
+  /// Possible mount-handle statuses are:
+  /// - `kOk`, when mounting succeeded.
+  /// - `kNotMounted`, when mounting is disabled.
+  /// - `kNoMedia`, when mounting fails because backing media is absent.
+  /// - `kGenericMountError`, when mounting fails for an unknown reason.
+  ///
+  /// Multiple mount handles may coexist and share the same mounted backend.
+  /// The backend is mounted when the first handle is created. Generally you do
+  /// not need to, and should not, explicitly unmount the filesystem:
+  /// `kUnmountEagerly` automatically drops the backend mount when the last
+  /// healthy `Mount` handle is destroyed or closed, while `kUnmountLazily`
+  /// keeps it mounted for reuse by future handles.
   Mount mount();
 
-  // Returns true if the filesystem is currently mounted.
+  /// Returns whether the filesystem backend is currently mounted.
   bool isMounted() const { return !mount_.expired(); }
 
-  // Returns true if there are any user-created live mounts referencing the
-  // filesystem. If unmounting policy is 'kEagerUnmount', it is always the same
-  // as 'isMounted()'. With 'kLazyUnmount', 'isUnUse()' can be false while
-  // 'isMounted()' is still true.
+  /// Returns whether any user-visible mount handles still reference this filesystem.
+  ///
+  /// Under `kUnmountLazily`, this can become `false` while `isMounted()`
+  /// remains `true` because the filesystem keeps the backend mount cached for
+  /// reuse.
   bool isInUse() const {
     return mount_.use_count() > (unmounting_policy_ == kUnmountEagerly ? 0 : 1);
   }
 
-  // Checks whether media is present. Does not require the filesystem to be
-  // mounted, and does not cause it to become mounted. Some implementations may
-  // not be able to determine media presence; they can return
-  // kMediaPresenceUnknown in such case.
+  /// Checks whether backing media is present without forcing a mount.
+  ///
+  /// Implementations should not mount the filesystem as a side effect.
   virtual MediaPresence checkMediaPresence() = 0;
 
-  // Returns the current value of the mounting policy.
+  /// Returns the current mounting policy.
   MountingPolicy mountingPolicy() const { return mounting_policy_; }
 
-  // Sets the mounting policy, which decides what do to when `mount()` gets
-  // called.
+  /// Sets the mounting policy used by future `mount()` calls.
+  ///
+  /// Existing mount handles keep their current access mode.
   void setMountingPolicy(MountingPolicy mounting_policy) {
     mounting_policy_ = mounting_policy;
   }
 
-  // Returns the current value of the unmounting policy.
+  /// Returns the current unmounting policy.
   UnmountingPolicy unmountingPolicy() const { return unmounting_policy_; }
 
-  // Sets unmounting policy, which decides how aggressively to unmount the
-  // filesystem when it stops being used.
-  //
-  // If switching from lazy to eager, and no mount objects currently exist, the
-  // filesystem gets unmounted. Otherwise, the call has no immediate effect.
+  /// Sets how the backend mount is retained after the last live `Mount` closes.
+  ///
+  /// If switching from lazy to eager, any cached lazy mount is released
+  /// immediately; if no other `Mount` handles still exist, this also causes an
+  /// automatic unmount.
   void setUnmountingPolicy(UnmountingPolicy unmounting_policy);
 
-  // Invalidates all existing mount objects, and unmounts the filesystem
-  // immediately. The mounts will return 'kNotMounted' from any subsequent
-  // calls.
-  //
-  // New mounts can still be created, as long as the mounting policy allows it.
-  //
-  // Prefer relying on automount. This method is indended for use in special
-  // circumstances, such as forceful shutdown.
+  /// Invalidates all existing mount handles and unmounts immediately.
+  ///
+  /// Handles that were previously `kOk` start reporting `kNotMounted`
+  /// afterward. New mounts can still be created later if mounting remains
+  /// enabled. Prefer relying on the automatic unmount behavior from
+  /// `unmountingPolicy()`; `forceUnmount()` is intended for exceptional cases
+  /// such as shutdown.
   void forceUnmount();
 
  protected:
@@ -132,7 +135,7 @@ class Filesystem {
   UnmountingPolicy unmounting_policy_;
 };
 
-// Returns a pointer into path that points past the last '/' in the path.
+/// Returns a pointer inside `path` positioned past the last `/` separator.
 const char* GetFileName(const char* path);
 
 }  // namespace roo_io

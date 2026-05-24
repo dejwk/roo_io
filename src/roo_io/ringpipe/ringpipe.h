@@ -8,66 +8,57 @@
 
 namespace roo_io {
 
-// A thread-safe pipe backed by a fixed-size in-memory buffer.
+/// Thread-safe byte pipe backed by a fixed-size in-memory ring buffer.
 class RingPipe {
  public:
-  // Constructs a pipe with the given capacity.
+  /// Constructs a pipe with the specified byte capacity.
   RingPipe(size_t capacity);
 
-  // Writes up to 'len' bytes, but at least one byte, to the pipe. Blocks if
-  // necessary until space is available. Returns the count of bytes written.
-  // If the input or output end has been closed, returns zero.
+  /// Writes at least one and at most `len` bytes, blocking for space if needed.
+  ///
+  /// Returns zero when either end of the pipe has been closed.
   size_t write(const byte* data, size_t len);
 
-  // Attempts to write exactly 'len' bytes to the pipe. Blocks if necessary
-  // until space is available. Returns the count of bytes written. The count
-  // may be less than 'len' if the input or output end gets closed.
+  /// Attempts to write exactly `len` bytes, blocking until progress is
+  /// possible.
+  ///
+  /// Returns fewer than `len` bytes when one end closes before the full write
+  /// completes.
   size_t writeFully(const byte* data, size_t len);
 
-  // Returns the number of bytes that can be written without blocking. If the
-  // input or output end has been closed, returns zero.
+  /// Returns the number of bytes that can be written without blocking.
   size_t availableForWrite();
 
-  // Writes up to 'len' bytes, but no more than the current value of
-  // availableForWrite(), to the pipe. Returns the count of bytes written,
-  // which may be zero. If the input or output end has been closed, returns
-  // zero.
+  /// Writes up to `len` bytes without blocking.
+  ///
+  /// The write is capped by `availableForWrite()` and returns zero when the
+  /// pipe is closed or currently full.
   size_t tryWrite(const byte* data, size_t len);
 
-  // Reads up to 'len' bytes, but at least one byte, from the pipe. Blocks if
-  // necessary until data is available. Returns the count of bytes read. If the
-  // output end has been closed and no more data is available, returns zero.
-  // If the input end has been closed, returns zero.
+  /// Reads at least one and at most `len` bytes, blocking for data if needed.
+  ///
+  /// Returns zero when the input end is closed, or when the output end is
+  /// closed and all buffered data has been drained.
   size_t read(byte* data, size_t len);
 
-  // Returns the number of bytes that can be read without blocking. If the
-  // input end has been closed, returns zero.
+  /// Returns the number of bytes that can be read without blocking.
   size_t availableForRead();
 
-  // Reads up to 'len' bytes, but no more than the current value of
-  // availableForRead(), from the pipe. Returns the count of bytes read, which
-  // may be zero.
+  /// Reads up to `len` bytes without blocking.
+  ///
+  /// The read is capped by `availableForRead()` and may return zero.
   size_t tryRead(byte* data, size_t len);
 
-  // Returns the current status of the input end of the pipe. If the input end
-  // has been closed, returns kClosed. If the output end has been closed and
-  // no more data is available, returns kEndOfStream. Otherwise, returns kOk.
+  /// Returns the current status visible to readers on the input end.
   Status inputStatus() const;
 
-  // Returns the current status of the output end of the pipe. If the output end
-  // has been closed, returns kClosed. If the input end has been closed, returns
-  // kBrokenPipe. Otherwise, returns kOk.
+  /// Returns the current status visible to writers on the output end.
   Status outputStatus() const;
 
-  // Closes the input end of the pipe. Further write() or tryWrite() calls, as
-  // well as read() or tryRead() calls, will return zero. If there is a
-  // write() call blocked waiting for data, it will be unblocked and return
-  // zero.
+  /// Closes the input end and unblocks writers waiting for additional space.
   void closeInput();
 
-  // Closes the output end of the pipe. Further write() or tryWrite() calls will
-  // return zero. If there is a read() call blocked waiting for data, it will be
-  // unblocked and return zero.
+  /// Closes the output end and unblocks readers waiting for additional data.
   void closeOutput();
 
  private:
