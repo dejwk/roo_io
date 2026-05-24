@@ -18,3 +18,6 @@ Additional features:
 * high-performance I/O abstractions (streams, iterators, etc.) over memory (RAM or Flash),
 * stream adapters for UART,
 * extra utilities (e.g. formatted printing to string).
+
+For a guided walkthrough of the filesystem, stream, iterator, and typed I/O
+layers, see [the programming guide](doc/programming_guide.md).
