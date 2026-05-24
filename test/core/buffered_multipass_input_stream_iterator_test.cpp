@@ -9,6 +9,38 @@
 
 namespace roo_io {
 
+class SeekErrorMultipassInputStream : public MultipassInputStream {
+ public:
+  SeekErrorMultipassInputStream() : position_(0), status_(kOk) {}
+
+  size_t read(byte* result, size_t count) override {
+    if (status_ != kOk) return 0;
+    size_t remaining = 128 - position_;
+    if (count > remaining) count = remaining;
+    memset(result, 0, count);
+    position_ += count;
+    if (count == 0) status_ = kEndOfStream;
+    return count;
+  }
+
+  uint64_t size() override { return 128; }
+
+  uint64_t position() const override { return position_; }
+
+  void seek(uint64_t position) override {
+    position_ = position;
+    status_ = kSeekError;
+  }
+
+  void close() override { status_ = kClosed; }
+
+  Status status() const override { return status_; }
+
+ private:
+  uint64_t position_;
+  Status status_;
+};
+
 class BufferedMultipassInputStreamIteratorFixture {
  public:
   using Iterator = BufferedMultipassInputStreamIterator;
@@ -57,6 +89,15 @@ TEST(BufferedMultipassInputStreamIterator, DefaultConstructibleResets) {
   EXPECT_EQ(kClosed, itr.status());
   itr.read();
   EXPECT_EQ(kClosed, itr.status());
+}
+
+TEST(BufferedMultipassInputStreamIterator, SeekPreservesUnderlyingFailure) {
+  SeekErrorMultipassInputStream input;
+  BufferedMultipassInputStreamIterator itr(input);
+
+  itr.seek(1);
+
+  EXPECT_EQ(kSeekError, itr.status());
 }
 
 }  // namespace roo_io

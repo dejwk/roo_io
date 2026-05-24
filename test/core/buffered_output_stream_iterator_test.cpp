@@ -45,4 +45,22 @@ TEST(BufferedOutputStreamIterator, DefaultConstructible) {
   EXPECT_EQ(kClosed, itr.status());
 }
 
+TEST(BufferedOutputStreamIterator, BlockWriteAfterFlushFailureReturnsZero) {
+  byte data[63] = {};
+  MemoryOutputStream<byte*> os(data, data + 63);
+  BufferedOutputStreamIterator itr(os);
+
+  std::string contents(63, 'A');
+  EXPECT_EQ(63, itr.write(reinterpret_cast<const byte*>(contents.data()),
+                          contents.size()));
+  EXPECT_EQ(1, itr.write(reinterpret_cast<const byte*>("B"), 1));
+  EXPECT_EQ(kOk, itr.status());
+
+  EXPECT_EQ(0, itr.write(reinterpret_cast<const byte*>("CD"), 2));
+  EXPECT_EQ(kNoSpaceLeftOnDevice, itr.status());
+  EXPECT_EQ(std::string(63, 'A'),
+            std::string(reinterpret_cast<const char*>(data),
+                        reinterpret_cast<const char*>(os.ptr())));
+}
+
 }  // namespace roo_io

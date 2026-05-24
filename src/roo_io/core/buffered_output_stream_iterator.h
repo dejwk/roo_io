@@ -72,9 +72,10 @@ class BufferedOutputStreamIterator {
   /// block first. If `status() != kOk` and buffer is full, call is a no-op.
   /// Updates `status()` through internal buffer flush.
   void write(byte v) {
+    if (status_ != kOk) return;
     if (offset_ >= kOutputStreamIteratorBufferSize) {
-      if (status_ != kOk) return;
       writeBuffer();
+      if (status_ != kOk) return;
     }
     buffer_[offset_++] = v;
   }
@@ -88,9 +89,10 @@ class BufferedOutputStreamIterator {
   ///
   /// @return Number of bytes accepted from `buf`.
   size_t write(const byte* buf, size_t count) {
+    if (status_ != kOk) return 0;
     if (offset_ >= kOutputStreamIteratorBufferSize) {
-      if (status_ != kOk) return 0;
       writeBuffer();
+      if (status_ != kOk) return 0;
     }
     if (offset_ > 0 || count < kOutputStreamIteratorBufferSize) {
       size_t cap = kOutputStreamIteratorBufferSize - offset_;

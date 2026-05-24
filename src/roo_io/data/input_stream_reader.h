@@ -46,7 +46,11 @@ class InputStreamReader {
   }
 
   InputStreamReader(std::unique_ptr<roo_io::InputStream> is)
-      : is_(is.release()), owned_(is_ != nullptr), in_(*is_) {}
+      : is_(is.release()), owned_(is_ != nullptr), in_() {
+    if (is_ != nullptr) {
+      in_.reset(*is_);
+    }
+  }
 
   InputStreamReader(roo_io::InputStream& is)
       : is_(&is), owned_(false), in_(*is_) {}

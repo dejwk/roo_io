@@ -220,6 +220,7 @@ class BufferedMultipassInputStreamIterator {
     if (file_pos <= position + length_ && file_pos >= position) {
       // Seek within the area we have in the buffer.
       offset_ = position + length_ - file_pos;
+      status_ = kOk;
     } else {
       // Seek outside the buffer. Just seek in the file and reset the buffer.
       input_->seek(position);
@@ -227,7 +228,6 @@ class BufferedMultipassInputStreamIterator {
       length_ = 0;
       status_ = input_->status();
     }
-    status_ = kOk;
   }
 
   /// Returns whether `status() == kOk`.

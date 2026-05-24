@@ -42,6 +42,14 @@ TEST(Reader, DefaultConstructible) {
   EXPECT_EQ(kClosed, reader.status());
 }
 
+TEST(Reader, NullOwnedStreamIsClosed) {
+  std::unique_ptr<MultipassInputStream> input;
+  MultipassInputStreamReader reader(std::move(input));
+  EXPECT_EQ(kClosed, reader.status());
+  reader.readBeU16();
+  EXPECT_EQ(kClosed, reader.status());
+}
+
 TEST(Reader, Unsigned) {
   byte data[] = {byte{0x12}, byte{0x34}, byte{0x56}, byte{0x78},
                  byte{0x9A}, byte{0xBC}, byte{0xDE}, byte{0xF0}};

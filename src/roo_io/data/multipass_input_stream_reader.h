@@ -20,7 +20,11 @@ class MultipassInputStreamReader {
       default;
 
   MultipassInputStreamReader(std::unique_ptr<roo_io::MultipassInputStream> is)
-      : is_(std::move(is)), in_(*is_) {}
+      : is_(std::move(is)), in_() {
+    if (is_ != nullptr) {
+      in_.reset(*is_);
+    }
+  }
 
   ~MultipassInputStreamReader() { close(); }
 
