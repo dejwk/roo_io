@@ -362,6 +362,21 @@ single `false` return collapses all failure modes together; `roo_io::Status`
 lets application code distinguish absence of media, permissions, read-only
 mode, directory-shape mistakes, and generic transport or storage faults.
 
+For example, status-driven code can keep setup logic explicit without turning
+into nested boolean checks:
+
+```cpp
+roo_io::Status ensureSettingsDir(roo_io::Mount& mount) {
+  roo_io::Stat st = mount.stat("/settings");
+  if (st.isDirectory()) return roo_io::kOk;
+  if (st.status() == roo_io::kNotFound) {
+    return mount.mkdir("/settings");
+  }
+  if (st.isFile()) return roo_io::kNotDirectory;
+  return st.status();
+}
+```
+
 ### Filesystem lifecycle and mount policies
 
 If your code starts from files or directories, `Filesystem`, `Mount`,
@@ -408,6 +423,26 @@ live mount handles immediately, after which they report `kNotMounted`.
 One detail worth remembering when lazy unmounting is enabled: `isMounted()`
 and `isInUse()` are not the same thing. A filesystem can remain mounted for
 reuse even after no user-visible `Mount` handles remain.
+
+That usually leads to code shaped like this:
+
+```cpp
+void inspectCard(roo_io::Filesystem& fs) {
+  if (fs.checkMediaPresence() == roo_io::Filesystem::kMediaAbsent) {
+    LOG(INFO) << "No media present";
+    return;
+  }
+
+  fs.setMountingPolicy(roo_io::Filesystem::kMountReadOnly);
+  roo_io::Mount mount = fs.mount();
+  if (!mount.ok()) {
+    LOG(ERROR) << "Mount failed: " << mount.status();
+    return;
+  }
+
+  LOG(INFO) << "Mounted in read-only mode: " << mount.isReadOnly();
+}  // Unmounts automatically according to the current unmounting policy.
+```
 
 ### Working with a mounted filesystem
 
@@ -485,6 +520,24 @@ At the lower level, `BufferedInputStreamIterator`,
 `BufferedMultipassInputStreamIterator`, and `BufferedOutputStreamIterator`
 adapt stream objects to the iterator contract used by the codec helpers.
 
+The multipass reader is the right tool when you need a typed view plus random
+access within the same open file:
+
+```cpp
+bool hasValidHeader(roo_io::Mount& mount) {
+  roo_io::MultipassInputStreamReader in(mount.fopen("/config.bin"));
+  if (!in.isOpen()) return false;
+  if (in.size() < 6) return false;
+
+  uint32_t magic = in.readBeU32();
+  uint16_t version = in.readBeU16();
+
+  in.rewind();
+  LOG(INFO) << "ready to reread from position " << in.position();
+  return magic == 0x524F4F49 && version >= 1;
+}
+```
+
 ### Iterator-level codecs and direct memory helpers
 
 Drop to this layer when you already have bytes in memory or when you need the
@@ -519,6 +572,23 @@ For contiguous input specifically, memory iterators also unlock a few helpers
 that are intentionally tied to in-memory data, such as `ReadStringView()`,
 which returns a non-owning view backed by the iterator's underlying buffer.
 
+The same field can be decoded at different layers depending on what guarantees
+you already have:
+
+```cpp
+uint16_t parsePortChecked(const roo_io::byte* begin,
+                          const roo_io::byte* end) {
+  roo_io::MemoryIterator in(begin, end);
+  in.skip(2);  // version + flags
+  uint16_t port = roo_io::ReadBeU16(in);
+  return in.status() == roo_io::kOk ? port : 0;
+}
+
+uint16_t parsePortUnchecked(const roo_io::byte* packet) {
+  return roo_io::LoadBeU16(packet + 2);
+}
+```
+
 ### Text helpers and bundled extras
 
 The text layer is intentionally small.
@@ -538,6 +608,17 @@ There are also bundled third-party components under `roo_io/third_party`, such
 as the COBS implementation and UTF support internals. Those are useful when you
 need them, but they are opt-in dependencies rather than the main public entry
 points of the library.
+
+For example, text helpers are often enough to derive readable metadata from a
+binary or UTF-8 source without pulling in a heavier formatting layer:
+
+```cpp
+std::string summarizeLabel(roo::string_view label, uint16_t version) {
+  std::vector<char32_t> codepoints = roo_io::DecodeUtfStringToVector(label);
+  return roo_io::StringPrintf("v%u (%u code points)", version,
+                              static_cast<unsigned>(codepoints.size()));
+}
+```
 
 ### Backends and portability boundaries
 
@@ -699,6 +780,27 @@ fixed-capacity option. Its capacity is a real design parameter: too small and
 producers or consumers block frequently; larger sizes reduce blocking at the
 cost of RAM.
 
+Here is the smallest useful in-process typed exchange built on top of it:
+
+```cpp
+void exchangeInProcess() {
+  roo_io::RingPipe pipe(256);
+  roo_io::RingPipeOutputStream pipe_out(pipe);
+  roo_io::RingPipeInputStream pipe_in(pipe);
+
+  roo_io::OutputStreamWriter out(pipe_out);
+  roo_io::InputStreamReader in(pipe_in);
+
+  out.writeVarU64(7);
+  out.writeString("ready");
+  out.flush();
+
+  uint64_t id = in.readVarU64();
+  std::string state = in.readString(16);
+  LOG(INFO) << "id=" << id << ", state=" << state;
+}
+```
+
 ### Testing and debugging
 
 The easiest way to debug `roo_io` code is to debug one layer at a time.
@@ -731,6 +833,21 @@ When debugging failures in application code, log the actual `Status` value
 instead of collapsing it to success or failure. That is often enough to tell a
 bad path from an exhausted stream, a missing card, or a write-after-close bug.
 
+For low-level parser bugs, a tiny host-side iterator test is often enough to
+pin down the issue before involving any filesystem or device code:
+
+```cpp
+TEST(ReadHelpers, ParsesBigEndianHeader) {
+  const roo_io::byte bytes[] = {roo_io::byte{0x12}, roo_io::byte{0x34},
+                                roo_io::byte{0x00}, roo_io::byte{0x02}};
+  roo_io::MemoryIterator in(bytes, bytes + 4);
+
+  EXPECT_EQ(roo_io::ReadBeU16(in), 0x1234);
+  EXPECT_EQ(roo_io::ReadBeU16(in), 0x0002);
+  EXPECT_EQ(in.status(), roo_io::kOk);
+}
+```
+
 ### Extending roo_io
 
 Most real extensions fall into one of three categories.
@@ -761,6 +878,42 @@ only when the backend can do better than the default helper behavior.
 
 Document close behavior clearly. Some adapters close an underlying resource;
 others, like the Arduino `Stream` wrappers, only mark the adapter closed.
+
+A minimal adapter usually starts out much smaller than people expect:
+
+```cpp
+class FixedBufferInputStream : public roo_io::InputStream {
+ public:
+  FixedBufferInputStream(const roo_io::byte* begin, const roo_io::byte* end)
+      : current_(begin), end_(end), status_(roo_io::kOk) {}
+
+  size_t read(roo_io::byte* out, size_t count) override {
+    if (status_ != roo_io::kOk || count == 0) return 0;
+    size_t available = static_cast<size_t>(end_ - current_);
+    if (available == 0) {
+      status_ = roo_io::kEndOfStream;
+      return 0;
+    }
+    if (count > available) count = available;
+    memcpy(out, current_, count);
+    current_ += count;
+    return count;
+  }
+
+  void close() override {
+    if (status_ == roo_io::kOk || status_ == roo_io::kEndOfStream) {
+      status_ = roo_io::kClosed;
+    }
+  }
+
+  roo_io::Status status() const override { return status_; }
+
+ private:
+  const roo_io::byte* current_;
+  const roo_io::byte* end_;
+  roo_io::Status status_;
+};
+```
 
 #### New codec or typed helper
 
