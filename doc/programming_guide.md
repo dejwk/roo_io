@@ -951,7 +951,7 @@ feature support even when the surface API is the same.
 
 ## Conclusion
 
-The shortest way to choose an entry point is to start from the problem shape.
+`roo_io` is a compact substrate for portable embedded I/O code:
 
 - If you need portable file or directory access, start with `Filesystem` and
   `Mount`.
@@ -964,8 +964,4 @@ The shortest way to choose an entry point is to start from the problem shape.
   stream and UART adapters.
 - If you need reliable framing or transport semantics, move up a layer rather
   than trying to force `roo_io` itself to provide them.
-
-Used that way, `roo_io` stays what it is best at: a compact substrate for
-portable embedded I/O code that still lets you choose the right cost and
-abstraction level for each call site.
 
