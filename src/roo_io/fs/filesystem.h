@@ -39,7 +39,8 @@ class Filesystem {
     /// Future mounts are forced read-only even if the backend supports writes.
     kMountReadOnly,
 
-    /// Future `mount()` calls return `kNotMounted` without touching the backend.
+    /// Future `mount()` calls return `kNotMounted` without touching the
+    /// backend.
     kMountDisabled,
   };
 
@@ -72,7 +73,8 @@ class Filesystem {
   /// Returns whether the filesystem backend is currently mounted.
   bool isMounted() const { return !mount_.expired(); }
 
-  /// Returns whether any user-visible mount handles still reference this filesystem.
+  /// Returns whether any user-visible mount handles still reference this
+  /// filesystem.
   ///
   /// Under `kUnmountLazily`, this can become `false` while `isMounted()`
   /// remains `true` because the filesystem keeps the backend mount cached for

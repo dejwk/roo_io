@@ -1,4 +1,5 @@
 #include "roo_io/core/buffered_input_stream_iterator.h"
+
 #include <memory>
 
 #include "gtest/gtest.h"

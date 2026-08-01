@@ -2,9 +2,9 @@
 
 #if ROO_IO_FS_SUPPORT_POSIX
 
-#include "roo_io/fs/posix/posix_file_input_stream.h"
-
 #include <sys/stat.h>
+
+#include "roo_io/fs/posix/posix_file_input_stream.h"
 
 namespace roo_io {
 

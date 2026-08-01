@@ -1,4 +1,5 @@
 #include "roo_io/memory/memory_input_iterator.h"
+
 #include "gtest/gtest.h"
 #include "input_iterator_p.h"
 

@@ -17,7 +17,7 @@
 #else
 
 #if defined(__STDC_IEC_559__) || defined(__STDCPP_IEC_559__) || \
-        defined(__GCC_IEC_559)
+    defined(__GCC_IEC_559)
 #define ROO_IO_IEEE754_FORMAT 1
 #else
 #define ROO_IO_IEEE754_FORMAT 0
@@ -27,8 +27,7 @@
 // If compiler exposes floating-point byte order, require it to match
 // integer byte order. Otherwise, assume compatible by default.
 #if defined(__FLOAT_WORD_ORDER__) && defined(__BYTE_ORDER__)
-#define ROO_IO_IEEE754_ENDIAN_MATCH \
-    (__FLOAT_WORD_ORDER__ == __BYTE_ORDER__)
+#define ROO_IO_IEEE754_ENDIAN_MATCH (__FLOAT_WORD_ORDER__ == __BYTE_ORDER__)
 #elif defined(__FLOAT_WORD_ORDER) && defined(__BYTE_ORDER)
 #define ROO_IO_IEEE754_ENDIAN_MATCH (__FLOAT_WORD_ORDER == __BYTE_ORDER)
 #else

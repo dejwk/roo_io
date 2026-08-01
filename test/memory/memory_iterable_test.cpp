@@ -61,4 +61,4 @@ TEST(MultipassMemoryIterable, Basic) {
   EXPECT_EQ(3, itr2.size());
 }
 
-}
+}  // namespace roo_io

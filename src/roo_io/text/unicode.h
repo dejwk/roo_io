@@ -15,11 +15,11 @@ namespace roo_io {
 class Utf8Decoder {
  public:
   /// Creates a decoder over the specified UTF-8 byte sequence.
-  Utf8Decoder(const byte *data, size_t size) : ptr_(data), end_(data + size) {}
+  Utf8Decoder(const byte* data, size_t size) : ptr_(data), end_(data + size) {}
 
   /// Creates a decoder over the specified UTF-8 character sequence.
-  Utf8Decoder(const char *data, size_t size)
-      : Utf8Decoder((const byte *)data, size) {}
+  Utf8Decoder(const char* data, size_t size)
+      : Utf8Decoder((const byte*)data, size) {}
 
   /// Creates a decoder over a fixed-size UTF-8 byte array.
   template <size_t N>
@@ -27,33 +27,33 @@ class Utf8Decoder {
 
   /// Creates a decoder over a fixed-size UTF-8 character array.
   template <size_t N>
-  Utf8Decoder(const char data[N]) : Utf8Decoder((const byte *)data, N) {}
+  Utf8Decoder(const char data[N]) : Utf8Decoder((const byte*)data, N) {}
 
   /// Creates a decoder over the contents of the specified string view.
   Utf8Decoder(roo::string_view s)
-      : Utf8Decoder((const byte *)s.data(), s.size()) {}
+      : Utf8Decoder((const byte*)s.data(), s.size()) {}
 
 #if __cplusplus >= 202002L
   /// Creates a decoder over the contents of the specified UTF-8 string view.
   Utf8Decoder(std::basic_string_view<char8_t> s)
-      : Utf8Decoder((const byte *)s.data(), s.size()) {}
+      : Utf8Decoder((const byte*)s.data(), s.size()) {}
 #endif
 
   /// Returns the next unread byte of the underlying UTF-8 sequence.
-  const byte *data() const { return ptr_; }
+  const byte* data() const { return ptr_; }
 
   /// Decodes the next Unicode code point into `result`.
   ///
   /// Returns `false` when the decoder has reached the end of the input.
-  bool next(char32_t &result) {
+  bool next(char32_t& result) {
     if (ptr_ == end_) return false;
-    ptr_ += u8c::u8next_((const char *)ptr_, (const char *)end_, result);
+    ptr_ += u8c::u8next_((const char*)ptr_, (const char*)end_, result);
     return true;
   }
 
  private:
-  const byte *ptr_;
-  const byte *end_;
+  const byte* ptr_;
+  const byte* end_;
 };
 
 /// Decodes the UTF-8 contents of `s` and appends code points to `itr`.
@@ -73,7 +73,7 @@ inline std::vector<char32_t> DecodeUtfStringToVector(roo::string_view s) {
 
 /// Encodes one Unicode code point as UTF-8 and writes it through `itr`.
 template <typename OutputIterator>
-void WriteUtf8Char(OutputIterator &itr, char32_t v) {
+void WriteUtf8Char(OutputIterator& itr, char32_t v) {
   if (v <= 0x7F) {
     itr.write((byte)v);
   } else if (v <= 0x7FF) {
@@ -95,7 +95,7 @@ void WriteUtf8Char(OutputIterator &itr, char32_t v) {
 ///
 /// The caller must provide enough storage for the result; four bytes are
 /// always sufficient. Returns the number of bytes written.
-inline int WriteUtf8Char(byte *buf, char32_t ch) {
+inline int WriteUtf8Char(byte* buf, char32_t ch) {
   if (ch <= 0x7F) {
     buf[0] = (byte)ch;
     return 1;
@@ -125,8 +125,8 @@ inline int WriteUtf8Char(byte *buf, char32_t ch) {
 }
 
 /// Encodes one Unicode code point as UTF-8 into a character buffer.
-inline int WriteUtf8Char(char *buf, char32_t ch) {
-  return WriteUtf8Char((byte *)buf, ch);
+inline int WriteUtf8Char(char* buf, char32_t ch) {
+  return WriteUtf8Char((byte*)buf, ch);
 }
 
 }  // namespace roo_io

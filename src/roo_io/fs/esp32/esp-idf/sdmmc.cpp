@@ -16,11 +16,11 @@
 #define MLOG_roo_io_fs 0
 #endif
 
-#include "ff.h"
 #include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "esp_idf_version.h"
 #include "esp_vfs_fat.h"
+#include "ff.h"
 #include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
@@ -32,10 +32,16 @@ namespace roo_io {
 
 SdMmcFs::SdMmcFs()
     : BaseEsp32VfsFilesystem(SDMMC_FREQ_HIGHSPEED, "/sdmmc"),
-      use_default_pins_(true), pin_clk_((gpio_num_t)-1),
-      pin_cmd_((gpio_num_t)-1), pin_d0_((gpio_num_t)-1),
-      pin_d1_((gpio_num_t)-1), pin_d2_((gpio_num_t)-1), pin_d3_((gpio_num_t)-1),
-      width_(0), card_(nullptr), pdrv_(0xFF) {}
+      use_default_pins_(true),
+      pin_clk_((gpio_num_t)-1),
+      pin_cmd_((gpio_num_t)-1),
+      pin_d0_((gpio_num_t)-1),
+      pin_d1_((gpio_num_t)-1),
+      pin_d2_((gpio_num_t)-1),
+      pin_d3_((gpio_num_t)-1),
+      width_(0),
+      card_(nullptr),
+      pdrv_(0xFF) {}
 
 void SdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0) {
   use_default_pins_ = false;

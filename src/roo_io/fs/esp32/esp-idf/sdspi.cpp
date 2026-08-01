@@ -19,8 +19,8 @@
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
 #if !defined(ROO_TESTING)
-#include "sd_protocol_defs.h"
 #include "roo_io/fs/esp32/esp-idf/internal/sd_spi_probe.h"
+#include "sd_protocol_defs.h"
 #endif
 
 namespace roo_io {

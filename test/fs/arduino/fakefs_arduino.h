@@ -9,8 +9,8 @@
 #include "FSImpl.h"
 #include "fakefs.h"
 #include "gtest/gtest.h"
-#include "roo_io/fs/filesystem.h"
 #include "roo_io/fs/arduino/mount.h"
+#include "roo_io/fs/filesystem.h"
 
 namespace roo_io {
 namespace fakefs {

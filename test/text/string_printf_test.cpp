@@ -1,7 +1,6 @@
 #include "roo_io/text/string_printf.h"
 
 #include "gtest/gtest.h"
-
 #include "roo_backport.h"
 #include "roo_backport/string_view.h"
 

@@ -53,7 +53,8 @@ class Mount {
     return status_;
   }
 
-  /// Returns whether the mount is healthy and can service filesystem operations.
+  /// Returns whether the mount is healthy and can service filesystem
+  /// operations.
   bool ok() const { return status() == kOk; }
 
   /// Returns whether `path` exists.

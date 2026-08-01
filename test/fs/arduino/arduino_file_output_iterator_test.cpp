@@ -1,10 +1,9 @@
-#include "roo_io/fs/arduino/file_output_iterator.h"
-
 #include "fakefs.h"
 #include "fakefs_arduino.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "output_iterator_p.h"
+#include "roo_io/fs/arduino/file_output_iterator.h"
 #include "roo_io/fs/arduino/sdfs.h"
 
 namespace roo_io {

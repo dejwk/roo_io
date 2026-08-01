@@ -1,7 +1,7 @@
+#include "fakefs.h"
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-
-#include "fakefs.h"
 
 namespace roo_io {
 namespace fakefs {
