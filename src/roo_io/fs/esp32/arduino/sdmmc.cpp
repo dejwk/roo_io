@@ -1,5 +1,11 @@
 #include "roo_io/fs/esp32/arduino/sdmmc.h"
 
+#if defined(ROO_TESTING)
+
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+
+#endif
+
 #if (defined ESP32 && defined ARDUINO)
 
 #include "soc/soc_caps.h"
@@ -14,7 +20,6 @@
 #include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
-#include "sdmmc_cmd.h"
 
 namespace roo_io {
 
@@ -69,8 +74,6 @@ MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
     mount_base_path_.clear();
     return MountImpl::MountError(kGenericMountError);
   }
-  // Enable disk status checking so disk_status(0) sends CMD13.
-  ff_sdmmc_set_disk_status_check(0, true);
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mount_base_path_.c_str(), readOnly(), unmount_fn)));
 }
