@@ -2,7 +2,7 @@
 
 #if defined(ROO_TESTING)
 
-#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#include "roo_io/fs/esp32/internal/testing_media_presence.h"
 
 #endif
 
@@ -57,15 +57,14 @@ void ArduinoSdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
 MountImpl::MountResult ArduinoSdMmcFs::mountImpl(
     std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
-#if defined(ROO_TESTING)
-  mount_base_path_ = FakeEsp32().fs_root();
-#else
   if (checkMediaPresence() == kMediaAbsent) {
     return MountImpl::MountError(kNoMedia);
   }
-  mount_base_path_.clear();
+#if defined(ROO_TESTING)
+  mount_base_path_ = internal::HostTestMountPath(mountPoint());
+#else
+  mount_base_path_ = mountPoint();
 #endif
-  mount_base_path_.append(mountPoint());
   // Note: SD_MMC expects frequency in kHz, not Hz.
   bool result =
       ::SD_MMC.begin(mount_base_path_.c_str(), mode_1bit_,
@@ -86,7 +85,8 @@ void ArduinoSdMmcFs::unmountImpl() {
 
 Filesystem::MediaPresence ArduinoSdMmcFs::checkMediaPresence() {
 #if defined(ROO_TESTING)
-  return kMediaPresenceUnknown;
+  return internal::HostTestMountPointExists(mountPoint()) ? kMediaPresent
+                                                          : kMediaAbsent;
 #else
   if (!mount_base_path_.empty()) {
     // Already mounted.  disk_status(0) calls sdmmc_get_status() internally

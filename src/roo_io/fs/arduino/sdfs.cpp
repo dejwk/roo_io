@@ -9,6 +9,9 @@
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
 // completely.
 #include "roo_io/fs/esp32/arduino/internal/sd_spi_probe.h"
+#if defined(ROO_TESTING)
+#include "roo_io/fs/esp32/internal/testing_media_presence.h"
+#endif
 #include "roo_io/fs/posix/posix_mount.h"
 #else
 // Fall back to Arduino filesystem APIs.
@@ -35,13 +38,20 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
                  formatIfMountFailed())) {
     return MountImpl::MountError(kGenericMountError);
   }
+#if defined(ROO_TESTING)
+  std::string mount_base_path = internal::HostTestMountPath(mountPoint());
+  return MountImpl::Mounted(std::unique_ptr<MountImpl>(
+      new PosixMountImpl(mount_base_path.c_str(), readOnly(), unmount_fn)));
+#else
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mountPoint(), readOnly(), unmount_fn)));
+#endif
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
 #if defined(ROO_TESTING)
-  return kMediaPresenceUnknown;
+  return internal::HostTestMountPointExists(mountPoint()) ? kMediaPresent
+                                                          : kMediaAbsent;
 #else
   if (isMounted()) {
     // Use a fast direct CMD13 probe instead of sd_.totalBytes() which goes

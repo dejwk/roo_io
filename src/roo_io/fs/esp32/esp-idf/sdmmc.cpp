@@ -2,7 +2,7 @@
 
 #if defined(ROO_TESTING)
 
-#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#include "roo_io/fs/esp32/internal/testing_media_presence.h"
 
 #endif
 
@@ -65,15 +65,14 @@ void SdMmcFs::setPins(uint8_t pin_clk, uint8_t pin_cmd, uint8_t pin_d0,
 
 MountImpl::MountResult SdMmcFs::mountImpl(std::function<void()> unmount_fn) {
   MLOG(roo_io_fs) << "Mounting SD card";
-#if defined(ROO_TESTING)
-  mount_base_path_ = FakeEsp32().fs_root();
-#else
   if (checkMediaPresence() == kMediaAbsent) {
     return MountImpl::MountError(kNoMedia);
   }
-  mount_base_path_.clear();
+#if defined(ROO_TESTING)
+  mount_base_path_ = internal::HostTestMountPath(mountPoint());
+#else
+  mount_base_path_ = mountPoint();
 #endif
-  mount_base_path_.append(mountPoint());
 
   sdmmc_host_t host = SDMMC_HOST_DEFAULT();
 
@@ -132,7 +131,8 @@ void SdMmcFs::unmountImpl() {
 
 Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
 #if defined(ROO_TESTING)
-  return kMediaPresenceUnknown;
+  return internal::HostTestMountPointExists(mountPoint()) ? kMediaPresent
+                                                          : kMediaAbsent;
 #else
   if (card_ != nullptr) {
     // Already mounted. Send CMD13 to check if card is still responsive.

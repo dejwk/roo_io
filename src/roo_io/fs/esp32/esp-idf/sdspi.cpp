@@ -2,7 +2,7 @@
 
 #if defined(ROO_TESTING)
 
-#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#include "roo_io/fs/esp32/internal/testing_media_presence.h"
 
 #endif
 
@@ -36,11 +36,10 @@ MountImpl::MountResult SdSpiFs::mountImpl(std::function<void()> unmount_fn) {
     return MountImpl::MountError(kNoMedia);
   }
 #if defined(ROO_TESTING)
-  mount_base_path_ = FakeEsp32().fs_root();
+  mount_base_path_ = internal::HostTestMountPath(mountPoint());
 #else
-  mount_base_path_.clear();
+  mount_base_path_ = mountPoint();
 #endif
-  mount_base_path_.append(mountPoint());
 
   esp_err_t ret;
 
@@ -93,7 +92,8 @@ void SdSpiFs::unmountImpl() {
 
 Filesystem::MediaPresence SdSpiFs::checkMediaPresence() {
 #if defined(ROO_TESTING)
-  return kMediaPresenceUnknown;
+  return internal::HostTestMountPointExists(mountPoint()) ? kMediaPresent
+                                                          : kMediaAbsent;
 #else
   if (card_ != nullptr) {
     // Already mounted — send CMD58 (READ_OCR) through the mounted SDSPI

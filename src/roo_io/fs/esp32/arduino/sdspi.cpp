@@ -1,5 +1,11 @@
 #include "roo_io/fs/esp32/arduino/sdspi.h"
 
+#if defined(ROO_TESTING)
+
+#include "roo_io/fs/esp32/internal/testing_media_presence.h"
+
+#endif
+
 #if (defined ESP32 && defined ARDUINO)
 
 #include "FS.h"
@@ -22,6 +28,11 @@ MountImpl::MountResult ArduinoSdSpiFs::mountImpl(
   if (checkMediaPresence() == kMediaAbsent) {
     return MountImpl::MountError(kNoMedia);
   }
+#if defined(ROO_TESTING)
+  std::string mount_base_path = internal::HostTestMountPath(mountPoint());
+  return MountImpl::Mounted(std::unique_ptr<MountImpl>(
+      new PosixMountImpl(mount_base_path.c_str(), readOnly(), unmount_fn)));
+#else
   pdrv_ = sdcard_init(cs_pin_, spi_, frequency());
   if (pdrv_ == 0xFF) {
     return MountImpl::MountError(kGenericMountError);
@@ -35,6 +46,7 @@ MountImpl::MountResult ArduinoSdSpiFs::mountImpl(
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
       new PosixMountImpl(mountPoint(), readOnly(), unmount_fn)));
+#endif
 }
 
 void ArduinoSdSpiFs::unmountImpl() {
@@ -47,6 +59,10 @@ void ArduinoSdSpiFs::unmountImpl() {
 }
 
 Filesystem::MediaPresence ArduinoSdSpiFs::checkMediaPresence() {
+#if defined(ROO_TESTING)
+  return internal::HostTestMountPointExists(mountPoint()) ? kMediaPresent
+                                                          : kMediaAbsent;
+#else
   if (pdrv_ != 0xFF) {
     // Drive is registered.  Use a fast direct CMD13 probe instead of
     // disk_status(), which blocks ~500 ms when the card is absent (its
@@ -58,6 +74,7 @@ Filesystem::MediaPresence ArduinoSdSpiFs::checkMediaPresence() {
   // Much faster than disk_initialize() which retries 3× with ~600 ms waits.
   return internal::SdSpiProbeCardArduino(*spi_, cs_pin_) ? kMediaPresent
                                                          : kMediaAbsent;
+#endif
 }
 
 ArduinoSdSpiFs CreateArduinoSdSpiFs() { return ArduinoSdSpiFs(); }
