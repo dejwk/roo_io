@@ -2,6 +2,8 @@
 
 #include "roo_io/uart/esp32/uart_input_stream.h"
 
+#include <limits>
+
 #include "driver/uart.h"
 
 namespace roo_io {
@@ -18,7 +20,8 @@ size_t Esp32UartInputStream::read(roo::byte* buf, size_t count) {
     int read = uart_read_bytes(port_, buf, count, 0);
     if (read > 0) return read;
     // Block to read at least one byte.
-    read = uart_read_bytes(port_, buf, 1, static_cast<uint32_t>(portMAX_DELAY));
+    read = uart_read_bytes(port_, buf, 1,
+                           std::numeric_limits<uint32_t>::max());
     if (read > 0) {
       if (count > static_cast<size_t>(read)) {
         // Opportunistically try to read some more bytes if they're available.
@@ -41,7 +44,7 @@ size_t Esp32UartInputStream::readFully(roo::byte* buf, size_t count) {
   size_t total = 0;
   while (total < count) {
     int read = uart_read_bytes(port_, buf, count,
-                               static_cast<uint32_t>(portMAX_DELAY));
+                               std::numeric_limits<uint32_t>::max());
     if (read < 0) {
       status_ = roo_io::kReadError;
       break;
