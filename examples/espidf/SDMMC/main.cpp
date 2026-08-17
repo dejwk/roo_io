@@ -1,4 +1,6 @@
-// This example shows how to use SDMMC filesystem on ESP32S3 using esp-idf.
+// This example shows how to use the SDMMC filesystem with ESP-IDF.
+
+#include <cstdio>
 
 #include "roo_io.h"
 #include "roo_io/fs/esp32/esp-idf/sdmmc.h"
@@ -16,13 +18,13 @@ auto& sd = roo_io::SDMMC;
 // directory.
 void printDir(Mount& mnt, Directory dir, int indent) {
   while (dir.read()) {
-    for (int i = 0; i < indent; i++) printf("  ");
-    printf(dir.entry().name());
+    for (int i = 0; i < indent; i++) std::printf("  ");
+    std::printf("%s", dir.entry().name());
     if (dir.entry().isDirectory()) {
-      printf("/\n");
+      std::printf("/\n");
       printDir(mnt, mnt.opendir(dir.entry().path()), indent + 1);
     } else {
-      printf("\n");
+      std::printf("\n");
     }
   }
   if (dir.failed()) {

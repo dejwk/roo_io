@@ -28,13 +28,21 @@ cc_library(
         "@roo_backport",
         "@roo_logging",
         "@roo_threads",
-    ],
+    ] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino": [
+            "@roo_testing//:arduino",
+        ],
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(
     name = "arduino_stream",
     srcs = glob(["src/roo_io/stream/arduino/**"]),
     includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
@@ -49,7 +57,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
@@ -57,22 +65,28 @@ cc_library(
     name = "arduino_fs",
     srcs = glob(["src/roo_io/fs/arduino/**"]),
     includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
 cc_library(
     name = "esp32_arduino_sdspi",
     srcs = [
-        "src/roo_io/fs/esp32/arduino/sdspi.cpp",
         "src/roo_io/fs/esp32/arduino/internal/sd_spi_probe.cpp",
+        "src/roo_io/fs/esp32/arduino/sdspi.cpp",
     ],
     includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
@@ -87,6 +101,9 @@ cc_library(
         "src/roo_io/fs/esp32/internal/sd_mmc_probe.cpp",
     ],
     includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
@@ -97,14 +114,14 @@ cc_library(
 cc_library(
     name = "esp32_idf_sdspi",
     srcs = [
-        "src/roo_io/fs/esp32/esp-idf/sdspi.cpp",
         "src/roo_io/fs/esp32/esp-idf/internal/sd_spi_probe.cpp",
+        "src/roo_io/fs/esp32/esp-idf/sdspi.cpp",
     ],
     includes = ["src"],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
@@ -118,7 +135,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
@@ -129,7 +146,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
@@ -140,7 +157,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/esp-idf-v4.4.1",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )
 
@@ -157,6 +174,9 @@ cc_library(
         "src",
     ],
     linkstatic = 1,
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         ":arduino_fs",

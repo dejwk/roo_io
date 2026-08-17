@@ -1,5 +1,21 @@
 # roo_io
 
+## ESP-IDF emulator coverage
+
+The ESP32 UART adapter has an IDF-only host test and a runnable `app_main`
+example. The SD-over-SPI and SDMMC sources also have compile-only example
+targets. Their complete ESP-IDF hardware-driver link surface is not currently
+shimmed by roo_testing, but API drift is still caught. All of these targets
+deliberately reject the Arduino profile:
+
+```sh
+bazel test --config=roo_testing_idf_esp32 //test/espidf:uart_stream_test
+bazel build --config=roo_testing_idf_esp32 \
+  //examples/espidf/UART:uart \
+  //examples/espidf/SD:sd \
+  //examples/espidf/SDMMC:sdmmc
+```
+
 Common I/O classes and routines: data encoding/decoding, file and stream abstraction, byte iterators.
 
 This library provides a unified filesystem abstraction over a variety of implementations, making it easy to write portable code for microcontrollers. Supported backend filesystems include: Arduino SD, ESP32 SDSPI (Arduino and esp-idf variants), ESP32 SDMMC (Arduino and esp-idf variants), ESP32 SPIFFS (works both with Arduino and esp-idf), as well as LittleFS.

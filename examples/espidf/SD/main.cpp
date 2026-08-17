@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "driver/spi_master.h"
 #include "roo_io.h"
 #include "roo_io/fs/esp32/esp-idf/sdspi.h"
@@ -16,13 +18,13 @@ auto& sd = roo_io::SDSPI;
 // directory.
 void printDir(Mount& mnt, Directory dir, int indent) {
   while (dir.read()) {
-    for (int i = 0; i < indent; i++) printf("  ");
-    printf(dir.entry().name());
+    for (int i = 0; i < indent; i++) std::printf("  ");
+    std::printf("%s", dir.entry().name());
     if (dir.entry().isDirectory()) {
-      printf("/\n");
+      std::printf("/\n");
       printDir(mnt, mnt.opendir(dir.entry().path()), indent + 1);
     } else {
-      printf("\n");
+      std::printf("\n");
     }
   }
   if (dir.failed()) {
