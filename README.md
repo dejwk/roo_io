@@ -37,3 +37,21 @@ Additional features:
 
 For a guided walkthrough of the filesystem, stream, iterator, and typed I/O
 layers, see [the programming guide](doc/programming_guide.md).
+
+## Host emulation
+
+Host builds support both Arduino and ESP-IDF through roo_testing 2.0. With
+Bazelisk 1.21 or newer, a plain command defaults to Arduino and prints a notice:
+
+    bazel test ...
+    bazel test ... --config=roo_testing_arduino_esp32
+    bazel test ... --config=roo_testing_idf_esp32
+    .roo_testing/bin/test_all_profiles ...
+
+The files under .roo_testing are vendored from roo_testing; follow their
+canonical-source headers when refreshing them.
+
+Arduino examples are native runnable targets in their source packages. For
+example:
+
+    bazel run //examples/Serial:Serial

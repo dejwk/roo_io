@@ -49,6 +49,12 @@ class FakeArduinoFile : public ::fs::FileImpl {
 
   ::fs::FileImplPtr openNextFile(const char* mode) override;
 
+  boolean seekDir(long position) override;
+
+  String getNextFileName(void) override;
+
+  String getNextFileName(bool* is_dir) override;
+
   void rewindDirectory(void) override { dir_->rewind(); }
 
   operator bool() override;

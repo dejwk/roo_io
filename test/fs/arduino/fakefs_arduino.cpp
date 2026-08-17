@@ -76,6 +76,26 @@ void FakeArduinoFile::close() {
   return f;
 }
 
+boolean FakeArduinoFile::seekDir(long position) {
+  if (dir_ == nullptr || position < 0) return false;
+  dir_->rewind();
+  for (long i = 0; i < position; ++i) {
+    if (!dir_->next()) return false;
+  }
+  return true;
+}
+
+String FakeArduinoFile::getNextFileName() {
+  return getNextFileName(nullptr);
+}
+
+String FakeArduinoFile::getNextFileName(bool* is_dir) {
+  if (dir_ == nullptr || !dir_->next()) return String();
+  if (is_dir != nullptr) *is_dir = dir_->entry().isDir();
+  std::string next = path_ + "/" + dir_->entry().name();
+  return String(next.c_str());
+}
+
 FakeArduinoFile::operator bool() {
   return (f_ != nullptr && f_->isOpen()) || (dir_ != nullptr && dir_->isOpen());
 }
