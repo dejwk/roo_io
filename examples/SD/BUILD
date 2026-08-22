@@ -7,5 +7,6 @@ roo_arduino_example(
     deps = [
         "//:arduino_fs",
         "//:roo_io",
+        "@roo_testing//roo_testing/microcontrollers/esp32",
     ],
 )

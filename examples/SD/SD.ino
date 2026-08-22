@@ -1,3 +1,7 @@
+#ifdef ROO_TESTING
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#endif
+
 #include "SPI.h"
 #include "roo_io.h"
 #include "roo_io/fs/arduino/sdfs.h"
@@ -13,6 +17,13 @@ auto& sd = roo_io::SD;
 
 void setup() {
   Serial.begin(115200);
+
+#ifdef ROO_TESTING
+  // The emulated SD card is backed by this local directory. Change the path to
+  // expose a different directory; mounting at "/" makes it the card root.
+  FakeEsp32().set_fs_root("examples");
+  sd.setMountPoint("/");
+#endif
 
   // Initialize the SPI bus.
   SPI.begin(kPinSpiSck, kPinSpiMiso, kPinSpiMosi);

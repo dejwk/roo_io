@@ -7,5 +7,6 @@ roo_arduino_example(
     deps = [
         "//:esp32_arduino_sdmmc",
         "//:roo_io",
+        "@roo_testing//roo_testing/microcontrollers/esp32",
     ],
 )

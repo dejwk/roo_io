@@ -1,15 +1,13 @@
-load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@roo_testing//roo_testing/emulation:esp_idf.bzl", "roo_esp_idf_example")
 
-cc_library(
-    name = "sd",
+roo_esp_idf_example(
+    name = "SD",
     srcs = ["main.cpp"],
-    target_compatible_with = select({
-        "@roo_testing//roo_testing/platforms:is_idf": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
+    visibility = ["//visibility:public"],
     deps = [
         "//:esp32_idf_sdspi",
         "@roo_testing//roo_testing/frameworks/esp-idf",
+        "@roo_testing//roo_testing/microcontrollers/esp32",
         "@roo_threads",
     ],
 )

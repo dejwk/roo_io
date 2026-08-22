@@ -1,14 +1,12 @@
-load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@roo_testing//roo_testing/emulation:esp_idf.bzl", "roo_esp_idf_example")
 
-cc_library(
-    name = "sdmmc",
+roo_esp_idf_example(
+    name = "SDMMC",
     srcs = ["main.cpp"],
-    target_compatible_with = select({
-        "@roo_testing//roo_testing/platforms:is_idf": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
+    visibility = ["//visibility:public"],
     deps = [
         "//:esp32_idf_sdmmc",
+        "@roo_testing//roo_testing/microcontrollers/esp32",
         "@roo_threads",
     ],
 )

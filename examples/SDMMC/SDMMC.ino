@@ -1,5 +1,9 @@
 // This example shows how to use SDMMC filesystem on ESP32S3 using Arduino.
 
+#ifdef ROO_TESTING
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#endif
+
 #include "roo_io.h"
 #include "roo_io/fs/esp32/arduino/sdmmc.h"
 
@@ -13,6 +17,13 @@ auto& sd = roo_io::SD_MMC;
 
 void setup() {
   Serial.begin(115200);
+
+#ifdef ROO_TESTING
+  // The emulated SD card is backed by this local directory. Change the path to
+  // expose a different directory; mounting at "/" makes it the card root.
+  FakeEsp32().set_fs_root("examples");
+  sd.setMountPoint("/");
+#endif
 
   // Configure the SD filesystem.
   sd.setPins(kPinMmcClk, kPinMmcCmd, kPinMmcD0);

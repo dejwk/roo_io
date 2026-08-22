@@ -1,15 +1,11 @@
-load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@roo_testing//roo_testing/emulation:esp_idf.bzl", "roo_esp_idf_example")
 
-cc_binary(
-    name = "uart",
+roo_esp_idf_example(
+    name = "UART",
     srcs = ["main.cpp"],
-    target_compatible_with = select({
-        "@roo_testing//roo_testing/platforms:is_idf": [],
-        "//conditions:default": ["@platforms//:incompatible"],
-    }),
+    visibility = ["//visibility:public"],
     deps = [
         "//:esp32_uart",
-        "@roo_testing//:esp_idf_main",
         "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )

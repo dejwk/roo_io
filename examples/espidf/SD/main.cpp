@@ -1,5 +1,9 @@
 #include <cstdio>
 
+#ifdef ROO_TESTING
+#include "roo_testing/microcontrollers/esp32/fake_esp32.h"
+#endif
+
 #include "driver/spi_master.h"
 #include "roo_io.h"
 #include "roo_io/fs/esp32/esp-idf/sdspi.h"
@@ -33,6 +37,13 @@ void printDir(Mount& mnt, Directory dir, int indent) {
 }
 
 extern "C" void app_main() {
+#ifdef ROO_TESTING
+  // The emulated SD card is backed by this local directory. Change the path to
+  // expose a different directory; mounting at "/" makes it the card root.
+  FakeEsp32().set_fs_root("examples");
+  sd.setMountPoint("/");
+#endif
+
   // Initialize the SPI bus.
   spi_bus_config_t buscfg = {.mosi_io_num = kPinSpiMosi,
                              .miso_io_num = kPinSpiMiso,
