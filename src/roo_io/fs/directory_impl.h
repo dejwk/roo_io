@@ -17,6 +17,9 @@ class DirectoryImpl {
   virtual bool close() = 0;
 
   virtual void rewind() = 0;
+
+  // Reads the next user-visible entry. Implementations must omit the special
+  // self and parent entries named `.` and `..`.
   virtual bool read(Directory::Entry& entry) = 0;
 
  protected:

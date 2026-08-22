@@ -30,19 +30,23 @@ void PosixDirectoryImpl::rewind() {
 
 bool PosixDirectoryImpl::read(Directory::Entry& entry) {
   if (status_ != kOk) return false;
-  next_ = ::readdir(dir_);
-  if (next_ == nullptr) {
-    status_ = kEndOfStream;
-    return false;
+  while ((next_ = ::readdir(dir_)) != nullptr) {
+    const char* name = next_->d_name;
+    if (name[0] == '.' &&
+        (name[1] == '\0' || (name[1] == '.' && name[2] == '\0'))) {
+      continue;
+    }
+    file_ = path_;
+    if (file_.empty() || file_.back() != '/') {
+      file_ += '/';
+    }
+    size_t path_offset = file_.size();
+    file_.append(name);
+    setEntry(entry, file_.c_str(), path_offset, next_->d_type == DT_DIR);
+    return true;
   }
-  file_ = path_;
-  if (file_.empty() || file_.back() != '/') {
-    file_ += '/';
-  }
-  size_t path_offset = file_.size();
-  file_.append(next_->d_name);
-  setEntry(entry, file_.c_str(), path_offset, next_->d_type == DT_DIR);
-  return true;
+  status_ = kEndOfStream;
+  return false;
 }
 
 }  // namespace roo_io

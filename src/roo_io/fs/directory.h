@@ -97,6 +97,10 @@ class Directory {
 
   /// Advances to the next directory entry.
   ///
+  /// Entries named `.` and `..` are always omitted, even when the underlying
+  /// filesystem exposes them. They therefore never become the current
+  /// `entry()` and do not count as successful reads.
+  ///
   /// Returns `true` only when a new entry was read. A `false` result means
   /// end-of-directory or an error; inspect `status()` to distinguish the two.
   /// A successful call invalidates the previously returned `entry()`.
