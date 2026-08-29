@@ -54,7 +54,7 @@ class Directory {
   Directory(Status status = kClosed);
 
   /// Destroys the directory object, closing it when needed.
-  ~Directory() = default;
+  ~Directory();
   /// Move-constructs the directory handle.
   Directory(Directory&& other) = default;
 

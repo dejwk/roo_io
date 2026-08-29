@@ -6,11 +6,13 @@ namespace roo_io {
 
 Directory::Directory(Status status) : status_(status) {}
 
+Directory::~Directory() { close(); }
+
 void Directory::close() {
-  if (status_ == kClosed) return;
-  if (status_ != kOk && status_ != kEndOfStream) return;
+  if (status_ == kClosed || dir_ == nullptr) return;
+  Status status_before_close = status_;
   dir_->close();
-  if (isOpen()) {
+  if (status_before_close == kOk || status_before_close == kEndOfStream) {
     status_ = dir_->status();
   }
 }
