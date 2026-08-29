@@ -149,9 +149,9 @@ TEST(RingPipe, StreamsDataTransfer) {
     total_read += read;
     roo::this_thread::yield();
   }
+  writer.join();
   EXPECT_EQ(input_stream.status(), kEndOfStream);
   input_stream.close();
-  writer.join();
   EXPECT_EQ(total_read, data_size);
   for (size_t i = 0; i < data_size; ++i) {
     EXPECT_EQ(in[i], byte(i & 0xFF));
