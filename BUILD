@@ -17,6 +17,7 @@ cc_library(
             "src/roo_io/fs/esp32/spiffs.cpp",
             "src/roo_io/stream/arduino/**/*.cpp",
             "src/roo_io/uart/esp32/**/*.cpp",
+            "src/roo_io/i2c/**",
             "test/**",
         ],
     ),
@@ -168,7 +169,7 @@ cc_library(
             "src/**/*.cpp",
             "src/**/*.h",
         ],
-        exclude = ["test/**"],
+        exclude = ["test/**", "src/roo_io/i2c/**"],
     ),
     includes = [
         "src",
@@ -183,4 +184,38 @@ cc_library(
         ":roo_io",
         "@roo_testing//:arduino_gtest_main",
     ],
+)
+
+# Headers and sources separately exposed for scripted transport-boundary tests.
+cc_library(
+    name = "i2c_headers",
+    hdrs = glob(["src/roo_io/i2c/**/*.h"]),
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+    deps = ["@roo_backport"],
+)
+
+filegroup(
+    name = "arduino_i2c_sources",
+    srcs = ["src/roo_io/i2c/arduino/i2c.cpp"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "i2c",
+    srcs = select({
+        "@roo_testing//roo_testing/platforms:is_arduino": [":arduino_i2c_sources"],
+        "@roo_testing//roo_testing/platforms:is_idf": ["src/roo_io/i2c/esp32/i2c.cpp"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [":i2c_headers"] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino": [
+            "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/Wire",
+        ],
+        "@roo_testing//roo_testing/platforms:is_idf": [
+            "@roo_testing//roo_testing/frameworks/esp-idf",
+        ],
+        "//conditions:default": [],
+    }),
 )

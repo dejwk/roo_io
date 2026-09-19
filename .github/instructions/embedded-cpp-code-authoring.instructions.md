@@ -20,6 +20,14 @@ policy on top of this baseline.
 
 ## Core Conventions
 
+- Use braces for every `if`, `else`, `for`, `while`, and `do` body, including
+  single-statement bodies. Format C++ with the Google baseline; when using
+  clang-format 15 or newer, enable `InsertBraces: true`.
+- Do not rely on implicit or contextual conversions to `bool`. Compare pointers
+  and smart pointers explicitly with `nullptr`, numeric values and counts with
+  zero, and bitmasks with zero. This applies to conditions, logical operators,
+  and conditional (`?:`) expressions. Boolean values and predicates may be used
+  directly; do not add redundant `== true` or `== false` comparisons.
 - Follow Google-style C++, except instance methods use `camelCase()`.
   Trivial accessors and mutators (one-line field getters/setters and
   STL-mimicking container methods) may keep `snake_case()` when that reads
