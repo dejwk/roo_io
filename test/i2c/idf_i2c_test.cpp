@@ -21,12 +21,37 @@ void* operator new(size_t size) {
   std::abort();
 }
 
+// GoogleTest's stable_sort uses nothrow new. Keep it on the same malloc/free
+// path as ordinary new/delete so ASan sees matching allocation families.
+void* operator new(size_t size, const std::nothrow_t&) noexcept {
+  ++allocation_count;
+  return std::malloc(size == 0 ? 1 : size);
+}
+
+void operator delete(void* memory, const std::nothrow_t&) noexcept {
+  std::free(memory);
+}
+
 void operator delete(void* memory) noexcept { std::free(memory); }
 
 void operator delete(void* memory, size_t) noexcept { std::free(memory); }
 
 namespace roo_io {
 namespace {
+// Verifies nothrow allocations are counted and support ordinary deletion,
+// including the zero-size allocation case.
+TEST(AllocationCounterTest, NothrowAllocationsMatchOrdinaryDelete) {
+  const size_t before = allocation_count;
+  void* memory = ::operator new(sizeof(int), std::nothrow);
+  void* empty = ::operator new(0, std::nothrow);
+  const size_t after = allocation_count;
+  EXPECT_NE(nullptr, memory);
+  EXPECT_NE(nullptr, empty);
+  EXPECT_EQ(before + 2, after);
+  ::operator delete(memory, sizeof(int));
+  ::operator delete(empty);
+}
+
 /// Resets the scripted IDF boundary between independent lifecycle tests.
 class I2cTest : public testing::Test {
   void SetUp() override { i2c_test::state() = i2c_test::State(); }
