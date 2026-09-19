@@ -1,3 +1,14 @@
+# roo_io 2.3.0
+
+- Added a unified I2C API for Arduino and native ESP-IDF, supporting 7-bit device addressing, reads, writes, and repeated-start transactions.
+- Added ESP-IDF bus ownership management, existing-bus support, and configurable device timeouts.
+- Added I2C documentation, Bazel targets, and ESP-IDF unit and host-emulation tests.
+- Updated dependencies to `roo_backport` 1.2.4, `roo_logging` 1.5.10, and `roo_threads` 1.2.8, including PlatformIO minimum versions.
+- Updated Bazel and CI dependencies to `rules_cc` 0.2.25 and `roo_testing` 2.1.2; added GoogleTest 1.18.0.bcr.1.
+- Added consolidated release history.
+
+---
+
 # [roo_io 2.2.7](https://github.com/dejwk/roo_io/releases/tag/2.2.7)
 
 Published 2026-08-29.
