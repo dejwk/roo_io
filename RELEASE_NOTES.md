@@ -1,3 +1,11 @@
+# roo_io 2.3.1
+
+- Updated filesystem `rename()` to follow POSIX replacement semantics: files replace files, and directories replace empty directories.
+- Improved rename error reporting and handling across POSIX and Arduino filesystem backends.
+- Updated the Bazel `roo_testing` dependency to 2.2.0.
+
+---
+
 # roo_io 2.3.0
 
 - Added a unified I2C API for Arduino and native ESP-IDF, supporting 7-bit device addressing, reads, writes, and repeated-start transactions.
