@@ -24,12 +24,12 @@ enum Status {
   // Requested file, directory, or its path component, does not exist.
   kNotFound,
 
-  // A create or rename operation was requested, while the destination already
-  // exists and it is a file.
+  // A create operation was requested, while the destination already exists
+  // and it is a file.
   kFileExists,
 
-  // A create or rename operation was requested, while the destination already
-  // exists and it is a directory.
+  // A create operation was requested, while the destination already exists
+  // and it is a directory.
   kDirectoryExists,
 
   // A component used as a directory in the path is not, in fact, a directory.

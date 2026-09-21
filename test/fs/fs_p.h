@@ -193,6 +193,46 @@ TYPED_TEST_P(FsTest, SuccessfulMoveDir) {
   EXPECT_EQ(kNotFound, this->fake().stat("/a/b/c/foo.txt").status);
 }
 
+TYPED_TEST_P(FsTest, SuccessfulRenameReplacingFile) {
+  this->CreateTextFile("/a/b/source.txt", "source");
+  this->CreateTextFile("/a/b/destination.txt", "destination");
+
+  EXPECT_EQ(kOk,
+            this->mount().rename("/a/b/source.txt", "/a/b/destination.txt"));
+  EXPECT_EQ("source",
+            fakefs::ReadTextFile(this->fake(), "/a/b/destination.txt"));
+  EXPECT_EQ(kNotFound, this->fake().stat("/a/b/source.txt").status);
+}
+
+TYPED_TEST_P(FsTest, SuccessfulMoveReplacingFile) {
+  this->CreateTextFile("/a/b/source.txt", "source");
+  this->CreateTextFile("/a/c/destination.txt", "destination");
+
+  EXPECT_EQ(kOk,
+            this->mount().rename("/a/b/source.txt", "/a/c/destination.txt"));
+  EXPECT_EQ("source",
+            fakefs::ReadTextFile(this->fake(), "/a/c/destination.txt"));
+  EXPECT_EQ(kNotFound, this->fake().stat("/a/b/source.txt").status);
+}
+
+TYPED_TEST_P(FsTest, SuccessfulRenameReplacingEmptyDirectory) {
+  this->CreateTextFile("/a/source/file.txt", "source");
+  this->RecursiveMkDir("/a/destination");
+
+  EXPECT_EQ(kOk, this->mount().rename("/a/source", "/a/destination"));
+  EXPECT_EQ("source",
+            fakefs::ReadTextFile(this->fake(), "/a/destination/file.txt"));
+  EXPECT_EQ(kNotFound, this->fake().stat("/a/source").status);
+}
+
+TYPED_TEST_P(FsTest, SuccessfulRenameToSamePath) {
+  this->CreateTextFile("/a/b/file.txt", "contents");
+
+  EXPECT_EQ(kOk, this->mount().rename("/a/b/file.txt", "/a/b/file.txt"));
+  EXPECT_EQ("contents", fakefs::ReadTextFile(this->fake(), "/a/b/file.txt"));
+  EXPECT_EQ(kOk, this->mount().rename("/a/b", "/a/b"));
+}
+
 TYPED_TEST_P(FsTest, UnsuccessfulRename) {
   this->CreateTextFile("/a/b/c/foo.txt", "foo");
   this->CreateTextFile("/a/b/d/bar.txt", "bar");
@@ -215,12 +255,12 @@ TYPED_TEST_P(FsTest, UnsuccessfulRename) {
 
   EXPECT_EQ(kNotDirectory, this->mount().rename("/a/b/c", "/a/b/d/bar.txt/x"));
 
-  EXPECT_EQ(kFileExists, this->mount().rename("/a/b/c", "/a/b/d/bar.txt"));
-  EXPECT_EQ(kDirectoryExists, this->mount().rename("/a/b/c", "/a/b/d"));
-
-  EXPECT_EQ(kFileExists,
-            this->mount().rename("/a/b/d/bar.txt", "/a/b/d/bar.txt"));
-  EXPECT_EQ(kDirectoryExists, this->mount().rename("/a/b", "/a/b"));
+  EXPECT_EQ(kNotDirectory,
+            this->mount().rename("/a/b/c", "/a/b/d/bar.txt"));
+  EXPECT_EQ(kDirectoryNotEmpty,
+            this->mount().rename("/a/b/c", "/a/b/d"));
+  EXPECT_EQ(kNotFile,
+            this->mount().rename("/a/b/d/bar.txt", "/a/b/c"));
 }
 
 TYPED_TEST_P(FsTest, ListEmptyDir) {
@@ -439,7 +479,11 @@ REGISTER_TYPED_TEST_SUITE_P(FsTest, StatExistingDir, StatNonExistentDir,
                             SuccessfulRemove, UnsuccessfulRemove,
                             SuccessfulMkdir, UnsuccessfulMkdir, SuccessfulRmdir,
                             UnsuccessfulRmdir, SuccessfulRename, SuccessfulMove,
-                            SuccessfulMoveDir, UnsuccessfulRename, ListEmptyDir,
+                            SuccessfulMoveDir, SuccessfulRenameReplacingFile,
+                            SuccessfulMoveReplacingFile,
+                            SuccessfulRenameReplacingEmptyDirectory,
+                            SuccessfulRenameToSamePath, UnsuccessfulRename,
+                            ListEmptyDir,
                             ListOneElemDir, ListDir, SuccessfullyReadFile,
                             UnsuccessfulFopen, SuccessfulCreateFile,
                             SuccessfulOverwriteFile, SuccessfulAppendToFile,

@@ -106,6 +106,9 @@ bool FakeArduinoFsImpl::exists(const char* path) {
 }
 
 bool FakeArduinoFsImpl::rename(const char* pathFrom, const char* pathTo) {
+  // Model Arduino backends that cannot replace an existing destination in
+  // their rename primitive. ArduinoMountImpl must provide the fallback.
+  if (strcmp(pathFrom, pathTo) != 0 && exists(pathTo)) return false;
   return fs_.rename(pathFrom, pathTo) == kOk;
 }
 

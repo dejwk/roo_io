@@ -293,20 +293,28 @@ Status FakeFs::rename(const char* pathFrom, const char* pathTo) {
   if (src == nullptr) return kNotFound;
 
   Entry* conflicting = resolvedTo.parent->dir().find(resolvedTo.basename);
+  if (conflicting == src) return kOk;
+  if (resolvedTo.parent->isDescendantOf(*src)) return kInvalidPath;
+  if (conflicting != nullptr && src->isFile() && conflicting->isDir()) {
+    return kNotFile;
+  }
+  if (conflicting != nullptr && src->isDir() && conflicting->isFile()) {
+    return kNotDirectory;
+  }
+  if (conflicting != nullptr && conflicting->isDir() &&
+      conflicting->dir().entryCount() != 0) {
+    return kDirectoryNotEmpty;
+  }
   if (conflicting != nullptr) {
-    if (conflicting->isDir()) {
-      return kDirectoryExists;
-    } else {
-      return kFileExists;
-    }
+    Status status = conflicting->isDir()
+                        ? resolvedTo.parent->dir().rmdir(resolvedTo.basename)
+                        : resolvedTo.parent->dir().rm(resolvedTo.basename);
+    CHECK(status == kOk);
   }
   if (resolvedTo.parent == resolvedFrom.parent) {
     resolvedFrom.parent->dir().rename(resolvedFrom.basename,
                                       resolvedTo.basename);
     return kOk;
-  }
-  if (resolvedTo.parent->isDescendantOf(*src)) {
-    return kInvalidPath;
   }
 
   resolvedTo.parent->dir().attach(

@@ -128,11 +128,25 @@ Status PosixMountImpl::rename(const char* pathFrom, const char* pathTo) {
   switch (errno) {
     case ENOENT:
       return kNotFound;
-    case EEXIST: {
-      return ResolveExistsError(full_dst_path.get());
-    }
+    case EEXIST:
+    case ENOTEMPTY:
+      return kDirectoryNotEmpty;
+    case EISDIR:
+      return kNotFile;
+    case ENOTDIR:
+      return kNotDirectory;
     case EINVAL:
+    case ENAMETOOLONG:
       return kInvalidPath;
+    case EACCES:
+    case EPERM:
+      return kAccessDenied;
+    case EROFS:
+      return kReadOnlyFilesystem;
+    case ENOMEM:
+      return kOutOfMemory;
+    case ENOSPC:
+      return kNoSpaceLeftOnDevice;
     default:
       return kUnknownIOError;
   }

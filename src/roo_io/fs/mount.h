@@ -102,6 +102,11 @@ class Mount {
 
   /// Renames or moves an existing file or directory.
   ///
+  /// If `pathTo` exists, it is replaced. Files may replace files, and
+  /// directories may replace empty directories. The replacement is atomic
+  /// when the backend supports it; other backends may remove the destination
+  /// before renaming the source.
+  ///
   /// Returns one of:
   /// - `kOk`, if the source was successfully moved.
   /// - `kInvalidPath`, if either path is syntactically invalid, or if
@@ -110,7 +115,11 @@ class Mount {
   ///   component of `pathTo` does not exist.
   /// - `kNotDirectory`, or permissibly `kNotFound`, if an intermediate path
   ///   component of either path exists but is not a directory.
-  /// - `kFileExists` or `kDirectoryExists`, if the destination already exists.
+  /// - `kNotFile`, if the source is a file and the destination is a directory.
+  /// - `kNotDirectory`, if the source is a directory and the destination is a
+  ///   file.
+  /// - `kDirectoryNotEmpty`, if the source and destination are directories and
+  ///   the destination is not empty.
   /// - `kAccessDenied`, if permissions are insufficient.
   /// - `kReadOnlyFilesystem`, if the mount is read-only.
   /// - `kOutOfMemory`, `kNoSpaceLeftOnDevice`, or `kUnknownIOError`, if the

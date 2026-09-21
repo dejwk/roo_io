@@ -68,18 +68,43 @@ Status ArduinoMountImpl::remove(const char* path) {
 }
 
 Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
+  if (pathFrom == nullptr || pathFrom[0] != '/' || pathTo == nullptr ||
+      pathTo[0] != '/') {
+    return kInvalidPath;
+  }
+  if (!active_) return kNotMounted;
   if (read_only_) return kReadOnlyFilesystem;
   if (fs_.rename(pathFrom, pathTo)) return kOk;
   Stat src = stat(pathFrom);
   if (!src.exists()) {
     return src.status();
   }
-  Stat dst = stat(pathTo);
-  if (dst.exists()) return dst.isDirectory() ? kDirectoryExists : kFileExists;
-  if (dst.status() != kNotFound) return dst.status();
-  if (strncmp(pathFrom, pathTo, strlen(pathFrom)) == 0) {
+  size_t from_len = strlen(pathFrom);
+  while (from_len > 1 && pathFrom[from_len - 1] == '/') --from_len;
+  size_t to_len = strlen(pathTo);
+  while (to_len > 1 && pathTo[to_len - 1] == '/') --to_len;
+  if (from_len == to_len && strncmp(pathFrom, pathTo, from_len) == 0) {
+    return kOk;
+  }
+  if (strncmp(pathFrom, pathTo, from_len) == 0 &&
+      (from_len == 1 || pathTo[from_len] == '/')) {
     return kInvalidPath;
   }
+  Stat dst = stat(pathTo);
+  if (dst.exists()) {
+    if (src.isFile() && dst.isDirectory()) return kNotFile;
+    if (src.isDirectory() && dst.isFile()) return kNotDirectory;
+    if (dst.isDirectory()) {
+      fs::File dir = fs_.open(pathTo, "r");
+      if (dir && dir.openNextFile()) return kDirectoryNotEmpty;
+    }
+    // Some Arduino backends do not replace an existing entry themselves.
+    // Fall back to a non-atomic remove-and-rename sequence.
+    bool removed = dst.isDirectory() ? fs_.rmdir(pathTo) : fs_.remove(pathTo);
+    if (!removed) return kUnknownIOError;
+    return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
+  }
+  if (dst.status() != kNotFound) return dst.status();
   // Check if the destination directory exists.
   std::unique_ptr<char[]> dup(new char[strlen(pathTo) + 1]);
   strcpy(dup.get(), pathTo);
