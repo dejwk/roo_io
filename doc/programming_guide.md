@@ -581,6 +581,12 @@ only its length prefix is consumed. Use `ReadCStringTruncated`,
 `ReadStringTruncated`, `readCStringTruncated`, or `readStringTruncated` only
 when retaining a prefix while consuming the entire field is intentional.
 
+For signed values that should use compact variable-length encoding, use the
+explicit ZigZag helpers (`ReadZigZag32`, `ReadZigZag64`, `WriteZigZag32`, and
+`WriteZigZag64`) or their typed-reader and writer counterparts. ZigZag is a
+signed-integer transform; it is not the same as casting a negative value to an
+unsigned integer before writing a varint.
+
 When the bytes are already contiguous in memory, there is an even lower-friction
 option: the direct memory helpers in `roo_io/memory/load.h` and
 `roo_io/memory/store.h`. Those functions load or store fixed-width values

@@ -254,6 +254,23 @@ TEST(Write, VarU64_150) {
   EXPECT_THAT(data, ElementsAre(0x96, 0x01, 0, 0, 0, 0, 0, 0));
 }
 
+// Verifies negative one uses the ZigZag varint golden encoding.
+TEST(Write, ZigZagNegativeOne) {
+  uint8_t data[] = {0, 0, 0, 0};
+  MemoryOutputIterator iterator(reinterpret_cast<byte*>(data),
+                                reinterpret_cast<byte*>(data) + 4);
+  WriteZigZag32(iterator, -1);
+  EXPECT_THAT(data, ElementsAre(0x01, 0, 0, 0));
+}
+
+TEST(Write, VarU32) {
+  uint8_t data[] = {0, 0, 0, 0};
+  MemoryOutputIterator iterator(reinterpret_cast<byte*>(data),
+                                reinterpret_cast<byte*>(data) + 4);
+  WriteVarU32(iterator, 150);
+  EXPECT_THAT(data, ElementsAre(0x96, 0x01, 0, 0));
+}
+
 struct DrippingIterator {
   byte* data;
   byte* end;

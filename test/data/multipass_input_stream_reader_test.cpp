@@ -172,6 +172,14 @@ TEST(Reader, VarU64FailureClassification) {
   EXPECT_EQ(kEndOfStream, truncated_reader.status());
 }
 
+// Verifies typed ZigZag decoding handles signed values.
+TEST(Reader, ZigZag64) {
+  const byte data[] = {byte{0x01}};
+  MultipassInputStreamReader reader = NewReader(data, data + 1);
+  EXPECT_EQ(-1, reader.readZigZag64());
+  EXPECT_TRUE(reader.ok());
+}
+
 TEST(Reader, ByteArray) {
   const byte* in = (const byte*)"ABCDEFGH";
   MultipassInputStreamReader reader = NewReader(in, in + 8);

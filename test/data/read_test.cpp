@@ -284,6 +284,51 @@ TEST(Read, CheckedVarU64RejectsTruncatedPrefix) {
   EXPECT_EQ(kEndOfStream, input.status());
 }
 
+// Verifies ZigZag transforms round-trip signed boundary values without signed
+// overflow or an arithmetic right shift.
+TEST(Read, ZigZagTransforms) {
+  EXPECT_EQ(0U, ZigZagEncode32(0));
+  EXPECT_EQ(1U, ZigZagEncode32(-1));
+  EXPECT_EQ(2U, ZigZagEncode32(1));
+  EXPECT_EQ(std::numeric_limits<uint32_t>::max(),
+            ZigZagEncode32(std::numeric_limits<int32_t>::min()));
+  EXPECT_EQ(std::numeric_limits<int64_t>::min(),
+            ZigZagDecode64(std::numeric_limits<uint64_t>::max()));
+  EXPECT_EQ(std::numeric_limits<int64_t>::max(),
+            ZigZagDecode64(std::numeric_limits<uint64_t>::max() - 1));
+}
+
+// Verifies checked ZigZag reads preserve output on malformed narrower values.
+TEST(Read, ZigZagReads) {
+  const byte encoded[] = {byte{0x01}, byte{0x02}};
+  MemoryIterator input(encoded, encoded + 2);
+  int32_t value32 = 0;
+  EXPECT_TRUE(ReadZigZag32(input, value32));
+  EXPECT_EQ(-1, value32);
+  int64_t value64 = 0;
+  EXPECT_TRUE(ReadZigZag64(input, value64));
+  EXPECT_EQ(1, value64);
+
+  const byte overflow[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                           byte{0x10}};
+  MemoryIterator overflow_input(overflow, overflow + 5);
+  value32 = 99;
+  EXPECT_FALSE(ReadZigZag32(overflow_input, value32));
+  EXPECT_EQ(99, value32);
+  EXPECT_EQ(kOk, overflow_input.status());
+}
+
+// Verifies narrower unsigned varints reject high bits without changing output.
+TEST(Read, VarU32RejectsOverflow) {
+  const byte overflow[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                           byte{0x10}};
+  MemoryIterator input(overflow, overflow + 5);
+  uint32_t value = 99;
+  EXPECT_FALSE(ReadVarU32(input, value));
+  EXPECT_EQ(99U, value);
+  EXPECT_EQ(kOk, input.status());
+}
+
 struct DrippingIterator {
   const char* data;
   const char* end;

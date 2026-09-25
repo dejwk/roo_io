@@ -177,6 +177,12 @@ class OutputStreamWriter {
 
   void writeVarU64(uint64_t data) { return WriteVarU64(out_, data); }
 
+  /// Writes a signed 32-bit integer using ZigZag and unsigned varint encoding.
+  void writeZigZag32(int32_t value) { return WriteZigZag32(out_, value); }
+
+  /// Writes a signed 64-bit integer using ZigZag and unsigned varint encoding.
+  void writeZigZag64(int64_t value) { return WriteZigZag64(out_, value); }
+
  private:
   roo_io::OutputStream* os_;
   bool owned_;

@@ -9,6 +9,7 @@
 #include "roo_io/core/output_iterator.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/data/ieee754.h"
+#include "roo_io/data/zigzag.h"
 
 namespace roo_io {
 
@@ -225,6 +226,24 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
   }
   buffer[size - 1] &= byte{0x7F};
   out.write(buffer, size);
+}
+
+/// Writes an unsigned 32-bit integer using protobuf-style varint encoding.
+template <typename OutputIterator>
+void WriteVarU32(OutputIterator& out, uint32_t value) {
+  WriteVarU64(out, value);
+}
+
+/// Writes a signed 32-bit integer using ZigZag and unsigned varint encoding.
+template <typename OutputIterator>
+void WriteZigZag32(OutputIterator& out, int32_t value) {
+  WriteVarU32(out, ZigZagEncode32(value));
+}
+
+/// Writes a signed 64-bit integer using ZigZag and unsigned varint encoding.
+template <typename OutputIterator>
+void WriteZigZag64(OutputIterator& out, int64_t value) {
+  WriteVarU64(out, ZigZagEncode64(value));
 }
 
 /// Writes `data` using roo_io's portable string encoding.

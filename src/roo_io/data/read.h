@@ -9,6 +9,7 @@
 #include "roo_io/core/input_iterator.h"
 #include "roo_io/data/byte_order.h"
 #include "roo_io/data/ieee754.h"
+#include "roo_io/data/zigzag.h"
 #include "roo_io/memory/memory_input_iterator.h"
 
 namespace roo_io {
@@ -251,6 +252,37 @@ template <typename InputIterator>
   uint64_t value = 0;
   ReadVarU64(in, value);
   return value;
+}
+
+/// Reads a checked protobuf-style variable-length unsigned 32-bit integer.
+///
+/// Returns false without changing `value` when the input cannot be decoded as
+/// a representable unsigned 32-bit value.
+template <typename InputIterator>
+bool ReadVarU32(InputIterator& in, uint32_t& value) {
+  uint64_t decoded = 0;
+  if (!ReadVarU64(in, decoded)) return false;
+  if (decoded > std::numeric_limits<uint32_t>::max()) return false;
+  value = static_cast<uint32_t>(decoded);
+  return true;
+}
+
+/// Reads a checked ZigZag-encoded signed 32-bit integer from `in`.
+template <typename InputIterator>
+bool ReadZigZag32(InputIterator& in, int32_t& value) {
+  uint32_t encoded = 0;
+  if (!ReadVarU32(in, encoded)) return false;
+  value = ZigZagDecode32(encoded);
+  return true;
+}
+
+/// Reads a checked ZigZag-encoded signed 64-bit integer from `in`.
+template <typename InputIterator>
+bool ReadZigZag64(InputIterator& in, int64_t& value) {
+  uint64_t encoded = 0;
+  if (!ReadVarU64(in, encoded)) return false;
+  value = ZigZagDecode64(encoded);
+  return true;
 }
 
 /// Byte-order-specific integer reader helper.

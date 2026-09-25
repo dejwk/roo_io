@@ -165,6 +165,17 @@ TEST(Reader, VarU64MalformedLatchesDataError) {
   EXPECT_EQ(0, reader.readU8());
 }
 
+// Verifies a ZigZag32 value outside the signed 32-bit encoding latches a data
+// error while preserving the iterator's transport status.
+TEST(Reader, ZigZag32OverflowLatchesDataError) {
+  const byte data[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                       byte{0x10}};
+  InputStreamReader reader = NewReader(data, data + 5);
+  reader.readZigZag32();
+  EXPECT_TRUE(reader.hasDataError());
+  EXPECT_EQ(kOk, reader.status());
+}
+
 TEST(Reader, ByteArray) {
   const byte* in = (const byte*)"ABCDEFGH";
   InputStreamReader reader = NewReader(in, in + 8);

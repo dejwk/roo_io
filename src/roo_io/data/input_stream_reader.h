@@ -247,6 +247,26 @@ class InputStreamReader {
     return value;
   }
 
+  /// Reads a checked ZigZag-encoded signed 32-bit integer.
+  int32_t readZigZag32() {
+    if (data_error_) return 0;
+    int32_t value = 0;
+    if (!ReadZigZag32(in_, value) && in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return value;
+  }
+
+  /// Reads a checked ZigZag-encoded signed 64-bit integer.
+  int64_t readZigZag64() {
+    if (data_error_) return 0;
+    int64_t value = 0;
+    if (!ReadZigZag64(in_, value) && in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return value;
+  }
+
  private:
   roo_io::InputStream* is_;
   bool owned_;
