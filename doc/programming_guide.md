@@ -214,7 +214,7 @@ void parsePacket(const roo::byte* begin, const roo::byte* end) {
   uint32_t message_id = ReadBeU32(in);
   uint64_t sequence = ReadVarU64(in);
 
-  if (in.status() != kOk && in.status() != kEndOfStream) {
+  if (!in.ok()) {
     LOG(ERROR) << "Packet parse failed: " << in.status();
     return;
   }
@@ -248,6 +248,19 @@ void parsePacketAsStream(const roo::byte* begin, const roo::byte* end) {
 Use an iterator when the buffer is already in hand and the cheapest byte-access
 path matters. Use a stream when interface uniformity with the rest of the API
 matters more.
+
+Typed readers also detect malformed variable-length integers. Read all fields
+for a record, then check `ok()`: `status()` reports transport failures, while
+`hasDataError()` identifies malformed binary data that leaves the transport
+status as `kOk`. For direct iterator use, prefer the checked overload:
+
+```cpp
+uint64_t length = 0;
+if (!roo_io::ReadVarU64(iterator, length)) {
+  // iterator.status() == kOk means malformed data.
+  return;
+}
+```
 
 > Streams vs iterators
 >
@@ -964,4 +977,3 @@ feature support even when the surface API is the same.
   stream and UART adapters.
 - If you need reliable framing or transport semantics, move up a layer rather
   than trying to force `roo_io` itself to provide them.
-

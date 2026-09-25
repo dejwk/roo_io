@@ -151,6 +151,20 @@ TEST(Reader, VarU64_150) {
   EXPECT_EQ(150, reader.readVarU64());
 }
 
+// Verifies malformed varints latch a data error without becoming transport
+// errors, and later reads do not consume the following record.
+TEST(Reader, VarU64MalformedLatchesDataError) {
+  byte data[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                 byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                 byte{0x80}, byte{0x02}, byte{0x7B}};
+  InputStreamReader reader = NewReader(data, data + 11);
+  reader.readVarU64();
+  EXPECT_TRUE(reader.hasDataError());
+  EXPECT_FALSE(reader.ok());
+  EXPECT_EQ(kOk, reader.status());
+  EXPECT_EQ(0, reader.readU8());
+}
+
 TEST(Reader, ByteArray) {
   const byte* in = (const byte*)"ABCDEFGH";
   InputStreamReader reader = NewReader(in, in + 8);

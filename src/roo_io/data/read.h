@@ -210,24 +210,47 @@ size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
   return read_total;
 }
 
+/// Reads a checked protobuf-style variable-length unsigned 64-bit integer.
+///
+/// Returns false without changing `value` when the input ends, has an error,
+/// or contains an unrepresentable varint. A false result with `in.status() ==
+/// kOk` denotes malformed input; otherwise the iterator status identifies the
+/// input failure. A malformed varint consumes at most ten bytes.
+template <typename InputIterator>
+bool ReadVarU64(InputIterator& in, uint64_t& value) {
+  if (in.status() != kOk) return false;
+  uint64_t result = 0;
+  for (int index = 0; index < 10; ++index) {
+    byte read = in.read();
+    if (in.status() != kOk) {
+      return false;
+    }
+    if (index == 9) {
+      // Bit 63 is the only payload bit representable in the final byte.
+      if (read != byte{0x00} && read != byte{0x01}) return false;
+      result |= static_cast<uint64_t>(read) << 63;
+      value = result;
+      return true;
+    }
+    result |= static_cast<uint64_t>(read & byte{0x7F}) << (7 * index);
+    if ((read & byte{0x80}) == byte{0}) {
+      value = result;
+      return true;
+    }
+  }
+  return false;
+}
+
 /// Reads a protobuf-style variable-length unsigned 64-bit integer from `in`.
 ///
-/// This uses the protobuf varint encoding, so values up to 127 occupy one
-/// byte. Returns zero if the iterator leaves the `kOk` state while decoding.
+/// This legacy overload returns zero on malformed input or input failure. Use
+/// the checked output-argument overload when decoding untrusted input.
 template <typename InputIterator>
-uint64_t ReadVarU64(InputIterator& in) {
-  uint64_t result = 0;
-  byte read;
-  int shift = 0;
-  do {
-    read = in.read();
-    if (in.status() != kOk) {
-      return 0;
-    }
-    result |= ((uint64_t)(read & byte{0x7F}) << shift);
-    shift += 7;
-  } while ((read & byte{0x80}) != byte{0});
-  return result;
+[[deprecated("Use ReadVarU64(input, value)")]] uint64_t ReadVarU64(
+    InputIterator& in) {
+  uint64_t value = 0;
+  ReadVarU64(in, value);
+  return value;
 }
 
 /// Byte-order-specific integer reader helper.
@@ -447,8 +470,8 @@ struct HostNativeReader {
 /// aligned. When `capacity` is non-zero, `buf` is always zero-terminated.
 template <typename InputIterator>
 size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
-  uint64_t len = ReadVarU64(in);
-  if (in.status() != kOk) return 0;
+  uint64_t len = 0;
+  if (!ReadVarU64(in, len)) return 0;
   if (len + 1 <= capacity) {
     // Common case.
     size_t written = ReadByteArray(in, (byte*)buf, len);
@@ -472,8 +495,8 @@ size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
 /// subsequent reads can continue past it.
 template <typename InputIterator>
 std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
-  uint64_t len = ReadVarU64(in);
-  if (in.status() != kOk) return "";
+  uint64_t len = 0;
+  if (!ReadVarU64(in, len)) return "";
   std::string result;
   if (len <= max_size) {
     // Common case.
@@ -505,8 +528,8 @@ template <typename InputIterator,
               internal::MemoryIteratorTraits<InputIterator>::is_memory,
               bool>::type = true>
 roo::string_view ReadStringView(InputIterator& in, size_t max_size = SIZE_MAX) {
-  uint64_t len = ReadVarU64(in);
-  if (in.status() != kOk) return "";
+  uint64_t len = 0;
+  if (!ReadVarU64(in, len)) return "";
   typename InputIterator::PtrType start = in.ptr();
   if (len <= max_size) {
     // Common case.

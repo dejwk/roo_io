@@ -205,31 +205,83 @@ TEST(Read, HostNativeOverflow) {
 TEST(Read, VarU64_0) {
   byte d[] = {byte{0}};
   MemoryIterator i(d, d + 1);
-  EXPECT_EQ(0, ReadVarU64(i));
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(i, value));
+  EXPECT_EQ(0, value);
 }
 
 TEST(Read, VarU64_1) {
   byte d[] = {byte{1}};
   MemoryIterator i(d, d + 1);
-  EXPECT_EQ(1, ReadVarU64(i));
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(i, value));
+  EXPECT_EQ(1, value);
 }
 
 TEST(Read, VarU64_127) {
   byte d[] = {byte{0x7F}};
   MemoryIterator i(d, d + 1);
-  EXPECT_EQ(127, ReadVarU64(i));
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(i, value));
+  EXPECT_EQ(127, value);
 }
 
 TEST(Read, VarU64_128) {
   byte d[] = {byte{0x80}, byte{0x01}};
   MemoryIterator i(d, d + 2);
-  EXPECT_EQ(128, ReadVarU64(i));
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(i, value));
+  EXPECT_EQ(128, value);
 }
 
 TEST(Read, VarU64_150) {
   byte d[] = {byte{0x96}, byte{0x01}};
   MemoryIterator i(d, d + 2);
-  EXPECT_EQ(150, ReadVarU64(i));
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(i, value));
+  EXPECT_EQ(150, value);
+}
+
+// Verifies checked decoding accepts the full uint64_t range and non-minimal
+// encodings without changing the output until a complete value is available.
+TEST(Read, CheckedVarU64AcceptsRepresentableEncodings) {
+  byte max_value[] = {byte{0xFF}, byte{0xFF}, byte{0xFF}, byte{0xFF},
+                      byte{0xFF}, byte{0xFF}, byte{0xFF}, byte{0xFF},
+                      byte{0xFF}, byte{0x01}};
+  MemoryIterator max_input(max_value, max_value + 10);
+  uint64_t value = 0;
+  EXPECT_TRUE(ReadVarU64(max_input, value));
+  EXPECT_EQ(std::numeric_limits<uint64_t>::max(), value);
+  EXPECT_EQ(kOk, max_input.status());
+
+  byte non_minimal_zero[] = {byte{0x80}, byte{0x00}};
+  MemoryIterator non_minimal_input(non_minimal_zero, non_minimal_zero + 2);
+  value = 17;
+  EXPECT_TRUE(ReadVarU64(non_minimal_input, value));
+  EXPECT_EQ(0, value);
+}
+
+// Verifies malformed byte ten is reported without consuming the next record.
+TEST(Read, CheckedVarU64RejectsInvalidTenthByte) {
+  byte data[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                 byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                 byte{0x80}, byte{0x82}, byte{0x7B}};
+  MemoryIterator input(data, data + 11);
+  uint64_t value = 99;
+  EXPECT_FALSE(ReadVarU64(input, value));
+  EXPECT_EQ(99, value);
+  EXPECT_EQ(kOk, input.status());
+  EXPECT_EQ(byte{0x7B}, input.read());
+}
+
+// Verifies truncated prefixes preserve the caller's value and report EOF.
+TEST(Read, CheckedVarU64RejectsTruncatedPrefix) {
+  byte data[] = {byte{0x80}, byte{0x80}};
+  MemoryIterator input(data, data + 2);
+  uint64_t value = 99;
+  EXPECT_FALSE(ReadVarU64(input, value));
+  EXPECT_EQ(99, value);
+  EXPECT_EQ(kEndOfStream, input.status());
 }
 
 struct DrippingIterator {

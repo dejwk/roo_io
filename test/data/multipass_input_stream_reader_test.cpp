@@ -151,6 +151,27 @@ TEST(Reader, VarU64_150) {
   EXPECT_EQ(150, reader.readVarU64());
 }
 
+// Verifies malformed varints latch a data error while EOF remains a transport
+// condition rather than a data error.
+TEST(Reader, VarU64FailureClassification) {
+  byte malformed[] = {byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                      byte{0x80}, byte{0x80}, byte{0x80}, byte{0x80},
+                      byte{0x80}, byte{0x02}};
+  MultipassInputStreamReader malformed_reader =
+      NewReader(malformed, malformed + 10);
+  malformed_reader.readVarU64();
+  EXPECT_TRUE(malformed_reader.hasDataError());
+  EXPECT_FALSE(malformed_reader.ok());
+  EXPECT_EQ(kOk, malformed_reader.status());
+
+  byte truncated[] = {byte{0x80}};
+  MultipassInputStreamReader truncated_reader =
+      NewReader(truncated, truncated + 1);
+  truncated_reader.readVarU64();
+  EXPECT_FALSE(truncated_reader.hasDataError());
+  EXPECT_EQ(kEndOfStream, truncated_reader.status());
+}
+
 TEST(Reader, ByteArray) {
   const byte* in = (const byte*)"ABCDEFGH";
   MultipassInputStreamReader reader = NewReader(in, in + 8);
