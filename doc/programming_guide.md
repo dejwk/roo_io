@@ -623,6 +623,7 @@ For UTF-8, use helpers in `roo_io/text/unicode.h` such as:
 
 - `Utf8Decoder` for incremental decoding,
 - `DecodeUtfString()` or `DecodeUtfStringToVector()` for whole-string decode,
+- `IsValidUtf8()` for strict UTF-8 byte-sequence validation,
 - `WriteUtf8Char()` for UTF-8 encoding.
 
 For formatting or compact textual transforms, the main public helpers are:

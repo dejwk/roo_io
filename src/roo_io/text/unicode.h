@@ -11,6 +11,13 @@
 
 namespace roo_io {
 
+/// Returns whether `text` is a strictly valid UTF-8 byte sequence.
+///
+/// Accepts every Unicode scalar value, including embedded NUL and U+FFFD, but
+/// rejects overlong forms, surrogates, incomplete sequences, and code points
+/// above U+10FFFF.
+bool IsValidUtf8(roo::string_view text);
+
 /// Iterates over a UTF-8 byte sequence and decodes it into Unicode code points.
 class Utf8Decoder {
  public:

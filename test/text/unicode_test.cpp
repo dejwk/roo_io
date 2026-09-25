@@ -10,6 +10,30 @@ using testing::ElementsAre;
 
 namespace roo_io {
 
+// Verifies strict validation accepts Unicode scalar boundaries and replacement
+// characters without changing the replacement-based decoder's behavior.
+TEST(Utf8, StrictValidationAcceptsValidSequences) {
+  EXPECT_TRUE(IsValidUtf8(""));
+  EXPECT_TRUE(IsValidUtf8(roo::string_view("ASCII\0text", 10)));
+  EXPECT_TRUE(IsValidUtf8("\xC2\x80\xDF\xBF"));
+  EXPECT_TRUE(IsValidUtf8("\xE0\xA0\x80\xED\x9F\xBF\xEE\x80\x80"));
+  EXPECT_TRUE(IsValidUtf8("\xF0\x90\x80\x80\xF4\x8F\xBF\xBF"));
+  EXPECT_TRUE(IsValidUtf8("\xEF\xBF\xBD"));
+}
+
+// Verifies strict validation rejects malformed byte sequences rather than
+// treating decoder replacement characters as valid input.
+TEST(Utf8, StrictValidationRejectsMalformedSequences) {
+  EXPECT_FALSE(IsValidUtf8("\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xC0\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xE0\x80\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xED\xA0\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xF0\x80\x80\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xF4\x90\x80\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xF8\x80\x80\x80\x80"));
+  EXPECT_FALSE(IsValidUtf8("\xE2\x82"));
+}
+
 TEST(Utf8, DecodeValidUsingDecoder) {
   std::string in = "Pełżą 나는 유";
   Utf8Decoder decoder(in);
