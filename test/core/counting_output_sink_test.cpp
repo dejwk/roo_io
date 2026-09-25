@@ -1,4 +1,4 @@
-#include "roo_io/core/counting_output_iterator.h"
+#include "roo_io/core/counting_output_sink.h"
 
 #include <limits>
 
@@ -9,8 +9,8 @@ namespace roo_io {
 
 // Verifies fixed-width and varint writers can size an encoded record without a
 // backing buffer.
-TEST(CountingOutputIterator, CountsEncodedWrites) {
-  CountingOutputIterator output;
+TEST(CountingOutputSink, CountsEncodedWrites) {
+  CountingOutputSink output;
   WriteBeU16(output, 0x1234);
   WriteVarU64(output, 150);
   WriteString(output, "hi");
@@ -19,8 +19,8 @@ TEST(CountingOutputIterator, CountsEncodedWrites) {
 }
 
 // Verifies over-limit writes fail atomically and remain sticky.
-TEST(CountingOutputIterator, EnforcesLimit) {
-  CountingOutputIterator output(3);
+TEST(CountingOutputSink, EnforcesLimit) {
+  CountingOutputSink output(3);
   const byte* unavailable = nullptr;
   EXPECT_EQ(3U, output.write(unavailable, 3));
   EXPECT_EQ(3U, output.size());
@@ -32,8 +32,8 @@ TEST(CountingOutputIterator, EnforcesLimit) {
 }
 
 // Verifies zero-length bulk writes do not alter an exhausted sink.
-TEST(CountingOutputIterator, ZeroLengthWriteIsNoOp) {
-  CountingOutputIterator output(0);
+TEST(CountingOutputSink, ZeroLengthWriteIsNoOp) {
+  CountingOutputSink output(0);
   const byte* unavailable = nullptr;
   EXPECT_EQ(0U, output.write(unavailable, 0));
   EXPECT_EQ(kOk, output.status());
@@ -43,8 +43,8 @@ TEST(CountingOutputIterator, ZeroLengthWriteIsNoOp) {
 
 // Verifies capacity arithmetic cannot wrap when a caller supplies only a
 // length and no backing buffer.
-TEST(CountingOutputIterator, DetectsSizeOverflow) {
-  CountingOutputIterator output;
+TEST(CountingOutputSink, DetectsSizeOverflow) {
+  CountingOutputSink output;
   const byte* unavailable = nullptr;
   EXPECT_EQ(std::numeric_limits<size_t>::max() - 1,
             output.write(unavailable, std::numeric_limits<size_t>::max() - 1));

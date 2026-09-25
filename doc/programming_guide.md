@@ -607,9 +607,24 @@ limited adapter is active. A local boundary error leaves the underlying iterator
 healthy, allowing its owner to continue with the next record after discarding
 the adapter.
 
-Use `CountingOutputIterator` to measure an encoded payload before allocating
+Use `CountingInputIterator<I>` and `CountingOutputIterator<O>` to forward
+transfers and track the successfully transferred byte count with `size()`.
+These adapters have no byte limit or per-byte capacity check. For a fixed-size
+field, check the protocol budget before constructing the adapter, perform the
+transfer, then advance the protocol position by `size()`, including on error.
+They cache status just like the limited iterators. Bulk operations report short
+transfers without retrying. Input `skip()` delegates directly to the source and
+counts the requested bytes only on success. After a failed skip, `size()` excludes
+any partial progress of that skip because the underlying void-returning API
+cannot report it. Reads still count successfully transferred prefixes on error.
+The count wraps modulo `SIZE_MAX + 1`, so use a fresh counter per bounded
+operation when exact lifetime totals could overflow.
+
+Use `CountingOutputSink` to measure an encoded payload before allocating
 or emitting it. It accepts the same fixed-width, varint, and byte-array writer
 helpers as a normal output iterator and can enforce a maximum encoded size.
+This was previously named `CountingOutputIterator`; use the new
+`roo_io/core/counting_output_sink.h` header for sizing without I/O.
 
 When the bytes are already contiguous in memory, there is an even lower-friction
 option: the direct memory helpers in `roo_io/memory/load.h` and

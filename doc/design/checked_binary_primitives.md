@@ -399,7 +399,7 @@ Measure sizeof on the tested ABI rather than promising these as universal sizes.
 
 ### 5. Counting output
 
-Add CountingOutputIterator in core/counting_output_iterator.h. It implements
+Add CountingOutputSink in core/counting_output_sink.h. It implements
 write(byte), write(const byte*, size_t), flush(), status(), and size(). Construct
 it with an optional byte limit, default SIZE_MAX. It never dereferences bulk
 write data, permitting a null pointer when only a length is available.
@@ -489,7 +489,7 @@ bool IsValidUtf8(roo::string_view text);
 template <typename InputIterator>
 class LimitedInputIterator;  // ctor(InputIterator&, size_t), remaining().
 class LimitedInputStream;    // ctor(InputStream&, size_t), remaining().
-class CountingOutputIterator;  // explicit ctor(size_t limit = SIZE_MAX), size().
+class CountingOutputSink;  // explicit ctor(size_t limit = SIZE_MAX), size().
 ```
 
 Typed readers retain readVarU64(), gain value-returning readZigZag32/64(),

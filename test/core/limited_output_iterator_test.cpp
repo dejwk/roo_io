@@ -1,7 +1,7 @@
 #include "roo_io/core/limited_output_iterator.h"
 
 #include "gtest/gtest.h"
-#include "roo_io/core/counting_output_iterator.h"
+#include "roo_io/core/counting_output_sink.h"
 
 namespace roo_io {
 namespace {
@@ -109,8 +109,8 @@ TEST(LimitedOutputIterator, ExplicitFlush) {
 // Verifies accounting accepts counting sinks without pointer arithmetic
 // overflow.
 TEST(LimitedOutputIterator, CountingWithoutStorage) {
-  CountingOutputIterator sink;
-  LimitedOutputIterator<CountingOutputIterator> output(sink, SIZE_MAX);
+  CountingOutputSink sink;
+  LimitedOutputIterator<CountingOutputSink> output(sink, SIZE_MAX);
   EXPECT_EQ(SIZE_MAX, output.write(nullptr, SIZE_MAX));
   EXPECT_EQ(0U, output.remaining());
   EXPECT_EQ(SIZE_MAX, sink.size());
