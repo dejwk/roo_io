@@ -6,6 +6,74 @@
 
 namespace roo_io {
 
+namespace {
+
+struct ObservedInput {
+  byte read() {
+    ++calls;
+    state = error;
+    return byte{7};
+  }
+  size_t read(byte*, size_t count) {
+    ++calls;
+    state = error;
+    return stalled ? 0 : (count > 1 ? 1 : count);
+  }
+  Status status() const {
+    ++queries;
+    return state;
+  }
+  mutable unsigned queries = 0;
+  unsigned calls = 0;
+  bool stalled = false;
+  Status state = kOk;
+  Status error = kOk;
+};
+
+}  // namespace
+
+// Verifies one status sample per transfer and none for cached queries or
+// errors.
+TEST(LimitedInputIterator, CachesStatusAndCountsSuccessfulBytes) {
+  ObservedInput source;
+  LimitedInputIterator<ObservedInput> input(source, 5);
+  EXPECT_EQ(1U, source.queries);
+  EXPECT_EQ(byte{7}, input.read());
+  EXPECT_EQ(kOk, input.status());
+  EXPECT_EQ(2U, source.queries);
+  source.error = kReadError;
+  EXPECT_EQ(byte{0}, input.read());
+  EXPECT_EQ(4U, input.remaining());
+  EXPECT_EQ(kReadError, input.status());
+  input.read();
+  EXPECT_EQ(3U, source.queries);
+  EXPECT_EQ(2U, source.calls);
+}
+
+// Verifies bulk partial failures count the prefix and zero progress is an
+// error.
+TEST(LimitedInputIterator, BulkErrorsAndInitialStatus) {
+  for (bool stalled : {false, true}) {
+    ObservedInput source;
+    source.stalled = stalled;
+    source.error = stalled ? kOk : kEndOfStream;
+    LimitedInputIterator<ObservedInput> input(source, 5);
+    byte data[5];
+    EXPECT_EQ(stalled ? 0U : 1U, input.read(data, 5));
+    EXPECT_EQ(stalled ? 5U : 4U, input.remaining());
+    EXPECT_EQ(stalled ? kReadError : kEndOfStream, input.status());
+    EXPECT_EQ(0U, input.read(data, 1));
+    EXPECT_EQ(2U, source.queries);
+    EXPECT_EQ(1U, source.calls);
+  }
+  ObservedInput source;
+  source.state = kReadError;
+  LimitedInputIterator<ObservedInput> input(source, 5);
+  input.read();
+  EXPECT_EQ(kReadError, input.status());
+  EXPECT_EQ(0U, source.calls);
+}
+
 // Verifies a limited iterator stops at its local boundary without consuming the
 // next record from the borrowed cursor.
 TEST(LimitedInputIterator, PreservesFollowingRecord) {

@@ -51,3 +51,11 @@ cc_test(
     linkstatic = 1,
     deps = ["//test:testing"],
 )
+
+cc_test(
+    name = "limited_output_iterator_test",
+    size = "small",
+    srcs = ["limited_output_iterator_test.cpp"],
+    linkstatic = 1,
+    deps = ["//test:testing"],
+)

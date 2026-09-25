@@ -593,6 +593,20 @@ read-ahead, and leave the source open when the limited adapter is closed or
 destroyed. Do not read the borrowed source directly while its limited adapter
 is active.
 
+Use `LimitedOutputIterator` to cap writes through a borrowed output iterator.
+It rejects bulk requests larger than its remaining budget before writing any
+bytes, and otherwise forwards one transfer, returning the accepted count.
+Short writes are allowed; `WriteByteArray` and varint writers retry them.
+A zero-progress write with healthy sink status becomes `kWriteError`.
+Flushing is explicit and forwards to the sink; destruction never flushes.
+
+Both limited iterators cache the source or sink status at construction and after
+each transfer. Their `status()` and subsequent pre-transfer checks access only
+local state. Do not operate on the underlying iterator independently while a
+limited adapter is active. A local boundary error leaves the underlying iterator
+healthy, allowing its owner to continue with the next record after discarding
+the adapter.
+
 Use `CountingOutputIterator` to measure an encoded payload before allocating
 or emitting it. It accepts the same fixed-width, varint, and byte-array writer
 helpers as a normal output iterator and can enforce a maximum encoded size.
