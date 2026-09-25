@@ -271,6 +271,57 @@ TEST(Write, VarU32) {
   EXPECT_THAT(data, ElementsAre(0x96, 0x01, 0, 0));
 }
 
+namespace {
+
+struct ShortVarintSink {
+  void write(byte value) { write(&value, 1); }
+  size_t write(const byte* source, size_t count) {
+    if (state != kOk) return 0;
+    if (size == limit) {
+      state = kNoSpaceLeftOnDevice;
+      return 0;
+    }
+    if (count == 0) return 0;
+    data[size++] = *source;
+    return 1;
+  }
+  Status status() const { return state; }
+  byte data[10] = {};
+  size_t size = 0;
+  size_t limit = 10;
+  Status state = kOk;
+};
+
+}  // namespace
+
+// Verifies every varint length survives one-byte bulk transfers.
+TEST(Write, VarintShortBulkWrites) {
+  for (unsigned length = 1; length <= 10; ++length) {
+    uint64_t value =
+        length == 10 ? UINT64_MAX : (uint64_t{1} << (7 * length)) - 1;
+    byte expected[10] = {};
+    MemoryOutputIterator reference(expected, expected + 10);
+    WriteVarU64(reference, value);
+    ShortVarintSink sink;
+    WriteVarU64(sink, value);
+    EXPECT_EQ(kOk, sink.status());
+    ASSERT_EQ(length, sink.size);
+    EXPECT_EQ(0, memcmp(expected, sink.data, length));
+  }
+}
+
+// Verifies errors stop retries and preserve the accepted varint prefix.
+TEST(Write, VarintShortBulkFailure) {
+  ShortVarintSink sink;
+  sink.limit = 3;
+  WriteVarU64(sink, UINT64_MAX);
+  EXPECT_EQ(kNoSpaceLeftOnDevice, sink.status());
+  EXPECT_EQ(3U, sink.size);
+  EXPECT_EQ(byte{0xff}, sink.data[2]);
+  WriteVarU64(sink, 150);
+  EXPECT_EQ(3U, sink.size);
+}
+
 struct DrippingIterator {
   byte* data;
   byte* end;

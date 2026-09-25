@@ -209,7 +209,7 @@ size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
 /// Writes a protobuf-style variable-length unsigned 64-bit integer to `out`.
 ///
 /// This uses the protobuf varint encoding, so values up to 127 occupy one
-/// byte.
+/// byte. Short bulk writes are retried; failures remain in out.status().
 template <typename OutputIterator>
 void WriteVarU64(OutputIterator& out, uint64_t data) {
   byte buffer[10];
@@ -225,7 +225,7 @@ void WriteVarU64(OutputIterator& out, uint64_t data) {
     data >>= 7;
   }
   buffer[size - 1] &= byte{0x7F};
-  out.write(buffer, size);
+  WriteByteArray(out, buffer, size);
 }
 
 /// Writes an unsigned 32-bit integer using protobuf-style varint encoding.
