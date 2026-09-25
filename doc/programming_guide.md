@@ -593,6 +593,10 @@ read-ahead, and leave the source open when the limited adapter is closed or
 destroyed. Do not read the borrowed source directly while its limited adapter
 is active.
 
+Use `CountingOutputIterator` to measure an encoded payload before allocating
+or emitting it. It accepts the same fixed-width, varint, and byte-array writer
+helpers as a normal output iterator and can enforce a maximum encoded size.
+
 When the bytes are already contiguous in memory, there is an even lower-friction
 option: the direct memory helpers in `roo_io/memory/load.h` and
 `roo_io/memory/store.h`. Those functions load or store fixed-width values

@@ -43,3 +43,11 @@ cc_test(
     linkstatic = 1,
     deps = ["//test:testing"],
 )
+
+cc_test(
+    name = "counting_output_iterator_test",
+    size = "small",
+    srcs = ["counting_output_iterator_test.cpp"],
+    linkstatic = 1,
+    deps = ["//test:testing"],
+)
