@@ -171,7 +171,7 @@ bool readConfig(Mount& mount) {
   uint16_t version = in.readBeU16();
   std::string name = in.readString(32);
 
-  if (in.status() != kOk && in.status() != kEndOfStream) {
+  if (!in.ok()) {
     LOG(ERROR) << "Read failed: " << in.status();
     return false;
   }
@@ -573,6 +573,13 @@ This is the API exposed by headers such as `roo_io/data/read.h` and
 `roo_io/data/write.h`. `InputStreamReader`, `MultipassInputStreamReader`, and
 `OutputStreamWriter` are convenience layers built on top of those same
 functions.
+
+Length-prefixed reads are strict by default. The low-level `ReadCString`,
+`ReadString`, and `ReadStringView` functions return `bool` and use output
+arguments; a field larger than the supplied capacity or `max_size` fails after
+only its length prefix is consumed. Use `ReadCStringTruncated`,
+`ReadStringTruncated`, `readCStringTruncated`, or `readStringTruncated` only
+when retaining a prefix while consuming the entire field is intentional.
 
 When the bytes are already contiguous in memory, there is an even lower-friction
 option: the direct memory helpers in `roo_io/memory/load.h` and

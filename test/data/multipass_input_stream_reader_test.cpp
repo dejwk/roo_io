@@ -193,8 +193,11 @@ TEST(Read, ShortCStringUnderBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MultipassInputStreamReader reader = NewReader(in, in + 5);
   char buf[] = {9, 9, 9, 9, 9};
-  EXPECT_EQ(1, reader.readCString(buf, 2));
-  EXPECT_EQ(7, reader.readU8());
+  EXPECT_EQ(0, reader.readCString(buf, 2));
+  EXPECT_TRUE(reader.hasDataError());
+  MultipassInputStreamReader truncated = NewReader(in, in + 5);
+  EXPECT_EQ(1, truncated.readCStringTruncated(buf, 2));
+  EXPECT_EQ(7, truncated.readU8());
   EXPECT_EQ(kOk, reader.status());
   EXPECT_THAT(buf, ElementsAre('f', 0, 9, 9, 9));
 }
@@ -209,9 +212,11 @@ TEST(Read, ShortString) {
 TEST(Read, ShortStringUnderBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MultipassInputStreamReader reader = NewReader(in, in + 5);
-  EXPECT_EQ("f", reader.readString(1));
-  EXPECT_EQ(7, reader.readU8());
-  EXPECT_EQ(kOk, reader.status());
+  EXPECT_EQ("", reader.readString(1));
+  EXPECT_TRUE(reader.hasDataError());
+  MultipassInputStreamReader truncated = NewReader(in, in + 5);
+  EXPECT_EQ("f", truncated.readStringTruncated(1));
+  EXPECT_EQ(7, truncated.readU8());
 }
 
 }  // namespace roo_io

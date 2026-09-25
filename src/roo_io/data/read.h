@@ -462,84 +462,121 @@ struct HostNativeReader {
   }
 };
 
-/// Reads a portable length-prefixed string into `buf`.
+/// Reads a strict portable length-prefixed C string into `buf`.
 ///
-/// `capacity` includes space for the terminating zero. If the encoded string
-/// is longer than the available space, the result is truncated, but the entire
-/// encoded string is still consumed from `in` so that subsequent reads remain
-/// aligned. When `capacity` is non-zero, `buf` is always zero-terminated.
+/// `capacity` includes the trailing NUL and must be nonzero. Returns false
+/// without consuming input when `capacity` is zero. On other failures, `buf`
+/// remains NUL-terminated and `len` and payload contents are unspecified.
 template <typename InputIterator>
-size_t ReadCString(InputIterator& in, char* buf, size_t capacity = SIZE_MAX) {
-  uint64_t len = 0;
-  if (!ReadVarU64(in, len)) return 0;
-  if (len + 1 <= capacity) {
-    // Common case.
-    size_t written = ReadByteArray(in, (byte*)buf, len);
-    buf[written] = 0;
-    return written;
-  }
-  if (capacity > 0) {
-    size_t written = ReadByteArray(in, (byte*)buf, capacity - 1);
-    buf[written] = 0;
-    in.skip(len - written);
-    return written;
-  }
-  in.skip(len);
-  return 0;
+bool ReadCString(InputIterator& in, char* buf, size_t capacity, size_t* len) {
+  if (capacity == 0) return false;
+  buf[0] = 0;
+  uint64_t encoded_length = 0;
+  if (!ReadVarU64(in, encoded_length)) return false;
+  if (encoded_length >= capacity) return false;
+  size_t read = ReadByteArray(in, reinterpret_cast<byte*>(buf),
+                              static_cast<size_t>(encoded_length));
+  buf[read] = 0;
+  if (read != encoded_length) return false;
+  *len = read;
+  return true;
 }
 
-/// Reads a portable length-prefixed string into a `std::string`.
+/// Reads a portable length-prefixed C string into `buf`, retaining what fits.
 ///
-/// If the encoded string exceeds `max_size`, the result is truncated to
-/// `max_size`, but the iterator still consumes the full encoded string so that
-/// subsequent reads can continue past it.
+/// `capacity` includes the trailing NUL and must be nonzero. Oversized fields
+/// succeed after their complete payload has been consumed.
 template <typename InputIterator>
-std::string ReadString(InputIterator& in, size_t max_size = SIZE_MAX) {
-  uint64_t len = 0;
-  if (!ReadVarU64(in, len)) return "";
-  std::string result;
-  if (len <= max_size) {
-    // Common case.
-    result.reserve(len);
-    for (size_t i = 0; i < len; ++i) {
-      char ch = (char)ReadU8(in);
-      if (in.status() != kOk) return result;
-      result.push_back(ch);
-    }
-    return result;
+bool ReadCStringTruncated(InputIterator& in, char* buf, size_t capacity,
+                          size_t* len) {
+  if (capacity == 0) return false;
+  buf[0] = 0;
+  uint64_t encoded_length = 0;
+  if (!ReadVarU64(in, encoded_length)) return false;
+  size_t retained = encoded_length < capacity - 1
+                        ? static_cast<size_t>(encoded_length)
+                        : capacity - 1;
+  size_t read = ReadByteArray(in, reinterpret_cast<byte*>(buf), retained);
+  buf[read] = 0;
+  if (read != retained) return false;
+  uint64_t remaining = encoded_length - retained;
+  while (remaining > 0) {
+    size_t chunk =
+        remaining > SIZE_MAX ? SIZE_MAX : static_cast<size_t>(remaining);
+    in.skip(chunk);
+    if (in.status() != kOk) return false;
+    remaining -= chunk;
   }
-  result.reserve(max_size);
-  for (size_t i = 0; i < max_size; ++i) {
-    char ch = (char)ReadU8(in);
-    if (in.status() != kOk) return result;
-    result.push_back(ch);
-  }
-  in.skip(len - max_size);
-  return result;
+  *len = retained;
+  return true;
 }
 
-/// Reads a portable length-prefixed string view from a memory iterator.
+/// Reads a strict portable length-prefixed string into `output`.
 ///
-/// The returned view points into the iterator's underlying memory buffer and
-/// does not own the data. If the encoded string exceeds `max_size`, the view
-/// is truncated, but the iterator still skips the full encoded string.
+/// Returns false before consuming the payload when its encoded length exceeds
+/// `max_size` or `output->max_size()`.
+template <typename InputIterator>
+bool ReadString(InputIterator& in, std::string* output,
+                size_t max_size = SIZE_MAX) {
+  uint64_t encoded_length = 0;
+  if (!ReadVarU64(in, encoded_length)) return false;
+  if (encoded_length > max_size || encoded_length > output->max_size()) {
+    return false;
+  }
+  size_t length = static_cast<size_t>(encoded_length);
+  output->resize(length);
+  if (length == 0) return true;
+  return ReadByteArray(in, reinterpret_cast<byte*>(&(*output)[0]), length) ==
+         length;
+}
+
+/// Reads a portable length-prefixed string into `output`, retaining what fits.
+///
+/// An oversized field succeeds after its complete payload has been consumed.
+template <typename InputIterator>
+bool ReadStringTruncated(InputIterator& in, std::string* output,
+                         size_t max_size = SIZE_MAX) {
+  uint64_t encoded_length = 0;
+  if (!ReadVarU64(in, encoded_length)) return false;
+  uint64_t retained_length =
+      encoded_length < max_size ? encoded_length : max_size;
+  if (retained_length > output->max_size()) return false;
+  size_t retained = static_cast<size_t>(retained_length);
+  output->resize(retained);
+  if (retained > 0 && ReadByteArray(in, reinterpret_cast<byte*>(&(*output)[0]),
+                                    retained) != retained) {
+    return false;
+  }
+  uint64_t remaining = encoded_length - retained;
+  while (remaining > 0) {
+    size_t chunk =
+        remaining > SIZE_MAX ? SIZE_MAX : static_cast<size_t>(remaining);
+    in.skip(chunk);
+    if (in.status() != kOk) return false;
+    remaining -= chunk;
+  }
+  return true;
+}
+
+/// Reads a strict portable length-prefixed view from a memory iterator.
+///
+/// The returned view borrows the iterator's backing memory and is valid only
+/// while that memory remains valid.
 template <typename InputIterator,
           typename std::enable_if<
               internal::MemoryIteratorTraits<InputIterator>::is_memory,
               bool>::type = true>
-roo::string_view ReadStringView(InputIterator& in, size_t max_size = SIZE_MAX) {
-  uint64_t len = 0;
-  if (!ReadVarU64(in, len)) return "";
+bool ReadStringView(InputIterator& in, roo::string_view* output,
+                    size_t max_size = SIZE_MAX) {
+  uint64_t encoded_length = 0;
+  if (!ReadVarU64(in, encoded_length)) return false;
+  if (encoded_length > max_size) return false;
   typename InputIterator::PtrType start = in.ptr();
-  if (len <= max_size) {
-    // Common case.
-    in.skip(len);
-    return roo::string_view((const char*)start, in.ptr() - start);
-  }
-  in.skip(max_size);
-  roo::string_view result((const char*)start, in.ptr() - start);
-  in.skip(len - max_size);
-  return result;
+  size_t length = static_cast<size_t>(encoded_length);
+  in.skip(length);
+  if (in.status() != kOk) return false;
+  *output = roo::string_view(reinterpret_cast<const char*>(start), length);
+  return true;
 }
 
 }  // namespace roo_io

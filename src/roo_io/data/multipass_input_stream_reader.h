@@ -186,16 +186,48 @@ class MultipassInputStreamReader {
     return ReadByteArray(in_, result, count);
   }
 
-  /// Reads a length-prefixed string into `buf`, truncating when needed.
-  size_t readCString(char* buf, size_t capacity = SIZE_MAX) {
+  /// Reads a strict length-prefixed C string into `buf`.
+  ///
+  /// `capacity` includes the trailing NUL. Malformed or oversized fields latch
+  /// a data error; successful reads return the payload length.
+  size_t readCString(char* buf, size_t capacity) {
     if (data_error_) return 0;
-    return ReadCString(in_, buf, capacity);
+    size_t length = 0;
+    if (!ReadCString(in_, buf, capacity, &length) && in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return length;
   }
 
-  /// Reads a length-prefixed string into a `std::string`.
+  /// Reads a length-prefixed C string into `buf`, retaining what fits.
+  size_t readCStringTruncated(char* buf, size_t capacity) {
+    if (data_error_) return 0;
+    size_t length = 0;
+    if (!ReadCStringTruncated(in_, buf, capacity, &length) &&
+        in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return length;
+  }
+
+  /// Reads a strict length-prefixed string, limited to `max_size` bytes.
   std::string readString(size_t max_size = SIZE_MAX) {
     if (data_error_) return {};
-    return ReadString(in_, max_size);
+    std::string result;
+    if (!ReadString(in_, &result, max_size) && in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return result;
+  }
+
+  /// Reads a length-prefixed string, retaining at most `max_size` bytes.
+  std::string readStringTruncated(size_t max_size = SIZE_MAX) {
+    if (data_error_) return {};
+    std::string result;
+    if (!ReadStringTruncated(in_, &result, max_size) && in_.status() == kOk) {
+      data_error_ = true;
+    }
+    return result;
   }
 
   /// Reads a host-native trivially copyable value or returns `default_value`.

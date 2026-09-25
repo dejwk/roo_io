@@ -317,7 +317,9 @@ TEST(Read, EmptyCString) {
   const byte in[] = {byte{0}};
   MemoryIterator itr{in, in + 1};
   char buf[] = {9, 9, 9, 9, 9};
-  EXPECT_EQ(0, ReadCString(itr, buf, 5));
+  size_t len = 9;
+  EXPECT_TRUE(ReadCString(itr, buf, 5, &len));
+  EXPECT_EQ(0, len);
   EXPECT_EQ(kOk, itr.status());
   EXPECT_THAT(buf, ElementsAre(0, 9, 9, 9, 9));
 }
@@ -326,7 +328,9 @@ TEST(Read, ShortCString) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
   MemoryIterator itr{in, in + 4};
   char buf[] = {9, 9, 9, 9, 9};
-  EXPECT_EQ(3, ReadCString(itr, buf, 5));
+  size_t len = 0;
+  EXPECT_TRUE(ReadCString(itr, buf, 5, &len));
+  EXPECT_EQ(3, len);
   EXPECT_EQ(kOk, itr.status());
   EXPECT_THAT(buf, ElementsAre('f', 'o', 'o', 0, 9));
 }
@@ -335,8 +339,9 @@ TEST(Read, ShortCStringZeroBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MemoryIterator itr{in, in + 5};
   char buf[] = {9, 9, 9, 9, 9};
-  EXPECT_EQ(0, ReadCString(itr, buf, 0));
-  EXPECT_EQ(7, ReadU8(itr));
+  size_t len = 0;
+  EXPECT_FALSE(ReadCString(itr, buf, 0, &len));
+  EXPECT_EQ(3, ReadU8(itr));
   EXPECT_EQ(kOk, itr.status());
   EXPECT_THAT(buf, ElementsAre(9, 9, 9, 9, 9));
 }
@@ -345,30 +350,60 @@ TEST(Read, ShortCStringUnderBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MemoryIterator itr{in, in + 5};
   char buf[] = {9, 9, 9, 9, 9};
-  EXPECT_EQ(1, ReadCString(itr, buf, 2));
+  size_t len = 0;
+  EXPECT_TRUE(ReadCStringTruncated(itr, buf, 2, &len));
+  EXPECT_EQ(1, len);
   EXPECT_EQ(7, ReadU8(itr));
   EXPECT_EQ(kOk, itr.status());
   EXPECT_THAT(buf, ElementsAre('f', 0, 9, 9, 9));
 }
 
+// Verifies strict size rejection leaves the payload available and truncated
+// reads consume the complete payload before the following field.
+TEST(Read, StringReadPolicies) {
+  const byte input[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
+  char buf[] = {9, 9, 9, 9, 9};
+  size_t len = 0;
+  MemoryIterator strict_cstring(input, input + 5);
+  EXPECT_FALSE(ReadCString(strict_cstring, buf, 2, &len));
+  EXPECT_EQ(kOk, strict_cstring.status());
+  EXPECT_EQ(byte{'f'}, strict_cstring.read());
+
+  std::string result;
+  MemoryIterator strict_string(input, input + 5);
+  EXPECT_FALSE(ReadString(strict_string, &result, 2));
+  EXPECT_EQ(byte{'f'}, strict_string.read());
+
+  MemoryIterator truncated_string(input, input + 5);
+  EXPECT_TRUE(ReadStringTruncated(truncated_string, &result, 1));
+  EXPECT_EQ("f", result);
+  EXPECT_EQ(byte{7}, truncated_string.read());
+}
+
 TEST(Read, EmptyString) {
   const byte in[] = {byte{0}};
   MemoryIterator itr{in, in + 1};
-  EXPECT_EQ("", ReadString(itr, 5));
+  std::string result;
+  EXPECT_TRUE(ReadString(itr, &result, 5));
+  EXPECT_EQ("", result);
   EXPECT_EQ(kOk, itr.status());
 }
 
 TEST(Read, ShortString) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
   MemoryIterator itr{in, in + 4};
-  EXPECT_EQ("foo", ReadString(itr, 5));
+  std::string result;
+  EXPECT_TRUE(ReadString(itr, &result, 5));
+  EXPECT_EQ("foo", result);
   EXPECT_EQ(kOk, itr.status());
 }
 
 TEST(Read, ShortStringZeroBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MemoryIterator itr{in, in + 5};
-  EXPECT_EQ("", ReadString(itr, 0));
+  std::string result;
+  EXPECT_TRUE(ReadStringTruncated(itr, &result, 0));
+  EXPECT_EQ("", result);
   EXPECT_EQ(7, ReadU8(itr));
   EXPECT_EQ(kOk, itr.status());
 }
@@ -376,7 +411,9 @@ TEST(Read, ShortStringZeroBuf) {
 TEST(Read, ShortStringUnderBuf) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}, byte{7}};
   MemoryIterator itr{in, in + 5};
-  EXPECT_EQ("f", ReadString(itr, 1));
+  std::string result;
+  EXPECT_TRUE(ReadStringTruncated(itr, &result, 1));
+  EXPECT_EQ("f", result);
   EXPECT_EQ(7, ReadU8(itr));
   EXPECT_EQ(kOk, itr.status());
 }
@@ -384,14 +421,17 @@ TEST(Read, ShortStringUnderBuf) {
 TEST(Read, ShortStringView) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}, byte{'o'}};
   MemoryIterator itr{in, in + 4};
-  EXPECT_EQ("foo", ReadStringView(itr));
+  roo::string_view result;
+  EXPECT_TRUE(ReadStringView(itr, &result));
+  EXPECT_EQ("foo", result);
   EXPECT_EQ(kOk, itr.status());
 }
 
 TEST(Read, ShortStringViewOverflow) {
   const byte in[] = {byte{3}, byte{'f'}, byte{'o'}};
   MemoryIterator itr{in, in + 3};
-  EXPECT_EQ("fo", ReadStringView(itr));
+  roo::string_view result;
+  EXPECT_FALSE(ReadStringView(itr, &result));
   EXPECT_EQ(kEndOfStream, itr.status());
 }
 
