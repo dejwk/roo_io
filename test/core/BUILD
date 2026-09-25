@@ -35,3 +35,11 @@ cc_test(
         "//test:testing",
     ],
 )
+
+cc_test(
+    name = "limited_input_test",
+    size = "small",
+    srcs = ["limited_input_test.cpp"],
+    linkstatic = 1,
+    deps = ["//test:testing"],
+)

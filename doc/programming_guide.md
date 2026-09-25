@@ -587,6 +587,12 @@ explicit ZigZag helpers (`ReadZigZag32`, `ReadZigZag64`, `WriteZigZag32`, and
 signed-integer transform; it is not the same as casting a negative value to an
 unsigned integer before writing a varint.
 
+Use `LimitedInputIterator` or `LimitedInputStream` when a length-delimited
+field must not read into the following record. Both borrow their source, do no
+read-ahead, and leave the source open when the limited adapter is closed or
+destroyed. Do not read the borrowed source directly while its limited adapter
+is active.
+
 When the bytes are already contiguous in memory, there is an even lower-friction
 option: the direct memory helpers in `roo_io/memory/load.h` and
 `roo_io/memory/store.h`. Those functions load or store fixed-width values
