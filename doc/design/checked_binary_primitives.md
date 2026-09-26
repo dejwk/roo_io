@@ -499,7 +499,7 @@ as specified in section 1; stream ownership and close behavior remain unchanged.
 
 ## Implementation Plan
 
-Follow the repo-local [code-authoring instructions](../../.github/instructions/embedded-cpp-code-authoring.instructions.md).
+Follow the repo-local [code-authoring instructions](../../.github/instructions/general-cpp-code-authoring-instructions.md).
 Use Google C++ style, public Doxygen contracts, no exceptions/RTTI, focused
 regression tests, and clang-format. Each numbered phase is one focused commit;
 its commit body describes the concrete slice and cites this design.
