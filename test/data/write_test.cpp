@@ -8,7 +8,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "roo_io/data/ieee754.h"
+#include "roo_io/data/read.h"
 #include "roo_io/memory/load.h"  // ForHostNativeWriter.
+#include "roo_io/memory/memory_input_iterator.h"
 #include "roo_io/memory/memory_output_iterator.h"
 
 using namespace testing;
@@ -292,7 +294,66 @@ struct ShortVarintSink {
   Status state = kOk;
 };
 
+// Checks both directions against a simple independent 64-bit reference encoder.
+void CheckVarint(uint64_t value) {
+  SCOPED_TRACE(value);
+  byte expected[10];
+  size_t size = 0;
+  uint64_t remaining = value;
+  do {
+    uint8_t payload = remaining & 0x7F;
+    remaining >>= 7;
+    expected[size++] = static_cast<byte>(payload | (remaining != 0 ? 0x80 : 0));
+  } while (remaining != 0);
+  byte encoded[10];
+  MemoryOutputIterator output(encoded, encoded + size);
+  WriteVarU64(output, value);
+  ASSERT_EQ(kOk, output.status());
+  ASSERT_EQ(encoded + size, output.ptr());
+  EXPECT_EQ(0, memcmp(expected, encoded, size));
+  MemoryIterator input(expected, expected + size);
+  uint64_t decoded = 0;
+  ASSERT_TRUE(ReadVarU64(input, decoded));
+  EXPECT_EQ(value, decoded);
+  EXPECT_EQ(expected + size, input.ptr());
+  if (value <= UINT32_MAX) {
+    MemoryOutputIterator output32(encoded, encoded + size);
+    WriteVarU32(output32, static_cast<uint32_t>(value));
+    EXPECT_EQ(kOk, output32.status());
+    EXPECT_EQ(encoded + size, output32.ptr());
+    EXPECT_EQ(0, memcmp(expected, encoded, size));
+    MemoryIterator input32(expected, expected + size);
+    uint32_t decoded32 = 0;
+    ASSERT_TRUE(ReadVarU32(input32, decoded32));
+    EXPECT_EQ(value, decoded32);
+  }
+}
+
 }  // namespace
+
+// Verifies every bit boundary, especially byte five's split across words.
+TEST(Write, VarintWordBoundaries) {
+  CheckVarint(0);
+  CheckVarint(UINT64_MAX);
+  for (unsigned bit = 0; bit < 64; ++bit) {
+    uint64_t value = uint64_t{1} << bit;
+    CheckVarint(value - 1);
+    CheckVarint(value);
+    CheckVarint(value + 1);
+  }
+}
+
+// Verifies mixed low/high words against the reference with deterministic data.
+TEST(Write, VarintReferenceCorpus) {
+  uint64_t state = 0x123456789ABCDEF0ULL;
+  for (unsigned i = 0; i < 20000; ++i) {
+    state ^= state << 13;
+    state ^= state >> 7;
+    state ^= state << 17;
+    CheckVarint(state);
+    CheckVarint(static_cast<uint32_t>(state));
+  }
+}
 
 // Verifies every varint length survives one-byte bulk transfers.
 TEST(Write, VarintShortBulkWrites) {

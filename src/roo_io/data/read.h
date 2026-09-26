@@ -220,22 +220,33 @@ size_t ReadByteArray(InputIterator& in, byte* result, size_t count) {
 template <typename InputIterator>
 bool ReadVarU64(InputIterator& in, uint64_t& value) {
   if (in.status() != kOk) return false;
-  uint64_t result = 0;
-  for (int index = 0; index < 10; ++index) {
-    byte read = in.read();
-    if (in.status() != kOk) {
-      return false;
-    }
-    if (index == 9) {
-      // Bit 63 is the only payload bit representable in the final byte.
-      if (read != byte{0x00} && read != byte{0x01}) return false;
-      result |= static_cast<uint64_t>(read) << 63;
-      value = result;
+  // Keep variable shifts in 32-bit registers. Byte five spans both words;
+  // byte ten has only one representable payload bit.
+  uint32_t low = 0;
+  for (unsigned shift = 0; shift < 28; shift += 7) {
+    uint32_t read = static_cast<uint32_t>(in.read());
+    if (in.status() != kOk) return false;
+    low |= (read & 0x7F) << shift;
+    if ((read & 0x80) == 0) {
+      value = low;
       return true;
     }
-    result |= static_cast<uint64_t>(read & byte{0x7F}) << (7 * index);
-    if ((read & byte{0x80}) == byte{0}) {
-      value = result;
+  }
+  uint32_t read = static_cast<uint32_t>(in.read());
+  if (in.status() != kOk) return false;
+  low |= (read & 0x0F) << 28;
+  uint32_t high = (read & 0x70) >> 4;
+  if ((read & 0x80) == 0) {
+    value = (static_cast<uint64_t>(high) << 32) | low;
+    return true;
+  }
+  for (unsigned shift = 3; shift <= 31; shift += 7) {
+    read = static_cast<uint32_t>(in.read());
+    if (in.status() != kOk) return false;
+    if (shift == 31 && read > 1) return false;
+    high |= (read & 0x7F) << shift;
+    if ((read & 0x80) == 0) {
+      value = (static_cast<uint64_t>(high) << 32) | low;
       return true;
     }
   }

@@ -206,32 +206,49 @@ size_t WriteByteArray(OutputIterator& out, const byte* source, size_t count) {
   return written_total;
 }
 
+/// Writes an unsigned 32-bit integer using protobuf-style varint encoding.
+template <typename OutputIterator>
+void WriteVarU32(OutputIterator& out, uint32_t data) {
+  if (data <= 0x7F) {
+    out.write(static_cast<byte>(data));
+    return;
+  }
+  byte buffer[5];
+  size_t size = 0;
+  while (data > 0x7F) {
+    buffer[size++] = static_cast<byte>((data & 0x7F) | 0x80);
+    data >>= 7;
+  }
+  buffer[size++] = static_cast<byte>(data);
+  WriteByteArray(out, buffer, size);
+}
+
 /// Writes a protobuf-style variable-length unsigned 64-bit integer to `out`.
 ///
 /// This uses the protobuf varint encoding, so values up to 127 occupy one
 /// byte. Short bulk writes are retried; failures remain in out.status().
 template <typename OutputIterator>
 void WriteVarU64(OutputIterator& out, uint64_t data) {
-  byte buffer[10];
-  if (data <= 0x7F) {
-    // Fast-path and special-case for single-byte data.
-    out.write((byte)data);
+  uint32_t low = static_cast<uint32_t>(data);
+  uint32_t high = static_cast<uint32_t>(data >> 32);
+  if (high == 0) {
+    WriteVarU32(out, low);
     return;
   }
-
+  byte buffer[10];
   size_t size = 0;
-  while (data > 0) {
-    buffer[size++] = ((byte)data & byte{0x7F}) | byte{0x80};
-    data >>= 7;
+  // Shift the two words together without 64-bit operations in the byte loop.
+  do {
+    buffer[size++] = static_cast<byte>((low & 0x7F) | 0x80);
+    low = (low >> 7) | (high << 25);
+    high >>= 7;
+  } while (high != 0);
+  while (low > 0x7F) {
+    buffer[size++] = static_cast<byte>((low & 0x7F) | 0x80);
+    low >>= 7;
   }
-  buffer[size - 1] &= byte{0x7F};
+  buffer[size++] = static_cast<byte>(low);
   WriteByteArray(out, buffer, size);
-}
-
-/// Writes an unsigned 32-bit integer using protobuf-style varint encoding.
-template <typename OutputIterator>
-void WriteVarU32(OutputIterator& out, uint32_t value) {
-  WriteVarU64(out, value);
 }
 
 /// Writes a signed 32-bit integer using ZigZag and unsigned varint encoding.

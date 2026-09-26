@@ -284,6 +284,42 @@ TEST(Read, CheckedVarU64RejectsTruncatedPrefix) {
   EXPECT_EQ(kEndOfStream, input.status());
 }
 
+// Verifies all terminal-byte patterns and non-minimal ten-byte encodings.
+TEST(Read, VarintEveryTenthByte) {
+  byte data[11];
+  memset(data, 0x80, 9);
+  data[10] = byte{0x7B};
+  for (unsigned last = 0; last < 256; ++last) {
+    SCOPED_TRACE(last);
+    data[9] = static_cast<byte>(last);
+    MemoryIterator input(data, data + 11);
+    uint64_t value = 99;
+    EXPECT_EQ(last <= 1, ReadVarU64(input, value));
+    EXPECT_EQ(last <= 1 ? uint64_t{last} << 63 : 99, value);
+    EXPECT_EQ(kOk, input.status());
+    EXPECT_EQ(byte{0x7B}, input.read());
+  }
+}
+
+// Verifies EOF at every byte boundary leaves output unchanged, including when
+// the iterator is already failed on entry.
+TEST(Read, VarintEveryTruncatedPrefix) {
+  byte data[10];
+  memset(data, 0xFF, sizeof(data));
+  for (size_t size = 0; size < 10; ++size) {
+    SCOPED_TRACE(size);
+    MemoryIterator input(data, data + size);
+    uint64_t value = 99;
+    EXPECT_FALSE(ReadVarU64(input, value));
+    EXPECT_EQ(99, value);
+    EXPECT_EQ(kEndOfStream, input.status());
+    EXPECT_EQ(data + size, input.ptr());
+    EXPECT_FALSE(ReadVarU64(input, value));
+    EXPECT_EQ(99, value);
+    EXPECT_EQ(data + size, input.ptr());
+  }
+}
+
 // Verifies ZigZag transforms round-trip signed boundary values without signed
 // overflow or an arithmetic right shift.
 TEST(Read, ZigZagTransforms) {
