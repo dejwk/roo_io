@@ -24,7 +24,7 @@
     ],
     "dependencies": {
         "dejwk/roo_backport": ">=1.2.4",
-        "dejwk/roo_logging": ">=1.5.10",
-        "dejwk/roo_threads": ">=1.2.8"
+        "dejwk/roo_logging": ">=1.5.11",
+        "dejwk/roo_threads": ">=1.2.9"
     }
 }
