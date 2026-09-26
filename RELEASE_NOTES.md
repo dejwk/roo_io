@@ -1,3 +1,15 @@
+# roo_io 2.4.0
+
+- Add checked 32-bit and 64-bit unsigned varint decoding; deprecate the unchecked `ReadVarU64` overload.
+- **Breaking:** Length-prefixed string reads now reject oversized fields. Low-level readers return `bool` with output arguments; C-string readers require explicit capacity. Use the new `Truncated` variants for intentional truncation.
+- Add persistent data-error tracking to typed readers through `hasDataError()` and `ok()`.
+- Add 32-bit and 64-bit ZigZag encoding and decoding, including typed reader and writer methods.
+- Add allocation-free strict UTF-8 validation with `IsValidUtf8()`.
+- Optimize varint encoding and decoding, add `WriteVarU32()`, and fix varint writers to retry short bulk writes.
+- Upgrade `roo_logging` to 1.5.11, `roo_threads` to 1.2.9, and the Bazel testing dependency `roo_testing` to 2.3.0.
+
+---
+
 # roo_io 2.3.1
 
 - Updated filesystem `rename()` to follow POSIX replacement semantics: files replace files, and directories replace empty directories.
