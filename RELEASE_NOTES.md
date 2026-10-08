@@ -1,3 +1,10 @@
+# roo_io 2.4.1
+
+- Fix ESP-IDF SDMMC compilation by including FatFs types before `diskio_sdmmc.h`.
+- Upgrade the Bazel testing dependency `roo_testing` from 2.3.0 to 2.3.1.
+
+---
+
 # roo_io 2.4.0
 
 - Add checked 32-bit and 64-bit unsigned varint decoding; deprecate the unchecked `ReadVarU64` overload.
