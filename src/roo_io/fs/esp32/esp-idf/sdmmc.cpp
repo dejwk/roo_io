@@ -16,11 +16,13 @@
 #define MLOG_roo_io_fs 0
 #endif
 
-#include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "esp_idf_version.h"
 #include "esp_vfs_fat.h"
 #include "ff.h"
+
+// ESP-IDF requires FatFs types (including BYTE) before this header.
+#include "diskio_sdmmc.h"
 #include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
 #include "roo_io/fs/posix/posix_mount.h"
 #include "roo_logging.h"
