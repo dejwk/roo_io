@@ -26,3 +26,14 @@ cc_test(
         "@roo_testing//:esp_idf_gtest_main",
     ],
 )
+
+cc_test(
+    name = "littlefs_test",
+    size = "small",
+    srcs = ["littlefs_test.cpp"],
+    deps = [
+        "//:esp32_littlefs",
+        "@roo_testing//roo_testing/microcontrollers/esp32:core",
+        "@googletest//:gtest_main",
+    ],
+)

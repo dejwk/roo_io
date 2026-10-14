@@ -148,6 +148,7 @@ cc_library(
     deps = [
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/esp-idf",
+        "@roo_testing//roo_testing/frameworks/esp_littlefs",
     ],
 )
 
