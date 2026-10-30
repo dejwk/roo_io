@@ -16,7 +16,7 @@ PosixFileOutputStream::PosixFileOutputStream(std::shared_ptr<MountImpl> mount,
       size_(-1),
       status_(file_ != nullptr ? kOk : kClosed) {}
 
-PosixFileOutputStream::~PosixFileOutputStream() { ::fclose(file_); }
+PosixFileOutputStream::~PosixFileOutputStream() { close(); }
 
 size_t PosixFileOutputStream::write(const byte* buf, size_t count) {
   if (status_ != kOk) return 0;
@@ -44,13 +44,17 @@ size_t PosixFileOutputStream::write(const byte* buf, size_t count) {
 }
 
 void PosixFileOutputStream::close() {
+  if (file_ == nullptr) return;
+  const int result = ::fclose(file_);
+  const int close_error = errno;
+  file_ = nullptr;
   mount_.reset();
   if (status_ != kOk && status_ != kEndOfStream) return;
-  if (::fclose(file_) == 0) {
+  if (result == 0) {
     status_ = kClosed;
     return;
   }
-  switch (errno) {
+  switch (close_error) {
     case ENOSPC:
       status_ = kNoSpaceLeftOnDevice;
       break;
