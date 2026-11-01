@@ -101,6 +101,35 @@ bazel test --config=roo_testing_idf_esp32 //test/i2c:all
 ```
 
 Tests cover the pin-routed RTC emulator as well as scripted initialization and
-transfer failures. Arduino RTC integration and Wire failure tests live in
-`roo_time_ds3231`. A temporary `roo_testing` local override supplies the modern
+transfer failures. RTC calendar and transport-failure tests live in
+`roo_rtc`; `roo_time_ds3231` retains compatibility and integration checks. A temporary `roo_testing` local override supplies the modern
 IDF emulator until its release; update its path when using a different checkout.
+
+## Synchronous SPI devices
+
+`roo_io/spi/spi.h` provides `SpiMasterBusHandle` and `SpiSlaveDevice` on Arduino
+and native ESP-IDF. The application initializes and owns the SPI bus; all devices
+must be destroyed before the bus is released. Transfers are MSB first, with one
+active-low chip-select assertion covering the complete buffer. Serialize access
+externally. Construction does not touch hardware; call `device.init()` before
+transfers. Native device registration is owned, noncopyable, and retryable.
+
+```cpp
+roo_io::SpiSlaveDevice device(bus, cs_pin, 1000000, 1);
+if (!device.init()) return;
+uint8_t request[] = {0, 0};
+uint8_t response[2];
+if (!device.transfer(request, response, sizeof(request))) return;
+```
+
+On Arduino, `bus` accepts a `SPIClass&` (default `SPI`); call `SPI.begin(...)`
+first. The Arduino SPI API cannot detect a disconnected device or bus errors:
+`transfer()` success means the API clocked the bytes. On native IDF, `bus` accepts
+an already initialized SPI host (default `SPI2_HOST`); include `esp_driver_spi`
+in the firmware component dependencies. The adapter propagates driver errors,
+but synchronous polling does not impose a finite transfer timeout. Null TX
+sends zeros on Arduino and disables the MOSI phase on IDF (dummy levels are
+unspecified); null RX discards data. Zero length and two null buffers fail.
+
+Bazel consumers depend on `@roo_io//:spi`. Adapter fault tests are under
+`//test/spi`, separately for the Arduino and IDF frontend profiles.

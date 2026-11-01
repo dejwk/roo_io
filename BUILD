@@ -18,6 +18,7 @@ cc_library(
             "src/roo_io/stream/arduino/**/*.cpp",
             "src/roo_io/uart/esp32/**/*.cpp",
             "src/roo_io/i2c/**",
+            "src/roo_io/spi/**",
             "test/**",
         ],
     ),
@@ -170,7 +171,11 @@ cc_library(
             "src/**/*.cpp",
             "src/**/*.h",
         ],
-        exclude = ["test/**", "src/roo_io/i2c/**"],
+        exclude = [
+            "test/**",
+            "src/roo_io/i2c/**",
+            "src/roo_io/spi/**",
+        ],
     ),
     includes = [
         "src",
@@ -213,6 +218,44 @@ cc_library(
     deps = [":i2c_headers"] + select({
         "@roo_testing//roo_testing/platforms:is_arduino": [
             "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/Wire",
+        ],
+        "@roo_testing//roo_testing/platforms:is_idf": [
+            "@roo_testing//roo_testing/frameworks/esp-idf",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+cc_library(
+    name = "spi_headers",
+    hdrs = glob(["src/roo_io/spi/**/*.h"]),
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "arduino_spi_sources",
+    srcs = ["src/roo_io/spi/arduino/spi.cpp"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "idf_spi_sources",
+    srcs = ["src/roo_io/spi/esp32/spi.cpp"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "spi",
+    srcs = select({
+        "@roo_testing//roo_testing/platforms:is_arduino": [":arduino_spi_sources"],
+        "@roo_testing//roo_testing/platforms:is_idf": [":idf_spi_sources"],
+        "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [":spi_headers"] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino": [
+            "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SPI",
         ],
         "@roo_testing//roo_testing/platforms:is_idf": [
             "@roo_testing//roo_testing/frameworks/esp-idf",

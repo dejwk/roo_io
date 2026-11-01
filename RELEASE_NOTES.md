@@ -1,3 +1,9 @@
+# Unreleased
+
+- Add synchronous MSB-first SPI devices for Arduino and native ESP-IDF, with
+  borrowed buses, active-low CS framing, registration retry/cleanup, and focused
+  transport tests. Used by the roo_rtc DS3234 driver.
+
 # roo_io 2.4.1
 
 - Fix ESP-IDF SDMMC compilation by including FatFs types before `diskio_sdmmc.h`.

@@ -1,0 +1,52 @@
+#include <Arduino.h>
+
+#include "gtest/gtest.h"
+#include "roo_io/spi/spi.h"
+
+SPIClass SPI;
+std::vector<std::pair<int, int>> pin_writes;
+int configured_pin = -1;
+
+// Verifies CS framing, SPI mode mapping, MSB order, and independent RX bytes.
+TEST(ArduinoSpi, FramingAndSettings) {
+  SPIClass spi;
+  roo_io::SpiSlaveDevice device(spi, 5, 1000000, 1);
+  uint8_t tx[] = {1, 2, 3};
+  uint8_t rx[3];
+  EXPECT_FALSE(device.transfer(tx, rx, 3));
+  ASSERT_TRUE(device.init());
+  ASSERT_TRUE(device.init());
+  EXPECT_EQ(5, configured_pin);
+  pin_writes.clear();
+  ASSERT_TRUE(device.transfer(tx, rx, 3));
+  EXPECT_EQ((std::vector<std::pair<int, int>>{{5, LOW}, {5, HIGH}}),
+            pin_writes);
+  EXPECT_EQ((std::vector<uint8_t>{1, 2, 3}), spi.sent);
+  EXPECT_EQ(0xfe, rx[0]);
+  EXPECT_EQ(0xfc, rx[2]);
+  EXPECT_EQ(SPI_MODE1, spi.settings.mode);
+  EXPECT_EQ(MSBFIRST, spi.settings.order);
+  EXPECT_EQ(1000000u, spi.settings.frequency);
+  EXPECT_EQ(1, spi.begins);
+  EXPECT_EQ(1, spi.ends);
+}
+
+// Verifies receive-only zeros, transmit-only discard, aliasing, and bad inputs.
+TEST(ArduinoSpi, BufferContracts) {
+  SPIClass spi;
+  roo_io::SpiSlaveDevice device(spi, 6);
+  ASSERT_TRUE(device.init());
+  uint8_t data[] = {0x55, 0xaa};
+  ASSERT_TRUE(device.transfer(data, data, 2));
+  EXPECT_EQ(0xaa, data[0]);
+  EXPECT_EQ(0x55, data[1]);
+  ASSERT_TRUE(device.transfer(nullptr, data, 2));
+  EXPECT_EQ(0xff, data[0]);
+  EXPECT_EQ(0xff, data[1]);
+  ASSERT_TRUE(device.transfer(data, nullptr, 2));
+  EXPECT_FALSE(device.transfer(nullptr, nullptr, 2));
+  EXPECT_FALSE(device.transfer(data, data, 0));
+  EXPECT_FALSE(roo_io::SpiSlaveDevice(spi, -1).init());
+  EXPECT_FALSE(roo_io::SpiSlaveDevice(spi, 5, 0).init());
+  EXPECT_FALSE(roo_io::SpiSlaveDevice(spi, 5, 1000, 4).init());
+}
