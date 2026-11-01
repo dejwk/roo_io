@@ -254,6 +254,9 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [":spi_headers"] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino_rp2040": [
+            "@roo_testing//:arduino",
+        ],
         "@roo_testing//roo_testing/platforms:is_arduino": [
             "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SPI",
         ],

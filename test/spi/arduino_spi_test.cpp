@@ -50,3 +50,56 @@ TEST(ArduinoSpi, BufferContracts) {
   EXPECT_FALSE(roo_io::SpiSlaveDevice(spi, 5, 0).init());
   EXPECT_FALSE(roo_io::SpiSlaveDevice(spi, 5, 1000, 4).init());
 }
+
+// Verifies multiple buffers share one CS assertion/settings reservation,
+// ownership moves safely, and nested use of the same device is rejected.
+TEST(ArduinoSpi, ScopedTransactions) {
+  SPIClass spi;
+  roo_io::SpiSlaveDevice device(spi, 5);
+  ASSERT_TRUE(device.init());
+  pin_writes.clear();
+  uint8_t bytes[] = {0x12, 0x34};
+  {
+    roo_io::SpiTransaction scope = device.transaction();
+    ASSERT_TRUE(scope.isOpen());
+    EXPECT_FALSE(device.transaction().isOpen());
+    EXPECT_FALSE(device.transfer(bytes, nullptr, 2));
+    ASSERT_TRUE(scope.transfer(bytes, nullptr, 2));
+    ASSERT_TRUE(scope.transfer(bytes, nullptr, 2));
+    EXPECT_FALSE(scope.transfer(nullptr, nullptr, 2));
+    roo_io::SpiTransaction moved(std::move(scope));
+    EXPECT_FALSE(scope.isOpen());
+    ASSERT_TRUE(moved.isOpen());
+    EXPECT_EQ(1, spi.begins);
+    EXPECT_EQ(0, spi.ends);
+    EXPECT_EQ((std::vector<std::pair<int, int>>{{5, LOW}}), pin_writes);
+  }
+  EXPECT_EQ(1, spi.ends);
+  EXPECT_EQ((std::vector<std::pair<int, int>>{{5, LOW}, {5, HIGH}}),
+            pin_writes);
+  {
+    roo_io::SpiTransaction scope = device.transaction();
+    ASSERT_TRUE(scope.isOpen());
+    EXPECT_TRUE(scope.close());
+    EXPECT_TRUE(scope.close());
+    EXPECT_FALSE(scope.transfer(bytes, nullptr, 2));
+  }
+  EXPECT_EQ(2, spi.begins);
+  EXPECT_EQ(2, spi.ends);
+}
+
+// Verifies existing Arduino device copies retain their bus/configuration while
+// each scope releases its own reservation before the other copy is used.
+TEST(ArduinoSpi, BorrowedDeviceCopy) {
+  SPIClass spi;
+  roo_io::SpiSlaveDevice device(spi, 5, 2000000, 3);
+  ASSERT_TRUE(device.init());
+  roo_io::SpiSlaveDevice copy(device);
+  uint8_t byte = 0;
+  EXPECT_TRUE(copy.transfer(&byte, nullptr, 1));
+  EXPECT_TRUE(device.transfer(&byte, nullptr, 1));
+  EXPECT_EQ(2, spi.begins);
+  EXPECT_EQ(2, spi.ends);
+  EXPECT_EQ(2000000u, spi.settings.frequency);
+  EXPECT_EQ(SPI_MODE3, spi.settings.mode);
+}

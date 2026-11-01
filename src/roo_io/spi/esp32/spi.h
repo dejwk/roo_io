@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "driver/spi_master.h"
+#include "roo_io/spi/transaction.h"
 
 namespace roo_io {
 
@@ -23,6 +24,9 @@ class Esp32SpiMasterBusHandle {
 /// must remain initialized until all devices are destroyed.
 class Esp32SpiSlaveDevice {
  public:
+  /// Scoped reservation type; keep this device alive until the scope closes.
+  using Transaction = BasicSpiTransaction<Esp32SpiSlaveDevice>;
+
   /// Binds @p bus and active-low @p chip_select at @p frequency Hz, MSB first,
   /// using SPI @p mode (0-3). The maximum transfer size is set by the host.
   Esp32SpiSlaveDevice(Esp32SpiMasterBusHandle bus, int chip_select,
@@ -37,7 +41,8 @@ class Esp32SpiSlaveDevice {
   /// Registrations cannot be assigned.
   Esp32SpiSlaveDevice& operator=(const Esp32SpiSlaveDevice&) = delete;
 
-  /// Registers the device; idempotent and retryable after failure.
+  /// Configures CS idle-high and registers a device with manual chip select.
+  /// Idempotent and retryable after failure; the application owns the bus.
   bool init();
 
   /// Clocks @p len bytes under one CS assertion. Null @p tx disables the MOSI
@@ -47,7 +52,17 @@ class Esp32SpiSlaveDevice {
   /// partial overlap is unsupported.
   bool transfer(const uint8_t* tx, uint8_t* rx, size_t len) const;
 
+  /// Opens a reservation spanning multiple transfer() calls with one CS
+  /// assertion. isOpen() reports setup failure or another scope on this device.
+  /// Native IDF waits for bus acquisition; polling transfers have no timeout.
+  Transaction transaction() const { return Transaction(*this); }
+
  private:
+  friend class BasicSpiTransaction<Esp32SpiSlaveDevice>;
+  bool beginTransaction() const;
+  bool endTransaction() const;
+  bool transferSelected(const uint8_t* tx, uint8_t* rx, size_t len) const;
+  mutable bool active_ = false;
   spi_host_device_t host_;
   int chip_select_;
   uint32_t frequency_;

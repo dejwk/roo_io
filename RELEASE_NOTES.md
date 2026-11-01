@@ -1,5 +1,9 @@
 # Unreleased
 
+- Add scoped SPI transactions spanning multiple buffers with one CS assertion
+  and bus reservation, including native manual-CS cleanup and acquisition/error
+  handling. Preserve the one-shot transfer API and Arduino borrowed-device copies.
+- Select the Arduino-Pico SPI dependency in emulation builds.
 - Add synchronous MSB-first SPI devices for Arduino and native ESP-IDF, with
   borrowed buses, active-low CS framing, registration retry/cleanup, and focused
   transport tests. Used by the roo_rtc DS3234 driver.

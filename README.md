@@ -133,3 +133,43 @@ unspecified); null RX discards data. Zero length and two null buffers fail.
 
 Bazel consumers depend on `@roo_io//:spi`. Adapter fault tests are under
 `//test/spi`, separately for the Arduino and IDF frontend profiles.
+
+### Scoped SPI exchanges
+
+Use `SpiTransaction` when several buffers form one peripheral conversation:
+
+```cpp
+roo_io::SpiTransaction scope = device.transaction();
+if (!scope.isOpen()) return;
+if (!scope.transfer(command, response, sizeof(command))) return;
+if (!scope.transfer(next_command, next_response, sizeof(next_command))) return;
+if (!scope.close()) return;  // Optional: observe CS cleanup failure explicitly.
+```
+
+The scope configures/reserves the bus and asserts CS once. Every transfer keeps
+CS low until `close()` or destruction; early returns also release the reservation.
+Scopes are noncopyable, can be move-constructed, and borrow the device/bus lifetime.
+A failed transfer leaves the scope open so callers can attempt protocol cleanup.
+Check each result; the scope does not turn an earlier error into success.
+`close()` always relinquishes the reservation, even when GPIO cleanup reports an
+error. Repeated close calls are no-ops. A closed or moved-from scope rejects IO.
+
+The existing `device.transfer()` opens one such scope for its buffer. Native IDF
+reserves the host using `spi_device_acquire_bus` and uses manual GPIO CS with
+`spics_io_num = -1`; this permits deterministic scope cleanup without clocking an
+extra command. Include `esp_driver_gpio` with `esp_driver_spi` in native firmware
+component dependencies. Bus acquisition waits indefinitely and polling transfers
+have no finite timeout. Arduino uses its existing `beginTransaction()` settings
+and CS calls; its API still cannot detect a disconnected peripheral.
+
+Serialize access externally. Do not nest reservations on the same bus, even
+through different device objects. Nested calls on the same device are rejected
+before requesting another lock. Devices sharing a bus must use separate scopes;
+the application initializes/owns that bus and keeps it alive through all scopes
+and device registrations. Arduino device copies remain borrowed views and must
+also be serialized. Native device registrations remain noncopyable.
+
+The SPI Bazel target selects the matching Arduino-ESP32, Arduino-Pico, or native
+ESP-IDF backend. Host tests under `//test/spi` cover one-shot compatibility,
+fragmented scopes, moves, nesting rejection, bus/GPIO/transfer failures, and cleanup.
+Until this API is released, use a local `roo_io` override in consumers.
