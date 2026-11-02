@@ -125,6 +125,7 @@ cc_library(
     name = "esp32_uart",
     srcs = glob(["src/roo_io/uart/esp32/**"]),
     includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
@@ -141,7 +142,8 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        ":roo_io",
+        ":esp32_fs_headers",
+        ":filesystem",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
         "@roo_testing//roo_testing/frameworks/esp-idf",
@@ -156,10 +158,12 @@ cc_library(
     ],
     includes = ["src"],
     target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:esp_idf",
         "@roo_testing//roo_testing/platforms:arduino",
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
     ],
@@ -173,10 +177,12 @@ cc_library(
     ],
     includes = ["src"],
     target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:esp_idf",
         "@roo_testing//roo_testing/platforms:arduino",
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD_MMC",
     ],
@@ -189,8 +195,10 @@ cc_library(
         "src/roo_io/fs/esp32/esp-idf/sdspi.cpp",
     ],
     includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
@@ -203,8 +211,10 @@ cc_library(
         "src/roo_io/fs/esp32/internal/sd_mmc_probe.cpp",
     ],
     includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
@@ -214,8 +224,10 @@ cc_library(
     name = "esp32_littlefs",
     srcs = ["src/roo_io/fs/esp32/littlefs.cpp"],
     includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/esp-idf",
         "@roo_testing//roo_testing/frameworks/esp_littlefs",
@@ -226,8 +238,10 @@ cc_library(
     name = "esp32_spiffs",
     srcs = ["src/roo_io/fs/esp32/spiffs.cpp"],
     includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     visibility = ["//visibility:public"],
     deps = [
+        ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
@@ -363,5 +377,17 @@ cc_library(
         ":spi_headers",
         "@roo_testing//:pico_sdk",
         "@roo_threads",
+    ],
+)
+
+cc_library(
+    name = "esp32_fs_headers",
+    hdrs = glob(["src/roo_io/fs/esp32/**/*.h"]),
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
+    deps = [
+        ":filesystem",
+        ":posix_fs",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
 )

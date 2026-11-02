@@ -53,6 +53,7 @@ cc_library(
     ],
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
     deps = [
         "@roo_io//:arduino_fs",
         "@roo_io//:testing",
