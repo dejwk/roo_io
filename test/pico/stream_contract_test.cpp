@@ -40,6 +40,26 @@ class ScriptedStream : public Stream {
   bool fail_flush = false;
 };
 
+// Verifies zero operations have no side effects and writeFully handles partial
+// writes without modifying the source, then flush propagates backend errors.
+TEST(ArduinoStreamContract, OutputProgressAndFlush) {
+  ScriptedStream stream;
+  roo_io::ArduinoStreamOutputStream output(stream);
+  const roo_io::byte data[] = {roo_io::byte{1}, roo_io::byte{2},
+                               roo_io::byte{3}};
+  EXPECT_EQ(output.write(nullptr, 0), 0u);
+  EXPECT_EQ(stream.calls, 0);
+  ASSERT_EQ(output.writeFully(data, 3), 3u);
+  EXPECT_EQ(stream.calls, 2);
+  EXPECT_EQ(stream.output, (std::vector<uint8_t>{1, 2, 3}));
+  output.flush();
+  EXPECT_EQ(stream.flushes, 1);
+  stream.fail_flush = true;
+  output.flush();
+  EXPECT_EQ(output.status(), roo_io::kWriteError);
+  EXPECT_EQ(output.write(data, 1), 0u);
+}
+
 // Verifies unavailable output is nonblocking, blocking write requests one
 // byte, and zero progress terminates writeFully with an observable error.
 TEST(ArduinoStreamContract, ZeroProgress) {

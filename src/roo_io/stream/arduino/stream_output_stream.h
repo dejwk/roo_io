@@ -39,9 +39,10 @@ class ArduinoStreamOutputStream : public OutputStream {
   /// @return Number of bytes written.
   size_t writeFully(const byte* buf, size_t count) override;
 
-  /// Flushes buffered output to sink.
+  /// Flushes the borrowed Stream and records any write error.
   ///
-  /// Updates status.
+  /// Completion and blocking follow Stream::flush(). In particular, an
+  /// Arduino hardware serial stream may wait until transmission completes.
   void flush() override;
 
   /// Closes adapter by setting status to `kClosed`.

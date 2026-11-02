@@ -49,9 +49,9 @@ size_t ArduinoStreamOutputStream::writeFully(const byte* buf, size_t count) {
 }
 
 void ArduinoStreamOutputStream::flush() {
-  // Arduino 'flush' is stronger than our semantics, in that it waits for the
-  // data to be actually sent out, which we don't require. if (status() != kOk)
-  // return; output_.flush();
+  if (status_ != kOk) return;
+  output_.flush();
+  if (output_.getWriteError() != 0) status_ = kWriteError;
 }
 
 void ArduinoStreamOutputStream::close() {
