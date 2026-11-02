@@ -122,4 +122,20 @@ TEST(ArduinoStreamContract, ClosePreservesFlushFailure) {
   EXPECT_EQ(stream.flushes, 1);
 }
 
+// Verifies the concrete destructor flushes the borrowed backend, since virtual
+// dispatch from OutputStream's base destructor cannot call the adapter flush.
+TEST(ArduinoStreamContract, DestructorFlushesOnce) {
+  ScriptedStream stream;
+  {
+    roo_io::ArduinoStreamOutputStream output(stream);
+  }
+  EXPECT_EQ(stream.flushes, 1);
+  {
+    roo_io::ArduinoStreamOutputStream output(stream);
+    output.close();
+    EXPECT_EQ(output.status(), roo_io::kClosed);
+  }
+  EXPECT_EQ(stream.flushes, 2);
+}
+
 }  // namespace

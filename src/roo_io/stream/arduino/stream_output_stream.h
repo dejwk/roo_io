@@ -17,6 +17,9 @@ class ArduinoStreamOutputStream : public OutputStream {
   /// Creates an adapter over the borrowed Arduino `Stream`.
   ArduinoStreamOutputStream(Stream& output);
 
+  /// Flushes this view before its borrowed Stream is released by the caller.
+  ~ArduinoStreamOutputStream() override { close(); }
+
   /// Writes the currently available prefix without waiting for capacity.
   ///
   /// Updates status.
