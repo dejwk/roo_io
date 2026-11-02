@@ -183,3 +183,12 @@ portable memory/data/text I/O; `:filesystem` provides generic mount abstractions
 `:ringpipe` requires a threaded runtime. The existing `:roo_io` aggregate retains
 these supported facilities, omitting blocking pipes in bare-metal profiles.
 Generic test fixtures do not depend on Arduino FS implementations.
+
+Pico SDK-only applications can use `I2cSlaveDevice` and `SpiSlaveDevice` through
+`:i2c` and `:spi`, and `PicoUartInputStream`/`PicoUartOutputStream` through
+`:pico_uart`. Initialize controllers and route pins with the SDK first. Concrete
+`:pico_i2c` and `:pico_spi` targets also allow SDK access from Arduino-Pico.
+SPI scopes retain CS and reserve the controller between calls. Reservations
+serialize these Roo SDK adapters; coordinate direct SDK and Arduino access
+externally. Keep controllers/devices alive until scopes and borrowed streams
+are closed. Blocking operations and mutex acquisition are task-context APIs.

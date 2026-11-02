@@ -46,3 +46,27 @@ cc_test(
         "@roo_testing//:arduino_gtest_main",
     ],
 )
+
+cc_test(
+    name = "sdk_transport_test",
+    size = "small",
+    timeout = "short",
+    srcs = ["sdk_transport_test.cpp"],
+    copts = [
+        "-fno-rtti",
+        "-fno-exceptions",
+    ],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:rp2040"],
+    deps = [
+        "//:pico_i2c",
+        "//:pico_spi",
+        "//:pico_uart",
+        "@roo_testing//roo_testing/buses/i2c",
+        "@roo_testing//roo_testing/buses/spi",
+        "@roo_testing//roo_testing/buses/uart",
+        "@roo_testing//roo_testing/microcontrollers/rp2040:pico",
+    ] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino": ["@roo_testing//:arduino_gtest_main"],
+        "//conditions:default": ["@roo_testing//:pico_gtest_main"],
+    }),
+)

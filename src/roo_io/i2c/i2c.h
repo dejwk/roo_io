@@ -14,4 +14,10 @@ namespace roo_io {
 using I2cMasterBusHandle = Esp32I2cMasterBusHandle;
 using I2cSlaveDevice = Esp32I2cSlaveDevice;
 }  // namespace roo_io
+#elif defined(PICO_RP2040) && PICO_RP2040
+#include "roo_io/i2c/pico/i2c.h"
+namespace roo_io {
+using I2cMasterBusHandle = PicoI2cMasterBusHandle;
+using I2cSlaveDevice = PicoI2cSlaveDevice;
+}  // namespace roo_io
 #endif

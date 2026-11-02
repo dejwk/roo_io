@@ -9,6 +9,7 @@ namespace roo_io {
 /// A failed transfer leaves the scope open so a caller can attempt protocol
 /// cleanup; check each return value. Destruction releases CS and the bus.
 /// Serialize access externally and do not nest reservations on the same bus.
+/// Create and close each reservation on the same task.
 template <typename Device>
 class BasicSpiTransaction {
  public:

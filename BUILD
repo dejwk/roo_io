@@ -266,6 +266,7 @@ cc_library(
     srcs = select({
         "@roo_testing//roo_testing/platforms:is_arduino": [":arduino_i2c_sources"],
         "@roo_testing//roo_testing/platforms:is_idf": ["src/roo_io/i2c/esp32/i2c.cpp"],
+        "@roo_testing//roo_testing/platforms:is_pico": [],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
@@ -277,6 +278,7 @@ cc_library(
         "@roo_testing//roo_testing/platforms:is_idf": [
             "@roo_testing//roo_testing/frameworks/esp-idf",
         ],
+        "@roo_testing//roo_testing/platforms:is_pico": [":pico_i2c"],
         "//conditions:default": [],
     }),
 )
@@ -305,6 +307,7 @@ cc_library(
     srcs = select({
         "@roo_testing//roo_testing/platforms:is_arduino": [":arduino_spi_sources"],
         "@roo_testing//roo_testing/platforms:is_idf": [":idf_spi_sources"],
+        "@roo_testing//roo_testing/platforms:is_pico": [],
         "//conditions:default": [],
     }),
     visibility = ["//visibility:public"],
@@ -318,6 +321,47 @@ cc_library(
         "@roo_testing//roo_testing/platforms:is_idf": [
             "@roo_testing//roo_testing/frameworks/esp-idf",
         ],
+        "@roo_testing//roo_testing/platforms:is_pico": [":pico_spi"],
         "//conditions:default": [],
     }),
+)
+
+cc_library(
+    name = "pico_uart",
+    hdrs = ["src/roo_io/uart/pico/uart.h"],
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:rp2040"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":core",
+        "@roo_testing//:pico_sdk",
+    ],
+)
+
+cc_library(
+    name = "pico_i2c",
+    srcs = ["src/roo_io/i2c/pico/i2c.cpp"],
+    hdrs = ["src/roo_io/i2c/pico/i2c.h"],
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:rp2040"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":i2c_headers",
+        "@roo_testing//:pico_sdk",
+        "@roo_threads",
+    ],
+)
+
+cc_library(
+    name = "pico_spi",
+    srcs = ["src/roo_io/spi/pico/spi.cpp"],
+    hdrs = ["src/roo_io/spi/pico/spi.h"],
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:rp2040"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":spi_headers",
+        "@roo_testing//:pico_sdk",
+        "@roo_threads",
+    ],
 )

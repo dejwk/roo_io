@@ -15,4 +15,11 @@ using SpiMasterBusHandle = Esp32SpiMasterBusHandle;
 using SpiSlaveDevice = Esp32SpiSlaveDevice;
 using SpiTransaction = SpiSlaveDevice::Transaction;
 }  // namespace roo_io
+#elif defined(PICO_RP2040) && PICO_RP2040
+#include "roo_io/spi/pico/spi.h"
+namespace roo_io {
+using SpiMasterBusHandle = PicoSpiMasterBusHandle;
+using SpiSlaveDevice = PicoSpiSlaveDevice;
+using SpiTransaction = SpiSlaveDevice::Transaction;
+}  // namespace roo_io
 #endif
