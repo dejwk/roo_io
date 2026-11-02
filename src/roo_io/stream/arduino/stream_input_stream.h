@@ -10,7 +10,8 @@ namespace roo_io {
 
 /// Adapter exposing Arduino `Stream` as `InputStream`.
 ///
-/// Stream remains open until `close()` is called.
+/// Borrows the underlying Stream, which must outlive this adapter.
+/// close() closes only this view. Serialize access to the Stream externally.
 class ArduinoStreamInputStream : public InputStream {
  public:
   /// Creates adapter over Arduino `Stream`.

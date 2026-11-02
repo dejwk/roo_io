@@ -31,3 +31,18 @@ load("@rules_cc//cc:cc_test.bzl", "cc_test")
         "manual",
     ]
 ]
+
+cc_test(
+    name = "stream_contract_test",
+    size = "small",
+    srcs = ["stream_contract_test.cpp"],
+    copts = [
+        "-fno-rtti",
+        "-fno-exceptions",
+    ],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:arduino"],
+    deps = [
+        "//:arduino_stream",
+        "@roo_testing//:arduino_gtest_main",
+    ],
+)
