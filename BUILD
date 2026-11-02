@@ -136,6 +136,10 @@ cc_library(
 cc_library(
     name = "arduino_fs",
     srcs = glob(["src/roo_io/fs/arduino/**"]),
+    copts = [
+        "-fno-rtti",
+        "-fno-exceptions",
+    ],
     includes = ["src"],
     target_compatible_with = [
         "@roo_testing//roo_testing/platforms:arduino",
