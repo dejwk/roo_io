@@ -31,7 +31,8 @@ class ArduinoStreamOutputStream : public OutputStream {
   /// @return Number of bytes written.
   size_t write(const byte* buf, size_t count) override;
 
-  /// Writes exactly `count` bytes unless stream becomes unavailable.
+  /// Repeats partial writes until `count` bytes transfer or an error occurs.
+  /// Zero progress is kWriteError; a zero-length request has no side effects.
   ///
   /// Updates status.
   ///

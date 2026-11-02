@@ -39,8 +39,13 @@ size_t ArduinoStreamOutputStream::write(const byte* buf, size_t count) {
 }
 
 size_t ArduinoStreamOutputStream::writeFully(const byte* buf, size_t count) {
-  if (status() != kOk) return 0;
-  return output_.write((const uint8_t*)buf, count);
+  size_t total = 0;
+  while (total < count && status_ == kOk) {
+    const size_t written =
+        write(buf == nullptr ? nullptr : buf + total, count - total);
+    total += written;
+  }
+  return total;
 }
 
 void ArduinoStreamOutputStream::flush() {
