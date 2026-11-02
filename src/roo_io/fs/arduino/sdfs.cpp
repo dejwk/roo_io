@@ -69,11 +69,11 @@ Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
 #else
 
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin)
-    : sd_(::SD),
+    : cs_pin_(cs_pin),
+      sd_(::SD),
 #if defined(ARDUINO_ARCH_RP2040)
       sdfs_(::SDFS),
 #endif
-      cs_pin_(cs_pin),
       read_only_(false) {
 }
 
