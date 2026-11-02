@@ -109,6 +109,7 @@ cc_library(
 cc_library(
     name = "arduino_stream",
     srcs = glob(["src/roo_io/stream/arduino/**"]),
+    hdrs = glob(["src/roo_io/uart/arduino/*.h"]),
     includes = ["src"],
     target_compatible_with = [
         "@roo_testing//roo_testing/platforms:arduino",
@@ -116,7 +117,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":roo_io",
-        "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
+        "@roo_testing//:arduino",
     ],
 )
 
@@ -269,6 +270,7 @@ cc_library(
     }),
     visibility = ["//visibility:public"],
     deps = [":i2c_headers"] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino_rp2040": ["@roo_testing//:arduino"],
         "@roo_testing//roo_testing/platforms:is_arduino": [
             "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/Wire",
         ],
