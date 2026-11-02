@@ -192,3 +192,16 @@ SPI scopes retain CS and reserve the controller between calls. Reservations
 serialize these Roo SDK adapters; coordinate direct SDK and Arduino access
 externally. Keep controllers/devices alive until scopes and borrowed streams
 are closed. Blocking operations and mutex acquisition are task-context APIs.
+
+Arduino-Pico storage is available through `:arduino_fs`:
+`roo_io::SD` selects `PicoSdSpiFs`, with `setSPI()` and `setFrequency()`
+configuration and automatic SPI card detection. Mounted presence checks preserve
+card state. SD unmount leaves the application-owned SPI bus running.
+`ArduinoLittleFs` wraps an application-configured `::LittleFS` or another Pico
+`fs::FS`. Configure flash layout and auto-format policy before mounting, and
+keep the filesystem wrapper and backend alive until all mounts/files close.
+Its mount factory selects `PicoLittleFsMountImpl` to restore ancestors pruned by
+the core; ordinary Arduino mounts use their native deletion operations.
+`examples/PicoStorageSmoke` demonstrates explicit provisioning and readback.
+Pico emulation uses `roo_testing`'s real core FS wrappers with isolated storage;
+ESP32 retains its VFS path. Native SDK filesystem drivers remain separate work.

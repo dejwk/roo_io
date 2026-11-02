@@ -43,8 +43,9 @@ Arduino-Pico filesystem support uses the core's FS APIs over SDFS and LittleFS.
 Host filesystem objects implement that same API over isolated native directories.
 Host paths model storage contents, not SD wire timing or flash wear. Card presence
 and mount failures have explicit fake controls. Production Arduino SD supports
-bus/frequency configuration and optional card-detect input; without card detect,
-unmounted presence remains unknown rather than inventing a card probe.
+bus/frequency configuration. The Pico-specific SD backend automatically probes
+the configured SPI bus and CS. Its command probes share their implementation
+with the ESP32 Arduino backend.
 
 ## Design Details
 
@@ -72,13 +73,50 @@ existing file objects retain their mount. Hardware qualification uses compile
 smoke tests plus a board sketch where hardware is available; host tests do not
 claim electrical SD or flash validation.
 
+### Pico SD card detection
+
+`PicoSdSpiFs` lives in `roo_io/fs/pico/arduino/sdspi.h`; existing consumers can
+keep including `roo_io/fs/arduino/sdfs.h` and linking `:arduino_fs`. Both headers
+expose the same `roo_io::SD` singleton over the core's global SD/SDFS objects.
+
+Before mounting, presence checks send bounded CMD0 probes at 400 kHz. This can
+reset a responding card, so mounted checks instead use CMD58 (READ_OCR), which
+preserves card state. Detection does not mount or unmount the filesystem.
+Mounting checks presence automatically: an absent card reports `kNoMedia`, while
+a responding card whose filesystem cannot be opened reports `kGenericMountError`.
+The checks initialize the selected SPI controller when needed and leave it
+available for application use; unmounting does not end that controller.
+
+```cpp
+#include <roo_io/fs/arduino/sdfs.h>
+
+// Configure the selected controller's pins before using the filesystem.
+roo_io::SD.setSPI(SPI1);
+roo_io::SD.setCsPin(13);
+roo_io::SD.setFrequency(4000000);
+roo_io::Mount mount = roo_io::SD.mount();
+```
+
+Configure SPI, CS and mount frequency while unmounted. Serialize filesystem and
+shared-bus use externally. Detect-pin configuration applies immediately to later
+checks; no callback or borrowed callback context is retained. Presence checking
+does not automatically invalidate mounted handles after removal.
+
+Host tests use `FakeSdSpiCard` for real command/response exchanges and the
+separate SDFS fake for file contents and mount failures. They cover both SPI
+controllers, inserted/absent cards, mounted non-resetting queries, bounded response
+polling and invalid OCR values on both Pico runtimes. Physical
+SD electrical behavior remains unqualified because no module was connected.
+
 ## Proposed API
 
 Existing :roo_io, :i2c and :spi names remain. Add focused :core, :filesystem,
 :ringbuffer, :ringpipe and :pico_uart targets. Public bus headers select Pico SDK
 when neither Arduino nor IDF is active and Pico identity is present. Arduino
-storage exposes configured SPI/frequency and an optional borrowed card-detect
-predicate. LittleFS gets a concrete Filesystem wrapper.
+storage exposes configured SPI/frequency and automatic SPI card detection. On
+Arduino-Pico, the existing `ArduinoSdFs` name aliases `PicoSdSpiFs`, and
+`roo_io::SD` selects that implementation automatically. LittleFS gets a
+concrete Filesystem wrapper.
 
 ## Implementation Plan
 
@@ -144,4 +182,40 @@ operations. Concrete backends and focused build targets minimize migration.
 ## Future Work
 
 SDK-native storage drivers, DMA/asynchronous I/O, multicore and IRQ integration
-need separate contracts and qualification.
+need separate contracts and qualification. GPIO card detection is deferred until
+roo_io provides a platform-independent digital-input API.
+
+## Storage qualification
+
+The PicoStorageSmoke sketch compiles with exceptions/RTTI disabled for both
+bare-metal and FreeRTOS using the installed Arduino-Pico 5.4.3 toolchain package
+(PlatformIO framework package 1.50403.0). Both ELF and UF2 artifacts were produced.
+Host tests use the separately pinned Arduino-Pico 6.3.1 FS API in roo_testing.
+The initial compile-only qualification was followed by physical tests on an
+RP2040-Zero (2 MiB flash). LittleFS passed the finite smoke sketch on both
+bare-metal and FreeRTOS: block/append/seek readback after remount, directory
+operations, read-only policy, file-held mount lifetime, stale mount handles
+and lazy unmount. No SD module was connected; SD electrical behavior remains
+unqualified. The original complete flash image was backed up before
+provisioning and restored with byte-for-byte verification after testing.
+
+The board test exposed Arduino-Pico LittleFS automatically pruning empty
+parent directories during deletion. The fake now models that behavior, and
+`PicoLittleFsMountImpl` restores missing ancestors after a successful removal.
+The LittleFS mount factory selects this subclass under the Pico compilation
+guard. Shared `ArduinoMountImpl` deletion paths call its protected virtual
+`removeEntry()` hook; ordinary mounts delegate directly to the core FS API.
+Repair uses one transient path-sized buffer and checks each ancestor. Deletion and restoration are not atomic; an
+unsuccessful restoration reports an I/O error.
+
+The sketch waits for a serial connection and prints a finite PASS/FAIL
+result; send `t` to repeat it. Define `ROO_IO_PICO_SMOKE_SD=0` when no SD
+module is wired. Formatting remains disabled unless the explicit test option
+`ROO_IO_PICO_SMOKE_FORMAT_IF_NEEDED=1` is selected. See the
+[board test record](../../roo-registry/integration/pico_io/BOARD_VALIDATION.md)
+for build options, serial logs and qualification boundaries.
+
+Storage tests cover isolated roots, upstream FS/File/Dir calls, remount
+persistence, SD configuration, file update policies, rename/enumeration,
+read-only mounts, file-held mount lifetime, failure injection, media loss and
+force-unmount invalidation. ESP32 filesystem regressions remain enabled.

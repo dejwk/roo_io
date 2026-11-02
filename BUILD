@@ -136,7 +136,10 @@ cc_library(
 cc_library(
     name = "arduino_fs",
     srcs = glob(
-        ["src/roo_io/fs/arduino/**"],
+        [
+            "src/roo_io/fs/arduino/**",
+            "src/roo_io/fs/pico/arduino/**",
+        ],
         exclude = ["src/roo_io/fs/arduino/internal/sd_spi_probe.cpp"],
     ),
     copts = [
@@ -150,12 +153,16 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":arduino_sd_probe_internal",
-        ":esp32_fs_headers",
         ":filesystem",
-        "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
-        "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
-        "@roo_testing//roo_testing/frameworks/esp-idf",
-    ],
+    ] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino_rp2040": ["@roo_testing//roo_testing/frameworks/arduino_pico_support:filesystem"],
+        "//conditions:default": [
+            ":esp32_fs_headers",
+            "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
+            "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
+            "@roo_testing//roo_testing/frameworks/esp-idf",
+        ],
+    }),
 )
 
 cc_library(

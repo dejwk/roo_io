@@ -42,6 +42,10 @@ ArduinoMountImpl::ArduinoMountImpl(FS& fs, bool read_only,
 
 bool ArduinoMountImpl::isReadOnly() const { return read_only_; }
 
+bool ArduinoMountImpl::removeEntry(const char* path, bool directory) {
+  return directory ? fs_.rmdir(path) : fs_.remove(path);
+}
+
 Stat ArduinoMountImpl::stat(const char* path) const {
   if (path == nullptr || path[0] != '/') {
     return Stat(kInvalidPath);
@@ -64,7 +68,7 @@ Status ArduinoMountImpl::remove(const char* path) {
     if (!f) return kNotFound;
     if (f.isDirectory()) return kNotFile;
   }
-  return fs_.remove(path) ? kOk : kUnknownIOError;
+  return removeEntry(path, false) ? kOk : kUnknownIOError;
 }
 
 Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
@@ -100,7 +104,7 @@ Status ArduinoMountImpl::rename(const char* pathFrom, const char* pathTo) {
     }
     // Some Arduino backends do not replace an existing entry themselves.
     // Fall back to a non-atomic remove-and-rename sequence.
-    bool removed = dst.isDirectory() ? fs_.rmdir(pathTo) : fs_.remove(pathTo);
+    bool removed = removeEntry(pathTo, dst.isDirectory());
     if (!removed) return kUnknownIOError;
     return fs_.rename(pathFrom, pathTo) ? kOk : kUnknownIOError;
   }
@@ -148,7 +152,7 @@ Status ArduinoMountImpl::rmdir(const char* path) {
     fs::File f = fs_.open(path, "r");
     if (!f) return kNotFound;
     if (!f.isDirectory()) return kNotDirectory;
-    if (fs_.rmdir(path)) return kOk;
+    if (removeEntry(path, true)) return kOk;
 
     fs::File child;
     do {

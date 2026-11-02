@@ -70,3 +70,46 @@ cc_test(
         "//conditions:default": ["@roo_testing//:pico_gtest_main"],
     }),
 )
+
+cc_test(
+    name = "storage_test",
+    size = "small",
+    srcs = ["storage_test.cpp"],
+    copts = [
+        "-fno-rtti",
+        "-fno-exceptions",
+    ],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+        "@roo_testing//roo_testing/platforms:rp2040",
+    ],
+    deps = [
+        "//:arduino_fs",
+        "@roo_testing//:arduino_gtest_main",
+        "@roo_testing//roo_testing/devices/storage/sd_spi",
+        "@roo_testing//roo_testing/frameworks/arduino_pico_support:filesystem",
+        "@roo_testing//roo_testing/microcontrollers/rp2040:pico",
+    ],
+)
+
+cc_test(
+    name = "sd_detection_test",
+    size = "small",
+    timeout = "short",
+    srcs = ["sd_detection_test.cpp"],
+    copts = [
+        "-fno-rtti",
+        "-fno-exceptions",
+    ],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+        "@roo_testing//roo_testing/platforms:rp2040",
+    ],
+    deps = [
+        "//:arduino_fs",
+        "@roo_testing//:arduino_gtest_main",
+        "@roo_testing//roo_testing/devices/storage/sd_spi",
+        "@roo_testing//roo_testing/frameworks/arduino_pico_support:filesystem",
+        "@roo_testing//roo_testing/microcontrollers/rp2040:pico",
+    ],
+)

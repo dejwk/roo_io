@@ -14,6 +14,7 @@ namespace roo_io {
 
 class ArduinoMountImpl : public MountImpl {
  public:
+  /// Borrows @p fs for the mount lifetime with the given read-only policy.
   ArduinoMountImpl(FS& fs, bool read_only, std::function<void()> unmount_fn);
 
   bool isReadOnly() const override;
@@ -41,6 +42,15 @@ class ArduinoMountImpl : public MountImpl {
   bool active() const override { return active_; }
 
   void deactivate() override;
+
+ protected:
+  /// Deletes a validated file or directory through the native FS API.
+  /// Overrides adapt backend deletion behavior for remove, rmdir and rename
+  /// replacement. Return false if deletion or the required adaptation fails.
+  virtual bool removeEntry(const char* path, bool directory);
+
+  /// Returns the borrowed backend for platform-specific mount operations.
+  FS& filesystem() const { return fs_; }
 
  private:
   FS& fs_;

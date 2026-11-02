@@ -1,11 +1,11 @@
 
-#ifdef ARDUINO
+#if defined(ARDUINO) && !defined(ARDUINO_ARCH_RP2040)
 
 #include "roo_io/fs/arduino/sdfs.h"
 
 #include <Arduino.h>
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP32 || defined ARDUINO_ARCH_ESP32)
 // Directly use the lower-level POSIX APIs, bypassing Arduino filesystem stuff
 // completely.
 #include "roo_io/fs/esp32/arduino/internal/sd_spi_probe.h"
@@ -20,7 +20,7 @@
 
 namespace roo_io {
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP32 || defined ARDUINO_ARCH_ESP32)
 
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin, decltype(::SD)& sd,
                          decltype(::SPI)& spi, uint32_t freq)
@@ -69,13 +69,7 @@ Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {
 #else
 
 ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin)
-    : cs_pin_(cs_pin),
-      sd_(::SD),
-#if defined(ARDUINO_ARCH_RP2040)
-      sdfs_(::SDFS),
-#endif
-      read_only_(false) {
-}
+    : cs_pin_(cs_pin), sd_(::SD), read_only_(false) {}
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
@@ -86,11 +80,7 @@ MountImpl::MountResult ArduinoSdFs::mountImpl(
     return MountImpl::MountError(kGenericMountError);
   }
   return MountImpl::Mounted(std::unique_ptr<MountImpl>(
-#if defined(ARDUINO_ARCH_RP2040)
-      new ArduinoMountImpl(sdfs_, read_only_, unmount_fn)));
-#else
       new ArduinoMountImpl(sd_, read_only_, unmount_fn)));
-#endif
 }
 
 Filesystem::MediaPresence ArduinoSdFs::checkMediaPresence() {

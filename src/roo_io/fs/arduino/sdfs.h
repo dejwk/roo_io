@@ -15,10 +15,19 @@
 
 #ifdef ARDUINO
 
+#if defined(ARDUINO_ARCH_RP2040)
+#include "roo_io/fs/pico/arduino/sdspi.h"
+
+namespace roo_io {
+/// Selects the Pico implementation through the existing Arduino SD header.
+using ArduinoSdFs = PicoSdSpiFs;
+}  // namespace roo_io
+#else
+
 #include <Arduino.h>
 #include <SD.h>
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP32 || defined ARDUINO_ARCH_ESP32)
 #include <SPI.h>
 
 #include "roo_io/fs/esp32/base_vfs_filesystem.h"
@@ -28,7 +37,7 @@
 
 namespace roo_io {
 
-#if (defined ESP32 || defined ROO_TESTING)
+#if (defined ESP32 || defined ARDUINO_ARCH_ESP32)
 
 /// Arduino SD wrapper that mounts media through the ESP32 VFS layer.
 class ArduinoSdFs : public BaseEsp32VfsFilesystem {
@@ -95,9 +104,6 @@ class ArduinoSdFs : public Filesystem {
   uint8_t cs_pin_;
 
   decltype(::SD)& sd_;
-#if defined(ARDUINO_ARCH_RP2040)
-  decltype(::SDFS)& sdfs_;
-#endif
   bool read_only_;
 };
 
@@ -108,4 +114,5 @@ extern ArduinoSdFs SD;
 
 }  // namespace roo_io
 
+#endif  // ARDUINO_ARCH_RP2040
 #endif  // ARDUINO
