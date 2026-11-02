@@ -173,3 +173,13 @@ The SPI Bazel target selects the matching Arduino-ESP32, Arduino-Pico, or native
 ESP-IDF backend. Host tests under `//test/spi` cover one-shot compatibility,
 fragmented scopes, moves, nesting rejection, bus/GPIO/transfer failures, and cleanup.
 Until this API is released, use a local `roo_io` override in consumers.
+
+
+## Pico support and focused targets
+
+See [the staged Pico support design](doc/pico_support.md). `:core` provides
+portable memory/data/text I/O; `:filesystem` provides generic mount abstractions;
+`:posix_fs` supplies native descriptors; `:ringbuffer` is nonblocking storage;
+`:ringpipe` requires a threaded runtime. The existing `:roo_io` aggregate retains
+these supported facilities, omitting blocking pipes in bare-metal profiles.
+Generic test fixtures do not depend on Arduino FS implementations.

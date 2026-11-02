@@ -1,6 +1,8 @@
 #include "roo_io/data/write.h"
 
+#if defined(ARDUINO)
 #include <WString.h>
+#endif
 #include <stdint.h>
 
 #include <cstring>
@@ -445,6 +447,7 @@ TEST(Write, CString) {
   EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
 }
 
+#if defined(ARDUINO)
 TEST(Write, ArduinoString) {
   uint8_t result[] = {9, 9, 9, 9, 9, 9, 9, 9};
   MemoryOutputIterator itr{(byte*)result, (byte*)result + 8};
@@ -452,5 +455,7 @@ TEST(Write, ArduinoString) {
   ASSERT_EQ(kOk, itr.status());
   EXPECT_THAT(result, ElementsAre(3, 'f', 'o', 'o', 9, 9, 9, 9));
 }
+
+#endif
 
 }  // namespace roo_io

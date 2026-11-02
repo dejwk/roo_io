@@ -1,40 +1,108 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 cc_library(
-    name = "roo_io",
+    name = "encoding_c",
+    srcs = glob(["src/roo_io/**/*.c"]),
+    hdrs = glob(["src/roo_io/third_party/**/*.h"]),
+    includes = ["src"],
+)
+
+# Portable code has no filesystem adapter or blocking-pipe dependency.
+cc_library(
+    name = "core",
     srcs = glob(
         [
-            "src/**/*.cpp",
-            "src/**/*.c",
-            "src/**/*.h",
+            "src/roo_io/**/*.cpp",
         ],
         exclude = [
-            "src/roo_io/fs/arduino/**/*.cpp",
-            "src/roo_io/fs/esp32/arduino/**/*.cpp",
-            "src/roo_io/fs/esp32/esp-idf/**/*.cpp",
-            "src/roo_io/fs/esp32/internal/**/*.cpp",
-            "src/roo_io/fs/esp32/littlefs.cpp",
-            "src/roo_io/fs/esp32/spiffs.cpp",
-            "src/roo_io/stream/arduino/**/*.cpp",
-            "src/roo_io/uart/esp32/**/*.cpp",
+            "src/roo_io/fs/**",
+            "src/roo_io/ringpipe/**",
             "src/roo_io/i2c/**",
             "src/roo_io/spi/**",
-            "test/**",
+            "src/roo_io/uart/**",
+            "src/roo_io/stream/**",
         ],
     ),
-    includes = [
-        "src",
+    hdrs = glob(
+        ["src/roo_io/**/*.h"],
+        exclude = [
+            "src/roo_io/fs/**",
+            "src/roo_io/ringpipe/**",
+            "src/roo_io/i2c/**",
+            "src/roo_io/spi/**",
+            "src/roo_io/uart/**",
+            "src/roo_io/stream/**",
+        ],
+    ),
+    copts = [
+        "-fno-exceptions",
+        "-fno-rtti",
     ],
+    includes = ["src"],
     visibility = ["//visibility:public"],
     deps = [
+        ":encoding_c",
         "@roo_backport",
         "@roo_logging",
-        "@roo_threads",
-    ] + select({
-        "@roo_testing//roo_testing/platforms:is_arduino": [
-            "@roo_testing//:arduino",
-        ],
+    ],
+)
+
+cc_library(
+    name = "filesystem",
+    srcs = glob(["src/roo_io/fs/*.cpp"]),
+    hdrs = glob(["src/roo_io/fs/*.h"]) + ["src/roo_io.h"],
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [":core"],
+)
+
+cc_library(
+    name = "posix_fs",
+    srcs = glob(["src/roo_io/fs/posix/*.cpp"]),
+    hdrs = glob(["src/roo_io/fs/posix/*.h"]),
+    visibility = ["//visibility:public"],
+    deps = [":filesystem"],
+)
+
+cc_library(
+    name = "ringbuffer",
+    hdrs = ["src/roo_io/ringpipe/ringbuffer.h"],
+    includes = ["src"],
+    visibility = ["//visibility:public"],
+    deps = [":core"],
+)
+
+cc_library(
+    name = "ringpipe",
+    srcs = ["src/roo_io/ringpipe/ringpipe.cpp"],
+    hdrs = glob(
+        ["src/roo_io/ringpipe/*.h"],
+        exclude = ["src/roo_io/ringpipe/ringbuffer.h"],
+    ),
+    target_compatible_with = select({
+        "@roo_testing//roo_testing/platforms:is_bare_metal": ["@platforms//:incompatible"],
         "//conditions:default": [],
+    }),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":ringbuffer",
+        "@roo_threads",
+    ],
+)
+
+# Preserve the existing aggregate on threaded runtimes. Bare metal exports
+# portable facilities and requires explicit use of supported nonblocking APIs.
+cc_library(
+    name = "roo_io",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":core",
+        ":filesystem",
+        ":posix_fs",
+        ":ringbuffer",
+    ] + select({
+        "@roo_testing//roo_testing/platforms:is_bare_metal": [],
+        "//conditions:default": [":ringpipe"],
     }),
 )
 
@@ -164,32 +232,17 @@ cc_library(
     ],
 )
 
+# Test fixtures use the matching runner without pulling Arduino filesystems.
 cc_library(
     name = "testing",
-    srcs = glob(
-        [
-            "src/**/*.cpp",
-            "src/**/*.h",
-        ],
-        exclude = [
-            "test/**",
-            "src/roo_io/i2c/**",
-            "src/roo_io/spi/**",
-        ],
-    ),
-    includes = [
-        "src",
-    ],
-    linkstatic = 1,
-    target_compatible_with = [
-        "@roo_testing//roo_testing/platforms:arduino",
-    ],
+    testonly = True,
     visibility = ["//visibility:public"],
-    deps = [
-        ":arduino_fs",
-        ":roo_io",
-        "@roo_testing//:arduino_gtest_main",
-    ],
+    deps = [":roo_io"] + select({
+        "@roo_testing//roo_testing/platforms:is_arduino": ["@roo_testing//:arduino_gtest_main"],
+        "@roo_testing//roo_testing/platforms:is_idf": ["@roo_testing//:esp_idf_gtest_main"],
+        "@roo_testing//roo_testing/platforms:is_pico": ["@roo_testing//:pico_gtest_main"],
+        "//conditions:default": ["@googletest//:gtest_main"],
+    }),
 )
 
 # Headers and sources separately exposed for scripted transport-boundary tests.

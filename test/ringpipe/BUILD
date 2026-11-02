@@ -19,6 +19,10 @@ cc_test(
         "ringpipe_test.cpp",
     ],
     linkstatic = 1,
+    target_compatible_with = select({
+        "@roo_testing//roo_testing/platforms:is_bare_metal": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
     deps = [
         "//test:testing",
     ],

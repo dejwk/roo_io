@@ -1,3 +1,5 @@
+#include "roo_threads/impl/resolve.h"
+#if !defined(ROO_THREADS_SINGLETHREADED)
 #include "roo_io/ringpipe/ringpipe.h"
 
 namespace roo_io {
@@ -114,3 +116,5 @@ void RingPipe::closeOutput() {
 }
 
 }  // namespace roo_io
+
+#endif

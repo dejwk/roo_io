@@ -7,20 +7,27 @@ cc_library(
     srcs = ["idf_fake.cpp"],
     hdrs = ["idf_fake.h"],
     includes = ["."],
-    visibility = ["//visibility:public"],
     target_compatible_with = select({
         "@roo_testing//roo_testing/platforms:is_idf": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    deps = ["@googletest//:gtest", "@roo_testing//roo_testing/frameworks/esp-idf"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@googletest//:gtest",
+        "@roo_testing//roo_testing/frameworks/esp-idf",
+    ],
 )
 
 cc_test(
     name = "idf_i2c_test",
     size = "small",
-    linkstatic = True,
     srcs = ["idf_i2c_test.cpp"],
-    deps = [":idf_fake", "//:i2c", "@googletest//:gtest_main"],
+    linkstatic = True,
+    deps = [
+        ":idf_fake",
+        "//:i2c",
+        "@googletest//:gtest_main",
+    ],
 )
 
 cc_test(

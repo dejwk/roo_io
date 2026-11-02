@@ -6,6 +6,10 @@
 #include "roo_threads/condition_variable.h"
 #include "roo_threads/mutex.h"
 
+#if defined(ROO_THREADS_SINGLETHREADED)
+#error "RingPipe requires a threaded runtime; use RingBuffer on bare metal"
+#endif
+
 namespace roo_io {
 
 /// Thread-safe byte pipe backed by a fixed-size in-memory ring buffer.

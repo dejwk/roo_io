@@ -11,6 +11,7 @@ cc_test(
     linkstatic = 1,
     deps = [
         ":fakefs_arduino",
+        "@roo_io//:arduino_fs",
         "@roo_io//:testing",
     ],
 )
@@ -45,6 +46,7 @@ cc_test(
 
 cc_library(
     name = "fakefs_arduino",
+    testonly = True,
     srcs = [
         "fakefs_arduino.cpp",
         "fakefs_arduino.h",
@@ -52,6 +54,7 @@ cc_library(
     # includes = glob(["**/*.h"]),
     linkstatic = 1,
     deps = [
+        "@roo_io//:arduino_fs",
         "@roo_io//:testing",
         "@roo_io//test/fs:fakefs",
     ],
