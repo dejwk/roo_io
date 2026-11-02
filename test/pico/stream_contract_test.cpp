@@ -40,6 +40,18 @@ class ScriptedStream : public Stream {
   bool fail_flush = false;
 };
 
+// Verifies unavailable output is nonblocking and a blocking write can request
+// one byte even when the stream reports no ready capacity.
+TEST(ArduinoStreamContract, ZeroProgress) {
+  ScriptedStream stream;
+  stream.capacity = 0;
+  roo_io::ArduinoStreamOutputStream output(stream);
+  const roo_io::byte data{7};
+  EXPECT_EQ(output.tryWrite(&data, 1), 0u);
+  EXPECT_EQ(output.status(), roo_io::kOk);
+  EXPECT_EQ(output.write(&data, 1), 1u);
+}
+
 // Verifies input reads bytes in order, zero/null handling, and closing leaves
 // the borrowed underlying stream untouched.
 TEST(ArduinoStreamContract, InputAndInvalidBuffers) {

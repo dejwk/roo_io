@@ -10,13 +10,14 @@ namespace roo_io {
 
 /// Adapter exposing Arduino `Stream` as `OutputStream`.
 ///
-/// Stream remains open until `close()` is called.
+/// Borrows the underlying Stream, which must outlive this adapter.
+/// close() closes only this view. Serialize access to the Stream externally.
 class ArduinoStreamOutputStream : public OutputStream {
  public:
-  /// Creates adapter over Arduino `Print`.
+  /// Creates an adapter over the borrowed Arduino `Stream`.
   ArduinoStreamOutputStream(Stream& output);
 
-  /// Non-blocking write.
+  /// Writes the currently available prefix without waiting for capacity.
   ///
   /// Updates status.
   ///
