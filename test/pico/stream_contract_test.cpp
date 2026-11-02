@@ -109,4 +109,17 @@ TEST(ArduinoStreamContract, TryReadRespectsCapacityAndAvailability) {
   EXPECT_EQ(stream.empty_reads, 0);
 }
 
+// Verifies a failed close retains the flush error rather than replacing it
+// with kClosed, while successful close is idempotent through destruction.
+TEST(ArduinoStreamContract, ClosePreservesFlushFailure) {
+  ScriptedStream stream;
+  roo_io::ArduinoStreamOutputStream output(stream);
+  stream.fail_flush = true;
+  output.close();
+  EXPECT_EQ(output.status(), roo_io::kWriteError);
+  output.close();
+  EXPECT_EQ(output.status(), roo_io::kWriteError);
+  EXPECT_EQ(stream.flushes, 1);
+}
+
 }  // namespace

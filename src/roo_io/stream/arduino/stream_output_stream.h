@@ -45,7 +45,7 @@ class ArduinoStreamOutputStream : public OutputStream {
   /// Arduino hardware serial stream may wait until transmission completes.
   void flush() override;
 
-  /// Closes adapter by setting status to `kClosed`.
+  /// Flushes and closes this view, preserving any existing or flush error.
   ///
   /// Updates status.
   void close() override;

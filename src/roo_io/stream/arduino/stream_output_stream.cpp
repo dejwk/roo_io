@@ -55,8 +55,9 @@ void ArduinoStreamOutputStream::flush() {
 }
 
 void ArduinoStreamOutputStream::close() {
+  if (status_ == kClosed) return;
   flush();
-  status_ = kClosed;
+  if (status_ == kOk) status_ = kClosed;
 }
 }  // namespace roo_io
 #endif
