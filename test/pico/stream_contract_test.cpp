@@ -40,6 +40,22 @@ class ScriptedStream : public Stream {
   bool fail_flush = false;
 };
 
+// Verifies input reads bytes in order, zero/null handling, and closing leaves
+// the borrowed underlying stream untouched.
+TEST(ArduinoStreamContract, InputAndInvalidBuffers) {
+  ScriptedStream stream;
+  roo_io::ArduinoStreamInputStream input(stream);
+  roo_io::byte bytes[4];
+  EXPECT_EQ(input.tryRead(nullptr, 0), 0u);
+  EXPECT_EQ(input.readFully(bytes, 3), 3u);
+  EXPECT_EQ(bytes[2], roo_io::byte{3});
+  EXPECT_EQ(input.tryRead(bytes, 1), 0u);
+  EXPECT_EQ(input.read(nullptr, 1), 0u);
+  EXPECT_EQ(input.status(), roo_io::kReadError);
+  input.close();
+  EXPECT_EQ(input.status(), roo_io::kClosed);
+}
+
 // Verifies tryRead respects output capacity and the available prefix without
 // attempting reads that could enter Stream's timeout polling on an empty input.
 TEST(ArduinoStreamContract, TryReadRespectsCapacityAndAvailability) {

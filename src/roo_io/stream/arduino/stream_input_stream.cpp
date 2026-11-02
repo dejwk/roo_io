@@ -5,7 +5,7 @@ namespace roo_io {
 ArduinoStreamInputStream::ArduinoStreamInputStream(Stream& input)
     : input_(input), status_(kOk) {}
 
-bool ArduinoStreamInputStream::isOpen() const { return status() == kOk; }
+bool ArduinoStreamInputStream::isOpen() const { return status_ == kOk; }
 
 size_t ArduinoStreamInputStream::tryRead(byte* buf, size_t count) {
   if (!isOpen() || count == 0) return 0;
@@ -25,26 +25,30 @@ size_t ArduinoStreamInputStream::tryRead(byte* buf, size_t count) {
 
 size_t ArduinoStreamInputStream::read(byte* buf, size_t count) {
   if (!isOpen() || count == 0) return 0;
-  while (true) {
-    size_t available = input_.available();
-    if (count > available) count = available;
-    // Must read at least one byte.
-    if (count == 0) ++count;
-    size_t result = input_.readBytes((char*)buf, count);
-    if (result > 0) return result;
+  if (buf == nullptr) {
+    status_ = kReadError;
+    return 0;
+  }
+  while (isOpen()) {
+    const int available = input_.available();
+    const size_t requested =
+        available <= 0
+            ? 1
+            : (count < static_cast<size_t>(available) ? count : available);
+    const size_t result =
+        input_.readBytes(reinterpret_cast<char*>(buf), requested);
+    if (result != 0) return result;
     yield();
   }
+  return 0;
 }
 
 size_t ArduinoStreamInputStream::readFully(byte* buf, size_t count) {
-  if (!isOpen() || count == 0) return 0;
   size_t total = 0;
-  while (true) {
-    size_t result = input_.readBytes((char*)buf + total, count - total);
-    total += result;
-    if (total >= count) return total;
-    yield();
+  while (total < count && isOpen()) {
+    total += read(buf == nullptr ? nullptr : buf + total, count - total);
   }
+  return total;
 }
 }  // namespace roo_io
 #endif
