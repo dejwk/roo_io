@@ -79,6 +79,9 @@ ArduinoSdFs::ArduinoSdFs(uint8_t cs_pin)
 
 MountImpl::MountResult ArduinoSdFs::mountImpl(
     std::function<void()> unmount_fn) {
+  if (checkMediaPresence() == kMediaAbsent) {
+    return MountImpl::MountError(kNoMedia);
+  }
   if (!sd_.begin(cs_pin_)) {
     return MountImpl::MountError(kGenericMountError);
   }
