@@ -111,7 +111,8 @@ class Filesystem {
   /// Invalidates all existing mount handles and unmounts immediately.
   ///
   /// Handles that were previously `kOk` start reporting `kNotMounted`
-  /// afterward. New mounts can still be created later if mounting remains
+  /// afterward. Closing those stale handles cannot unmount a later mount.
+  /// New mounts can still be created later if mounting remains
   /// enabled. Prefer relying on the automatic unmount behavior from
   /// `unmountingPolicy()`; `forceUnmount()` is intended for exceptional cases
   /// such as shutdown.

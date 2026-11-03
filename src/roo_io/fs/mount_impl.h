@@ -65,6 +65,8 @@ class MountImpl {
   MountImpl(std::function<void()> unmount_fn) : unmount_fn_(unmount_fn) {}
 
  private:
+  friend class Filesystem;
+
   std::function<void()> unmount_fn_;
 };
 

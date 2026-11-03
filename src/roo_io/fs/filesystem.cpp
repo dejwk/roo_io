@@ -45,6 +45,8 @@ void Filesystem::forceUnmount() {
   auto m = mount_.lock();
   if (m != nullptr) {
     m->deactivate();
+    // A stale handle must never unmount a later mount of the same backend.
+    m->unmount_fn_ = nullptr;
   }
   mount_.reset();
   lazy_unmount_.reset();
