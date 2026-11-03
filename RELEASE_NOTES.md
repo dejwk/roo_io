@@ -1,4 +1,11 @@
-# Unreleased
+# roo_io 2.5.0
+
+- Add focused portable/filesystem/ringbuffer/ringpipe targets and reject blocking pipes on bare metal.
+- Route Arduino-Pico transports through the selected core; add SDK I2C/SPI/UART adapters.
+- Fix Stream partial/zero writes, error/flush propagation.
+- Add Pico-specific SD SPI/frequency configuration and automatic SPI card detection; share non-destructive mounted probes with ESP32.
+- Add LittleFS wrappers, real FS/protocol fake integration and a firmware smoke sketch.
+- Validate all nine canonical profiles with normal and ASAN builds.
 
 - Add scoped SPI transactions spanning multiple buffers with one CS assertion
   and bus reservation, including native manual-CS cleanup and acquisition/error
@@ -7,6 +14,8 @@
 - Add synchronous MSB-first SPI devices for Arduino and native ESP-IDF, with
   borrowed buses, active-low CS framing, registration retry/cleanup, and focused
   transport tests. Used by the roo_rtc DS3234 driver.
+
+---
 
 # roo_io 2.4.1
 

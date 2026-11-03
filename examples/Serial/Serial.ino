@@ -35,16 +35,29 @@
 #endif
 #include "roo_threads.h"
 
+#if defined(ARDUINO_ARCH_RP2040)
+static const int kPinServerTx = 0;
+static const int kPinServerRx = 1;
+static const int kPinClientTx = 8;
+static const int kPinClientRx = 9;
+#else
 static const int kPinServerTx = 27;
 static const int kPinServerRx = 14;
 static const int kPinClientTx = 25;
 static const int kPinClientRx = 26;
+#endif
 
 roo::thread server_thread;
 
 void server() {
   LOG(INFO) << "Server connecting...";
+#if defined(ARDUINO_ARCH_RP2040)
+  Serial1.setRX(kPinServerRx);
+  Serial1.setTX(kPinServerTx);
+  Serial1.begin(115200, SERIAL_8N1);
+#else
   Serial1.begin(115200, SERIAL_8N1, kPinServerRx, kPinServerTx);
+#endif
   LOG(INFO) << "Server connected.";
 
 #ifdef ESP32_UART
@@ -83,7 +96,13 @@ void startServer() {
 
 void client() {
   LOG(INFO) << "Client connecting...";
+#if defined(ARDUINO_ARCH_RP2040)
+  Serial2.setRX(kPinClientRx);
+  Serial2.setTX(kPinClientTx);
+  Serial2.begin(115200, SERIAL_8N1);
+#else
   Serial2.begin(115200, SERIAL_8N1, kPinClientRx, kPinClientTx);
+#endif
   LOG(INFO) << "Client connected.";
 
 #ifdef ESP32_UART

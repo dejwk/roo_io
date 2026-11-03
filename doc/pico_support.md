@@ -219,3 +219,43 @@ Storage tests cover isolated roots, upstream FS/File/Dir calls, remount
 persistence, SD configuration, file update policies, rename/enumeration,
 read-only mounts, file-held mount lifetime, failure injection, media loss and
 force-unmount invalidation. ESP32 filesystem regressions remain enabled.
+
+
+## Validation results
+
+The recursive `roo_io`, `roo_logging`, `roo_threads` and `roo_time` trees pass
+under all nine canonical profiles, normally and with ASAN. Each configuration
+discovers 87 test targets; 59-76 are compatible, depending on frontend/runtime.
+Unsupported targets are excluded at their declared capability boundaries.
+Coverage includes examples, so the serial example now uses Pico pin setup,
+threaded examples require FreeRTOS, optional stack reporting respects the port,
+and ESP32-C3 excludes SDMMC. Explicit backend time tests clear ambient Pico
+identity before selecting their scripted backend.
+
+The reproducible cross-checkout workspace and firmware helper are in
+`roo-registry/integration/pico_io`. Prepared release versions are roo_testing
+2.5.0, roo_time 2.1.0, roo_threads 1.3.0, roo_logging 1.6.0 and roo_io 2.5.0.
+The time bump is required because logging consumes formatter APIs added after
+the published time 2.0.2 archive. Module and PlatformIO minimums follow that
+order. These commits do not publish tags or archives; registry integrity entries
+must come from the real release archives after publication.
+
+
+Additional lifetime regressions ensure stale force-unmounted handles cannot
+unmount a new mount, cached LittleFS mounts close before wrapper destruction,
+and Arduino files close before dropping their final mount reference. Zero-length
+file reads preserve status. Final downstream checks cover all seven RTC drivers
+on all nine profiles and the focused XPT2046 target on its eight supported
+profiles; the classic ESP32 touch/display sharing regression also passes.
+Consumer metadata prepares roo_rtc 0.1.0 (first release) and roo_display 3.5.0
+against the coordinated I/O pins. Hardware pixel transfer implementations are
+unchanged; the full display emulator aggregate keeps its qualified classic ESP32
+boundary while the focused touch target is available independently.
+
+
+The automatic SD detection follow-up passes all eight focused Pico transport,
+filesystem and SD protocol-fake tests with ASAN on each Arduino-Pico runtime.
+Both physical RP2040-Zero firmware variants compile with SD support enabled.
+The five existing ESP32 filesystem tests pass, and the shared SD probe adapters
+compile for ESP32, ESP32-S3 and ESP32-C3. These focused checks supplement the
+original full-matrix checkpoint; they do not establish physical SD qualification.

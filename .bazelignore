@@ -1,0 +1,4 @@
+bazel-roo_io
+bazel-out
+bazel-bin
+bazel-testlogs

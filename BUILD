@@ -205,10 +205,10 @@ cc_library(
         "src/roo_io/fs/esp32/internal/sd_mmc_probe.cpp",
     ],
     includes = ["src"],
-    target_compatible_with = [
-        "@roo_testing//roo_testing/platforms:esp_idf",
-        "@roo_testing//roo_testing/platforms:arduino",
-    ],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"] + select({
+        "@roo_testing//roo_testing/platforms:is_esp32c3": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }) + ["@roo_testing//roo_testing/platforms:arduino"],
     visibility = ["//visibility:public"],
     deps = [
         ":esp32_fs_headers",
@@ -240,7 +240,10 @@ cc_library(
         "src/roo_io/fs/esp32/internal/sd_mmc_probe.cpp",
     ],
     includes = ["src"],
-    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"] + select({
+        "@roo_testing//roo_testing/platforms:is_esp32c3": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
     visibility = ["//visibility:public"],
     deps = [
         ":esp32_fs_headers",
