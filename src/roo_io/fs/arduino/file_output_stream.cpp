@@ -21,6 +21,7 @@ size_t ArduinoFileOutputStream::write(const byte* buf, size_t count) {
   size_t result = file_.write((const uint8_t*)buf, count);
   if (result < count) {
     status_ = roo_io::kWriteError;
+    file_.close();
     mount_.reset();
   }
   return result;
@@ -36,9 +37,9 @@ void ArduinoFileOutputStream::flush() {
 }
 
 void ArduinoFileOutputStream::close() {
-  mount_.reset();
   if (status_ == kClosed) return;
   file_.close();
+  mount_.reset();
   if (status_ == kOk) {
     status_ = kClosed;
   }

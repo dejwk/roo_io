@@ -25,6 +25,7 @@ size_t ArduinoFileInputStream::read(byte* buf, size_t count) {
   } else if (result == ((size_t)(-1))) {
     // Indicates an error.
     status_ = kReadError;
+    file_.close();
     mount_.reset();
     return 0;
   }
@@ -37,6 +38,7 @@ void ArduinoFileInputStream::seek(uint64_t offset) {
     status_ = kOk;
   } else {
     status_ = kSeekError;
+    file_.close();
     mount_.reset();
   }
 }
@@ -49,6 +51,7 @@ void ArduinoFileInputStream::skip(uint64_t count) {
   }
   if (!file_.seek(count, SeekCur)) {
     status_ = kSeekError;
+    file_.close();
     mount_.reset();
     return;
   }

@@ -9,9 +9,10 @@ ArduinoDirectoryImpl::ArduinoDirectoryImpl(std::shared_ptr<MountImpl> mount,
     : mount_(std::move(mount)), file_(std::move(file)), status_(status) {}
 
 bool ArduinoDirectoryImpl::close() {
-  mount_.reset();
+  // Closing the last mount reference may unmount the physical filesystem.
   entry_.close();
   file_.close();
+  mount_.reset();
   if (status_ == kOk) status_ = kClosed;
   return true;
 }
