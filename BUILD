@@ -135,7 +135,10 @@ cc_library(
 
 cc_library(
     name = "arduino_fs",
-    srcs = glob(["src/roo_io/fs/arduino/**"]),
+    srcs = glob(
+        ["src/roo_io/fs/arduino/**"],
+        exclude = ["src/roo_io/fs/arduino/internal/sd_spi_probe.cpp"],
+    ),
     copts = [
         "-fno-rtti",
         "-fno-exceptions",
@@ -146,12 +149,26 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":arduino_sd_probe_internal",
         ":esp32_fs_headers",
         ":filesystem",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/FS",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
         "@roo_testing//roo_testing/frameworks/esp-idf",
     ],
+)
+
+cc_library(
+    name = "arduino_sd_probe_internal",
+    srcs = ["src/roo_io/fs/arduino/internal/sd_spi_probe.cpp"],
+    hdrs = ["src/roo_io/fs/arduino/internal/sd_spi_probe.h"],
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:arduino"],
+    visibility = ["//:__pkg__"],
+    deps = select({
+        "@roo_testing//roo_testing/platforms:is_arduino_rp2040": ["@roo_testing//:arduino"],
+        "//conditions:default": ["@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SPI"],
+    }),
 )
 
 cc_library(
@@ -167,6 +184,7 @@ cc_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        ":arduino_sd_probe_internal",
         ":esp32_fs_headers",
         ":roo_io",
         "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD",
