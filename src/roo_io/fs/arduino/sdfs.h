@@ -33,6 +33,11 @@ namespace roo_io {
 /// Arduino SD wrapper that mounts media through the ESP32 VFS layer.
 class ArduinoSdFs : public BaseEsp32VfsFilesystem {
  public:
+  /// Drops any cached mount while the SD backend and derived type are alive.
+  ~ArduinoSdFs() override {
+    if (isMounted()) forceUnmount();
+  }
+
   /// Sets the SD chip-select pin.
   void setCsPin(uint8_t cs_pin) { cs_pin_ = (gpio_num_t)cs_pin; }
   /// Selects the SPI peripheral used for SD access.
@@ -62,6 +67,11 @@ class ArduinoSdFs : public BaseEsp32VfsFilesystem {
 /// Arduino SD wrapper for non-ESP32 Arduino platforms.
 class ArduinoSdFs : public Filesystem {
  public:
+  /// Drops any cached mount while the SD backend and derived type are alive.
+  ~ArduinoSdFs() override {
+    if (isMounted()) forceUnmount();
+  }
+
   /// Probes whether removable media is present.
   MediaPresence checkMediaPresence() override;
 
