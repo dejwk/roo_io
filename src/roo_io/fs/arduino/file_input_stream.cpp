@@ -17,7 +17,7 @@ ArduinoFileInputStream::ArduinoFileInputStream(std::shared_ptr<MountImpl> mount,
       status_(file_ ? kOk : kClosed) {}
 
 size_t ArduinoFileInputStream::read(byte* buf, size_t count) {
-  if (status_ != kOk) return 0;
+  if (status_ != kOk || count == 0) return 0;
   size_t result = file_.read((uint8_t*)buf, count);
   if (result == 0) {
     status_ = kEndOfStream;

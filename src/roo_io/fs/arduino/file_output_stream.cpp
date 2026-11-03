@@ -17,7 +17,7 @@ ArduinoFileOutputStream::ArduinoFileOutputStream(
       status_(file_ ? kOk : kClosed) {}
 
 size_t ArduinoFileOutputStream::write(const byte* buf, size_t count) {
-  if (status_ != kOk) return 0;
+  if (status_ != kOk || count == 0) return 0;
   size_t result = file_.write((const uint8_t*)buf, count);
   if (result < count) {
     status_ = roo_io::kWriteError;
