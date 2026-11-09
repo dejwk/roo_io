@@ -140,7 +140,7 @@ Filesystem::MediaPresence SdMmcFs::checkMediaPresence() {
     // Already mounted. Send CMD13 to check if card is still responsive.
     return (sdmmc_get_status(card_) == ESP_OK) ? kMediaPresent : kMediaAbsent;
   }
-  // Not mounted.  Full init → CMD8 → deinit cycle (~3–4 ms).
+  // Not mounted. Probe CMD8, resetting to idle and retrying if needed.
   sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
   if (!use_default_pins_) {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)

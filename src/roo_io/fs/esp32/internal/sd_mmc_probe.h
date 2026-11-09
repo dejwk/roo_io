@@ -1,12 +1,5 @@
 #pragma once
 
-// Fast SDMMC-bus card-presence probe.
-//
-// SdMmcProbe() initialises the SDMMC host, sends a single CMD8, and tears
-// the host back down.  The full cycle takes ~2–3 ms.  The host is always
-// deinitialised on return so that esp_vfs_fat_sdmmc_mount() can call
-// sdmmc_host_init() without conflict.
-
 #if defined(ESP_PLATFORM)
 
 #include "soc/soc_caps.h"
@@ -18,8 +11,16 @@
 namespace roo_io {
 namespace internal {
 
-// Probe for an SD card on the given SDMMC slot.  Returns true if a card
-// responded to CMD8 with a valid echo pattern.
+/// Probes an unmounted SD v2+ card for a valid CMD8 voltage/pattern echo.
+/// Initializes the host with @p slot_config on @p slot. If CMD8 fails, resets
+/// the card with native-mode CMD0, supplies at least eight clocks at 400 kHz
+/// (20 us), and retries. An already-idle card needs no reset or settling delay.
+/// Driver timeouts still apply; this is not a total probe time bound.
+/// Releases the host acquired by this call
+/// before returning, including on failure, so normal mounting can initialize
+/// it again. Returns false if initialization or the final probe fails.
+/// The SDMMC host must be unused and no card may be mounted: the fallback
+/// resets card protocol state. Callers must serialize access to the host.
 bool SdMmcProbe(int slot, const sdmmc_slot_config_t* slot_config);
 
 }  // namespace internal

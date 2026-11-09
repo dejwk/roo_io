@@ -93,7 +93,7 @@ Filesystem::MediaPresence ArduinoSdMmcFs::checkMediaPresence() {
     // (CMD13) when status checking is enabled — fast, non-destructive.
     return (disk_status(0) == 0) ? kMediaPresent : kMediaAbsent;
   }
-  // Not mounted.  Full init → CMD8 → deinit cycle (~2–3 ms).
+  // Not mounted. Probe CMD8, resetting to idle and retrying if needed.
   return internal::SdMmcProbe(SDMMC_HOST_SLOT_1, &slot_config_) ? kMediaPresent
                                                                 : kMediaAbsent;
 #endif

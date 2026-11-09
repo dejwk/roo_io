@@ -1,4 +1,5 @@
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
 cc_library(
     name = "encoding_c",
@@ -421,5 +422,27 @@ cc_library(
         ":filesystem",
         ":posix_fs",
         "@roo_testing//roo_testing/frameworks/esp-idf",
+    ],
+)
+
+# Exercise the physical probe against a scripted native API, bypassing the
+# emulator's directory-based media detection while retaining real SDK types.
+cc_test(
+    name = "sd_mmc_probe_test",
+    size = "small",
+    srcs = [
+        "src/roo_io/fs/esp32/internal/sd_mmc_probe.cpp",
+        "src/roo_io/fs/esp32/internal/sd_mmc_probe.h",
+        "//test/espidf:sd_mmc_probe_test.cpp",
+    ],
+    copts = ["-UROO_TESTING", "-fno-exceptions", "-fno-rtti"],
+    includes = ["src"],
+    target_compatible_with = ["@roo_testing//roo_testing/platforms:esp_idf"] + select({
+        "@roo_testing//roo_testing/platforms:is_esp32c3": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        "@googletest//:gtest_main",
+        "@roo_testing//roo_testing/frameworks/esp-idf:headers",
     ],
 )
