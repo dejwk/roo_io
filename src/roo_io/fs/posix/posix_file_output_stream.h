@@ -27,6 +27,9 @@ class PosixFileOutputStream : public OutputStream {
   /// Writes up to `count` bytes to the file.
   size_t write(const byte* buf, size_t count) override;
 
+  /// Flushes the file's stdio buffer and records any write error.
+  void flush() override;
+
   /// Closes the file and releases any retained mount reference.
   void close() override;
 

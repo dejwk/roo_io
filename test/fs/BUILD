@@ -47,3 +47,15 @@ cc_test(
         "//:testing",
     ],
 )
+
+cc_test(
+    name = "posix_file_output_stream_test",
+    size = "small",
+    srcs = ["posix_file_output_stream_test.cpp"],
+    linkstatic = 1,
+    target_compatible_with = ["@platforms//os:linux"],
+    deps = [
+        "//:posix_fs",
+        "@googletest//:gtest_main",
+    ],
+)
