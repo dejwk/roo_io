@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "driver/i2c_master.h"
+#include "roo_backport.h"
 #include "roo_backport/byte.h"
 
 namespace roo_io {

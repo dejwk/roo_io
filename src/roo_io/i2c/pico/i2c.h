@@ -2,6 +2,7 @@
 #if defined(PICO_RP2040) && PICO_RP2040
 #include <hardware/i2c.h>
 
+#include "roo_backport.h"
 #include "roo_backport/byte.h"
 namespace roo_io {
 /// Borrows an initialized Pico SDK I2C controller, including its pin setup.

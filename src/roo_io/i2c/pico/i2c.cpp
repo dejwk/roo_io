@@ -2,6 +2,7 @@
 #if defined(PICO_RP2040) && PICO_RP2040
 #include <climits>
 
+#include "roo_threads.h"
 #include "roo_threads/mutex.h"
 namespace roo_io {
 namespace {

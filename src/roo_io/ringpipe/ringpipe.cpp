@@ -1,3 +1,4 @@
+#include "roo_threads.h"
 #include "roo_threads/impl/resolve.h"
 #if !defined(ROO_THREADS_SINGLETHREADED)
 #include "roo_io/ringpipe/ringpipe.h"

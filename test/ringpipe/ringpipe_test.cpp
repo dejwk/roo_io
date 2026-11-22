@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include "roo_io/ringpipe/ringpipe_input_stream.h"
 #include "roo_io/ringpipe/ringpipe_output_stream.h"
+#include "roo_threads.h"
 #include "roo_threads/thread.h"
 
 namespace roo_io {

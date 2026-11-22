@@ -1,4 +1,5 @@
 #include "driver/uart.h"
+#include "roo_backport.h"
 #include "roo_backport/byte.h"
 #include "roo_io/uart/esp32/uart_output_stream.h"
 
