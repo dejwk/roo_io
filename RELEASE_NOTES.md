@@ -3,6 +3,11 @@
 - Add focused portable/filesystem/ringbuffer/ringpipe targets and reject blocking pipes on bare metal.
 - Route Arduino-Pico transports through the selected core; add SDK I2C/SPI/UART adapters.
 - Fix Stream partial/zero writes, error/flush propagation.
+- Preserve the first output error after `OutputStreamWriter::close()` and flush
+  buffered data before rebinding the writer. POSIX file streams report stdio
+  write failures during `flush()`.
+- Require roo_backport 1.2.5, roo_logging 1.6.0, and roo_threads 1.3.1.
+  Bazel host emulation uses roo_testing 2.6.0.
 - Add Pico-specific SD SPI/frequency configuration and automatic SPI card detection; share non-destructive mounted probes with ESP32.
 - Add LittleFS wrappers, real FS/protocol fake integration and a firmware smoke sketch.
 - Validate all nine canonical profiles with normal and ASAN builds.

@@ -40,9 +40,9 @@ layers, see [the programming guide](doc/programming_guide.md).
 
 ## Host emulation
 
-Host builds support nine canonical profiles through roo_testing 2.5: Arduino
-and ESP-IDF on ESP32/S3/C3, SDK-only Pico, and Arduino-Pico bare-metal/FreeRTOS. With
-Bazelisk 1.21 or newer, a plain command defaults to Arduino and prints a notice:
+Host builds use roo_testing 2.6 for nine profiles covering Arduino and ESP-IDF
+on ESP32/S3/C3, Pico SDK, and Arduino-Pico with and without FreeRTOS.
+With Bazelisk 1.21 or newer, a plain command defaults to Arduino and prints a notice:
 
     bazel test ...
     bazel test ... --config=asan
@@ -103,8 +103,7 @@ bazel test --config=roo_testing_idf_esp32 //test/i2c:all
 
 Tests cover the pin-routed RTC emulator as well as scripted initialization and
 transfer failures. RTC calendar and transport-failure tests live in
-`roo_rtc`; `roo_time_ds3231` retains compatibility and integration checks. A temporary `roo_testing` local override supplies the modern
-IDF emulator until its release; update its path when using a different checkout.
+`roo_rtc`. `roo_time_ds3231` retains compatibility and integration checks.
 
 ## Synchronous SPI devices
 
@@ -173,7 +172,6 @@ also be serialized. Native device registrations remain noncopyable.
 The SPI Bazel target selects the matching Arduino-ESP32, Arduino-Pico, or native
 ESP-IDF backend. Host tests under `//test/spi` cover one-shot compatibility,
 fragmented scopes, moves, nesting rejection, bus/GPIO/transfer failures, and cleanup.
-Until this API is released, use a local `roo_io` override in consumers.
 
 
 ## Pico support and focused targets
