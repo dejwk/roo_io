@@ -55,39 +55,32 @@ class OutputStreamWriter {
 
   ~OutputStreamWriter() { close(); }
 
+  /// Binds and takes ownership of @p os. Flushes and closes a different
+  /// previous stream before rebinding. Passing nullptr closes the writer.
+  /// Adopting the currently borrowed stream preserves its buffered data.
+  /// When rebinding, status() reflects the new stream. Call close() first
+  /// to inspect the previous stream's final status.
   void reset(std::unique_ptr<roo_io::OutputStream> os) {
     if (os_ == os.get()) {
-      owned_ = true;
+      owned_ = os.release() != nullptr;
       return;
     }
-    if (os_ != nullptr) {
-      os_->close();
-      if (owned_) {
-        delete os_;
-      }
-    }
+    close();
     os_ = os.release();
     owned_ = (os_ != nullptr);
-    if (os_ == nullptr) {
-      out_.reset();
-    } else {
-      out_.reset(*os_);
-    }
+    if (os_ != nullptr) out_.reset(*os_);
   }
 
+  /// Borrows @p os. Flushes and closes a different previous stream before
+  /// rebinding. Call close() first to inspect the previous stream's final
+  /// status. Passing the currently borrowed stream keeps the existing binding.
   void reset(roo_io::OutputStream& os) {
     if (os_ == &os) {
       CHECK(!owned_);
       return;
     }
-    if (os_ != nullptr) {
-      os_->close();
-      if (owned_) {
-        delete os_;
-      }
-    }
+    close();
     os_ = &os;
-    owned_ = false;
     out_.reset(*os_);
   }
 
@@ -101,21 +94,15 @@ class OutputStreamWriter {
   /// Flushes and closes the stream. Afterward, status() returns the first
   /// output error or `kClosed` on success. Repeated calls preserve the result.
   void close() {
-    if (os_ != nullptr) {
-      out_.flush();
-      Status result = out_.status();
-      os_->close();
-      if (result == kOk) result = os_->status();
-      out_.reset(result);
-      if (owned_) {
-        delete os_;
-        owned_ = false;
-      }
-      os_ = nullptr;
-    } else if (owned_) {
-      delete os_;
-      owned_ = false;
-    }
+    if (os_ == nullptr) return;
+    out_.flush();
+    Status result = out_.status();
+    os_->close();
+    if (result == kOk) result = os_->status();
+    out_.reset(result);
+    if (owned_) delete os_;
+    os_ = nullptr;
+    owned_ = false;
   }
 
   /// Returns the current output status, including any error retained by
