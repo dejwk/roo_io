@@ -112,13 +112,13 @@ class BufferedOutputStreamIterator {
   /// Flushes buffered data and then flushes underlying stream.
   ///
   /// If `status() != kOk`, this call is a no-op.
-  /// Updates `status()` from `output.status()`.
+  /// Preserves the first error from writing or flushing the output.
   void flush() {
-    if (status_ == kOk) {
-      if (offset_ > 0) writeBuffer();
-      output_->flush();
-      status_ = output_->status();
-    }
+    if (status_ != kOk) return;
+    if (offset_ > 0) writeBuffer();
+    if (status_ != kOk) return;
+    output_->flush();
+    status_ = output_->status();
   }
 
   /// Returns current iterator status.
@@ -133,12 +133,12 @@ class BufferedOutputStreamIterator {
 
   /// Detaches from stream and releases internal buffer.
   ///
-  /// Sets status to `kClosed`.
-  void reset() {
+  /// Retains @p status for inspection, mapping `kOk` to `kClosed`.
+  void reset(Status status = kClosed) {
     output_ = nullptr;
     buffer_.reset();
     offset_ = kOutputStreamIteratorBufferSize;
-    status_ = kClosed;
+    status_ = status == kOk ? kClosed : status;
   }
 
   /// Rebinds iterator to `output` and clears buffered state.

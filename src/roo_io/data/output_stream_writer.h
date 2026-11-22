@@ -98,22 +98,28 @@ class OutputStreamWriter {
     out_.flush();
   }
 
+  /// Flushes and closes the stream. Afterward, status() returns the first
+  /// output error or `kClosed` on success. Repeated calls preserve the result.
   void close() {
     if (os_ != nullptr) {
       out_.flush();
+      Status result = out_.status();
       os_->close();
+      if (result == kOk) result = os_->status();
+      out_.reset(result);
       if (owned_) {
         delete os_;
         owned_ = false;
       }
       os_ = nullptr;
-      out_.reset();
     } else if (owned_) {
       delete os_;
       owned_ = false;
     }
   }
 
+  /// Returns the current output status, including any error retained by
+  /// close().
   Status status() const { return out_.status(); }
 
   void write(byte v) { out_.write(v); }
