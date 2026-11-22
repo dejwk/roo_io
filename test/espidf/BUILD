@@ -33,6 +33,7 @@ cc_test(
     name = "littlefs_test",
     size = "small",
     srcs = ["littlefs_test.cpp"],
+    linkstatic = 1,
     deps = [
         "//:esp32_littlefs",
         "@roo_testing//roo_testing/microcontrollers/esp32:core",
