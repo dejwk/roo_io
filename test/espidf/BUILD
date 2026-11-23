@@ -1,6 +1,9 @@
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
-exports_files(["sd_mmc_probe_test.cpp"], visibility = ["//:__pkg__"])
+exports_files(
+    ["arduino_sd_mmc_test.cpp", "sd_mmc_probe_test.cpp"],
+    visibility = ["//:__pkg__"],
+)
 
 cc_test(
     name = "posix_directory_test",

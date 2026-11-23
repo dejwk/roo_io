@@ -425,6 +425,31 @@ cc_library(
     ],
 )
 
+# Exercise the Arduino adapter's physical presence paths with scripted probes.
+cc_test(
+    name = "arduino_sd_mmc_test",
+    size = "small",
+    srcs = [
+        "src/roo_io/fs/esp32/arduino/sdmmc.cpp",
+        "//test/espidf:arduino_sd_mmc_test.cpp",
+    ],
+    copts = ["-UROO_TESTING", "-fno-exceptions", "-fno-rtti"],
+    includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+        "@roo_testing//roo_testing/platforms:esp_idf",
+    ] + select({
+        "@roo_testing//roo_testing/platforms:is_esp32c3": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":esp32_fs_headers",
+        ":roo_io",
+        "@googletest//:gtest_main",
+        "@roo_testing//roo_testing/frameworks/arduino-esp32-2.0.4/libraries/SD_MMC",
+    ],
+)
+
 # Exercise the physical probe against a scripted native API, bypassing the
 # emulator's directory-based media detection while retaining real SDK types.
 cc_test(

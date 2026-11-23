@@ -16,12 +16,29 @@
 #define MLOG_roo_io_fs 0
 #endif
 
-#include "diskio_impl.h"
-#include "diskio_sdmmc.h"
 #include "driver/sdmmc_host.h"
 #include "roo_io/fs/esp32/internal/sd_mmc_probe.h"
+#include "roo_logging.h"
+#if !defined(ROO_TESTING)
+#include "sdmmc_cmd.h"
+#endif
 
 namespace roo_io {
+
+#if !defined(ROO_TESTING)
+namespace {
+
+// Arduino owns the mounted card. Form a pointer to the protected base member
+// so we can query the card in the global instance without changing ownership.
+class SdMmcCardAccess : public fs::SDMMCFS {
+ public:
+  static sdmmc_card_t* GetCard(const fs::SDMMCFS& sd) {
+    return sd.*&SdMmcCardAccess::_card;
+  }
+};
+
+}  // namespace
+#endif
 
 ArduinoSdMmcFs::ArduinoSdMmcFs()
     : BaseEsp32VfsFilesystem((uint32_t)SDMMC_FREQ_HIGHSPEED * 1000L, "/sdcard"),
@@ -89,9 +106,11 @@ Filesystem::MediaPresence ArduinoSdMmcFs::checkMediaPresence() {
                                                           : kMediaAbsent;
 #else
   if (!mount_base_path_.empty()) {
-    // Already mounted.  disk_status(0) calls sdmmc_get_status() internally
-    // (CMD13) when status checking is enabled — fast, non-destructive.
-    return (disk_status(0) == 0) ? kMediaPresent : kMediaAbsent;
+    // Arduino disables FatFs live status checks. Send CMD13 to the active
+    // card directly so ejection is visible without resetting the card.
+    sdmmc_card_t* card = SdMmcCardAccess::GetCard(::SD_MMC);
+    return card != nullptr && sdmmc_get_status(card) == ESP_OK ? kMediaPresent
+                                                               : kMediaAbsent;
   }
   // Not mounted. Probe CMD8, resetting to idle and retrying if needed.
   return internal::SdMmcProbe(SDMMC_HOST_SLOT_1, &slot_config_) ? kMediaPresent
