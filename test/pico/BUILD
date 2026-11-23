@@ -1,5 +1,7 @@
 load("@rules_cc//cc:cc_test.bzl", "cc_test")
 
+exports_files(["sdio_test.cpp", "stubs/SDFS.h"], visibility = ["//:__pkg__"])
+
 [
     cc_test(
         name = "arduino_transport_" + mode + "_test",

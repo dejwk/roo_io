@@ -450,6 +450,29 @@ cc_test(
     ],
 )
 
+# Compile the native Pico adapter against a scripted SdFat/SDFS boundary.
+cc_test(
+    name = "pico_sdio_test",
+    size = "small",
+    srcs = [
+        "src/roo_io/fs/pico/arduino/sdio.cpp",
+        "src/roo_io/fs/pico/arduino/sdio.h",
+        "//test/pico:sdio_test.cpp",
+        "//test/pico:stubs/SDFS.h",
+    ],
+    copts = ["-DROO_IO_TEST_PICO_SDIO", "-iquote", "test/pico/stubs", "-fno-exceptions", "-fno-rtti"],
+    includes = ["src"],
+    target_compatible_with = [
+        "@roo_testing//roo_testing/platforms:arduino",
+        "@roo_testing//roo_testing/platforms:rp2040",
+    ],
+    deps = [
+        ":arduino_fs",
+        "@roo_testing//:arduino_gtest_main",
+        "@roo_testing//roo_testing/frameworks/arduino_pico_support:filesystem",
+    ],
+)
+
 # Exercise the physical probe against a scripted native API, bypassing the
 # emulator's directory-based media detection while retaining real SDK types.
 cc_test(
