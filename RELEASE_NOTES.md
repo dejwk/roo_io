@@ -1,24 +1,13 @@
 # roo_io 2.5.0
 
-- Add focused portable/filesystem/ringbuffer/ringpipe targets and reject blocking pipes on bare metal.
-- Route Arduino-Pico transports through the selected core; add SDK I2C/SPI/UART adapters.
-- Fix Stream partial/zero writes, error/flush propagation.
-- Preserve the first output error after `OutputStreamWriter::close()` and flush
-  buffered data before rebinding the writer. POSIX file streams report stdio
-  write failures during `flush()`.
-- Require roo_backport 1.2.5, roo_logging 1.6.0, and roo_threads 1.3.1.
-  Bazel host emulation uses roo_testing 2.6.0.
-- Add Pico-specific SD SPI/frequency configuration and automatic SPI card detection; share non-destructive mounted probes with ESP32.
-- Add LittleFS wrappers, real FS/protocol fake integration and a firmware smoke sketch.
-- Validate all nine canonical profiles with normal and ASAN builds.
-
-- Add scoped SPI transactions spanning multiple buffers with one CS assertion
-  and bus reservation, including native manual-CS cleanup and acquisition/error
-  handling. Preserve the one-shot transfer API and Arduino borrowed-device copies.
-- Select the Arduino-Pico SPI dependency in emulation builds.
-- Add synchronous MSB-first SPI devices for Arduino and native ESP-IDF, with
-  borrowed buses, active-low CS framing, registration retry/cleanup, and focused
-  transport tests. Used by the roo_rtc DS3234 driver.
+- Add RP2040 I/O support through Arduino-Pico and native Pico SDK adapters for I²C, SPI, and UART. Bazel emulation selects the matching Arduino core and SPI backend.
+- Add synchronous, MSB-first SPI devices for Arduino and ESP-IDF, as used by the `roo_rtc` DS3234 driver. Scoped transactions hold one bus reservation and keep active-low chip select asserted across multiple buffers, with cleanup and error reporting. One-shot transfers and copyable Arduino device views remain supported.
+- Add Arduino-Pico SD over SPI with configurable bus and frequency, automatic card detection, and non-destructive mounted probes shared with ESP32. Add native four-bit SDIO with card-removal detection and distinct errors for absent and unmountable cards.
+- Add Arduino-Pico LittleFS support that preserves parent directories when deleting their last file. Add filesystem and SD protocol tests, a `PicoStorageSmoke` firmware example, and ESP-IDF LittleFS host-emulation coverage.
+- Fix ESP32 SDMMC detection before mounting and detect ejection from mounted Arduino SDMMC cards with CMD13. Fix Arduino file and mount cleanup so native handles close before unmount and stale handles cannot unmount a replacement.
+- Fix Arduino stream reads, retry partial writes, keep zero-length I/O from changing stream state, and propagate write and flush errors through close. `OutputStreamWriter` preserves the first error after close and flushes before rebinding. POSIX file streams report buffered write failures during `flush()` and safely handle repeated closes.
+- Split Bazel targets for portable I/O, filesystems, ring buffers, and blocking ring pipes. Blocking ring pipes require a threaded runtime. Validate all nine canonical profiles with and without AddressSanitizer.
+- Update Bazel pins and PlatformIO minimums to `roo_backport` 1.3.0, `roo_logging` 1.6.1, and `roo_threads` 1.4.0. Update Bazel host emulation and CI to `roo_testing` 2.7.0 and improve Arduino dependency discovery.
 
 ---
 
